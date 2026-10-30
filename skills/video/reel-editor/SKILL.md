@@ -19,8 +19,8 @@ If the person did not say which clip or which part, transcribe first and choose 
 "$HOME/.closer-studio/venv/bin/python" "$KIT/tools/reel_build.py" "$KIT/inbox/<file>" --out "$KIT/output/<job>" --end 1
 ```
 
-That writes `output/<job>/transcript.json` for the first second only; for the whole clip run the real command below with
-`--preview` (fast, low quality), read `transcript.json`, then pick the window. A reel is one idea: the moment that makes
+That writes the transcript file (transcript.json inside the job folder) for the first second only; for the whole clip run the real command below with
+`--preview` (fast, low quality), read the transcript file, then pick the window. A reel is one idea: the moment that makes
 a closer feel seen, called out, or shown a move. 20 to 45 seconds. Start on a sentence that stands alone without the
 setup before it.
 
@@ -58,7 +58,7 @@ ffmpeg -v error -y -i "$KIT/output/<job>/<file>_reel.mp4" -vf "fps=1,scale=216:-
 
 Look at the sheet. Captions must be below the chin and above the bottom 320 px (the apps put their own UI there);
 nothing over the face; the hook readable; the end card last. Read `captions.srt` top to bottom: a wrong word on screen
-is a reshoot of the caption, not a shrug. If a caption is wrong, fix the word in `transcript.json` and run the command
+is a reshoot of the caption, not a shrug. If a caption is wrong, fix the word in the transcript file and run the command
 again (it reuses the pieces, only the captions and the final pass re-render).
 
 ## 5. Hand it over
