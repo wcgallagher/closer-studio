@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(bash install.sh)",
+      "Bash(bash install.sh:*)",
+      "Bash(ffmpeg:*)",
+      "Bash(ffprobe:*)",
+      "Bash(python3:*)",
+      "Bash(~/.closer-studio/venv/bin/python:*)",
+      "Bash(ls:*)",
+      "Bash(cat:*)",
+      "Bash(mkdir:*)"
+    ]
+  }
+}

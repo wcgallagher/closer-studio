@@ -3,23 +3,22 @@
 Everything Claude Code needs to cut reels, VSLs and long-form video for Become The Closer and Set More Annuities,
 with the brand, the writing rules and the sales thinking already loaded. Built by Chase's Claude; made for Owen.
 
-## Install (once, about 5 minutes)
+## Set up (once, about 5 minutes, Mac)
 
-You need a Mac with Claude Code already installed. If you do not have Claude Code yet: https://claude.ai/code
+1. Get the `closer-studio` folder onto your Mac. Either unzip the file Chase sent you, or on this GitHub page click
+   the green **Code** button, then **Download ZIP**, then double-click the zip. Put the folder somewhere you can find it
+   (your home folder or Documents is fine).
+2. Open the **Claude Code** app. Choose **Open folder** and pick the `closer-studio` folder.
+3. Type: `set me up` and press Enter. Claude installs what it needs (a video engine and a speech-to-text package).
+   It will ask for permission a few times: click **Allow**. If your Mac asks for your password, that is normal.
+4. When Claude says **Done**, you are set.
 
-1. Open **Terminal** (press Cmd + Space, type `Terminal`, press Enter).
-2. Paste this whole line and press Enter. It downloads the kit into a folder called `closer-studio` in your home folder and installs it:
-
-```bash
-cd ~ && git clone https://github.com/wcgallagher/sellmoreannuities.git --branch closer-studio --single-branch closer-studio && cd closer-studio && bash install.sh
-```
-
-3. When it says **Done**, you are set up. If it asks to install something (ffmpeg, Python packages), say yes.
+No Terminal, no commands to remember.
 
 ## Every time you want to edit
 
-1. Put your raw video files in the folder `closer-studio/inbox` (Finder: your home folder, then `closer-studio`, then `inbox`).
-2. Double-click **Start Closer Studio.command** in the `closer-studio` folder. Terminal opens with Claude ready.
+1. Put your raw video files in the folder `closer-studio/inbox` (Finder: open the `closer-studio` folder, then `inbox`).
+2. Open the `closer-studio` folder in the Claude Code app (it remembers it under recent projects).
 3. Type what you want, in plain words. Examples:
    - `make a reel from the video in inbox`
    - `cut three reels from this call: the part about objections, the part about the quiz, and the close`
@@ -27,7 +26,16 @@ cd ~ && git clone https://github.com/wcgallagher/sellmoreannuities.git --branch 
    - `write the caption and hook for this reel`
 4. Finished videos land in `closer-studio/output`. Claude tells you the file name.
 
-That is the whole workflow. You never need to open the tools yourself.
+## If something goes wrong
+
+Tell Claude "this failed" and paste whatever it showed you. It fixes it. If it cannot, send it to Chase.
+
+## Terminal users (optional)
+
+If you use the Claude Code command line instead of the app: open Terminal in the folder, run `bash install.sh` once,
+then start Claude with the double-click file **Start Closer Studio.command** or by typing `claude`.
+
+Windows: the installer is written for Mac. On Windows use WSL and ask Chase to walk through it once.
 
 ## What is inside
 
@@ -43,10 +51,8 @@ That is the whole workflow. You never need to open the tools yourself.
 | `tools/` | the scripts the skills run (you never run them yourself) |
 | `HOUSE_RULES.md` | writing rules that apply to everything: no em dashes, no hype words, no invented numbers |
 
-## If something goes wrong
-
-Copy the red text from Terminal and paste it to Claude with "this failed". Claude fixes it. If Claude cannot, send it
-to Chase.
+The skills are also wired into this folder's own `.claude/skills`, so they load the moment the folder is open in the
+app, even before setup finishes.
 
 ## Credits and licences
 
