@@ -1,0 +1,516 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="fonts/fonts.css">
+<style>
+/* SMA motion graphics. One page, many scenes; render(t) is deterministic so every frame can be captured exactly. */
+:root {
+  /* setmoreannuities.com palette: the site is cream with a dark, red-glow video panel; these graphics live inside that panel */
+  --bg: #0e1114;
+  --red: #B5311F;
+  --red-hot: #D24A36;
+  --gold: #C9A24A;
+  --gold-hot: #E0BE66;
+  --cream: #FAF6EE;
+  --sand: #F1EADD;
+  --ink: #FAF6EE;
+  --mute: #A89F90;
+  --line: rgba(241, 234, 221, .13);
+  --glass: linear-gradient(160deg, rgba(241,234,221,.06), rgba(241,234,221,.015));
+  --mono: 'JetBrains Mono', ui-monospace, monospace;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { width: 1920px; height: 1080px; overflow: hidden; background: var(--bg); }
+body { font-family: Inter, sans-serif; color: var(--ink); -webkit-font-smoothing: antialiased; }
+#bg { position: absolute; inset: 0; overflow: hidden;
+  background:
+    radial-gradient(900px 560px at 50% 42%, rgba(73,29,25,.95), transparent 70%),
+    radial-gradient(1200px 700px at 50% 120%, rgba(73,29,25,.35), transparent 70%),
+    var(--bg); }
+#grid { display: none; position: absolute; inset: -200px;
+  background-image: linear-gradient(rgba(241,234,221,.04) 1px, transparent 1px), linear-gradient(90deg, rgba(241,234,221,.04) 1px, transparent 1px);
+  background-size: 64px 64px;
+  -webkit-mask-image: radial-gradient(ellipse 60% 55% at 50% 45%, #000 30%, transparent 75%); }
+#vig { position: absolute; inset: 0; pointer-events: none;
+  background: radial-gradient(ellipse 75% 70% at 50% 45%, transparent 55%, rgba(0,0,0,.65)); }
+#grain { position: absolute; inset: 0; opacity: .11; mix-blend-mode: overlay; }
+.scene { position: absolute; inset: 0; display: none; }
+.cam { position: absolute; inset: 0; transform-origin: 50% 45%; }
+.abs { position: absolute; }
+.card { position: absolute; background: var(--glass); border: 1px solid var(--line); border-radius: 14px;
+  box-shadow: 0 30px 80px rgba(0,0,0,.55), inset 0 1px 0 rgba(241,234,221,.07); backdrop-filter: blur(6px); }
+.card.hot { border-color: rgba(210,74,54,.85); box-shadow: 0 0 0 1px rgba(181,49,31,.3), 0 0 36px rgba(181,49,31,.2), 0 30px 80px rgba(0,0,0,.55); }
+.label { font: 600 20px/1 var(--mono); letter-spacing: .22em; text-transform: uppercase; color: var(--mute); }
+.h { font: 600 64px/1.02 Fraunces, Georgia, serif; letter-spacing: -.025em; }
+.script { font: italic 500 84px/1 Fraunces; color: var(--gold-hot); letter-spacing: -.01em; }
+.serif { font-family: Fraunces, Georgia, serif; font-weight: 600; letter-spacing: -.02em; }
+.pill { display: inline-flex; align-items: center; gap: 12px; padding: 14px 26px; border-radius: 6px;
+  font: 700 28px/1 Inter; letter-spacing: .01em; color: #fff; background: var(--red); box-shadow: 0 0 24px rgba(181,49,31,.3); }
+.chip { display: inline-flex; align-items: center; gap: 10px; padding: 12px 16px; border-radius: 6px;
+  font: 600 20px/1 var(--mono); letter-spacing: .12em; text-transform: uppercase; color: #15130F; background: var(--cream); }
+.icon { display: inline-flex; }
+.icon svg { width: 100%; height: 100%; }
+.glowline { fill: none; stroke: var(--gold); stroke-width: 3; filter: drop-shadow(0 0 6px rgba(201,162,74,.8)) drop-shadow(0 0 18px rgba(201,162,74,.45)); stroke-linecap: round; }
+.baseline { fill: none; stroke: rgba(241,234,221,.10); stroke-width: 3; stroke-linecap: round; }
+.dot { position: absolute; width: 14px; height: 14px; margin: -7px 0 0 -7px; border-radius: 50%; background: var(--cream);
+  box-shadow: 0 0 10px #fff, 0 0 24px var(--gold), 0 0 48px rgba(201,162,74,.8); }
+svg.world { position: absolute; left: 0; top: 0; overflow: visible; }
+
+/* crm */
+.row { position: absolute; left: 40px; right: 40px; height: 84px; border-radius: 6px; display: flex; align-items: center; gap: 22px; padding: 0 26px;
+  background: rgba(255,255,255,.035); border: 1px solid rgba(255,255,255,.06); }
+.row.hot { border-color: rgba(210,74,54,.85); background: rgba(181,49,31,.10); box-shadow: 0 0 40px rgba(181,49,31,.2); }
+.av { width: 50px; height: 50px; border-radius: 50%; display: grid; place-items: center; font: 700 19px Inter; color: #15130F; flex: none; }
+.nm { font: 700 26px Inter; width: 210px; white-space: nowrap; }
+.pr { font: 500 21px Inter; color: var(--mute); flex: 1; white-space: nowrap; }
+.tagslot { width: 300px; display: flex; justify-content: flex-end; }
+
+/* call */
+.bubble { position: absolute; left: 50px; max-width: 540px; padding: 22px 28px; border-radius: 10px 10px 10px 4px;
+  background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.08); font: 500 32px/1.3 Inter; }
+.sig { position: absolute; right: 46px; }
+.bar { position: absolute; bottom: 0; width: 8px; border-radius: 4px; background: var(--gold); box-shadow: 0 0 10px rgba(201,162,74,.6); }
+
+/* nodes */
+.node { position: absolute; width: 300px; padding: 30px 26px; text-align: center; transform-origin: 50% 50%; }
+.node .ic { width: 64px; height: 64px; margin: 0 auto 18px; color: var(--gold); filter: drop-shadow(0 0 12px rgba(201,162,74,.5)); }
+.node .t { font: 700 25px/1.15 Inter; letter-spacing: .05em; text-transform: uppercase; }
+.node .s { font: 500 22px/1.3 Inter; color: var(--mute); margin-top: 10px; }
+.strike { position: absolute; left: -8px; right: -8px; top: 52%; height: 4px; background: var(--red-hot); transform-origin: 0 50%; border-radius: 2px; }
+</style>
+</head>
+<body>
+<div id="bg"><div id="grid"></div></div>
+
+<!-- 1. CRM: the money already in the book -->
+<div class="scene" id="crm"><div class="cam">
+  <div class="abs" id="crm-head" style="left:410px;top:96px"><span class="label">Your book of business</span></div>
+  <div class="card" id="crm-panel" style="left:400px;top:140px;width:1120px;height:650px">
+    <div class="abs" style="left:40px;top:34px;right:40px;height:58px;border-radius:14px;background:rgba(0,0,0,.35);border:1px solid rgba(255,255,255,.06);display:flex;align-items:center;gap:16px;padding:0 20px">
+      <span class="icon" data-i="search" style="width:26px;height:26px;color:#7a7267"></span>
+      <span style="font:500 22px Inter;color:#7a7267">Search contacts</span>
+    </div>
+    <div id="crm-rows"></div>
+  </div>
+  <div class="abs script" id="crm-note" style="left:1250px;top:690px;font-size:76px">sitting there.</div>
+</div></div>
+
+<!-- 2. CALL: what clients already tell you -->
+<div class="scene" id="call"><div class="cam">
+  <div class="abs" style="left:530px;top:88px"><span class="script" id="call-title" style="font-size:70px">what they already tell you</span></div>
+  <div class="card" id="call-card" style="left:510px;top:190px;width:900px;height:600px">
+    <div class="abs" style="left:40px;top:34px;display:flex;align-items:center;gap:20px">
+      <div class="av" style="background:#E3D3B5;width:64px;height:64px;font-size:22px">RK</div>
+      <div><div style="font:700 28px Inter">Robert K.</div><div class="label" style="font-size:16px;color:var(--gold-hot);margin-top:8px" id="call-timer">On a call</div></div>
+    </div>
+    <div class="abs" id="call-wave" style="right:50px;top:44px;width:200px;height:48px"></div>
+    <div class="abs" style="left:40px;right:40px;top:122px;height:1px;background:rgba(255,255,255,.08)"></div>
+    <div id="call-bubbles"></div>
+  </div>
+</div></div>
+
+<!-- 3. THEN / NOW -->
+<div class="scene" id="thennow"><div class="cam">
+  <div class="abs" id="tn-title" style="left:0;right:0;top:96px;text-align:center"><span class="h" style="font-size:66px">Insurance <span class="script" style="font-size:82px">changed</span></span></div>
+  <div class="card" id="tn-then" style="left:300px;top:250px;width:520px;height:470px">
+    <div class="abs label" style="left:44px;top:42px">Then</div>
+    <div class="abs tn-item" id="tn-i1" style="left:44px;top:120px;display:flex;align-items:center;gap:22px"><span class="icon" data-i="car" style="width:56px;height:56px;color:var(--sand)"></span><span class="h" style="font-size:44px;position:relative">In person<span class="strike" id="tn-s1"></span></span></div>
+    <div class="abs tn-item" id="tn-i2" style="left:44px;top:230px;display:flex;align-items:center;gap:22px"><span class="icon" data-i="file-text" style="width:56px;height:56px;color:var(--sand)"></span><span class="h" style="font-size:44px;position:relative">Paper apps<span class="strike" id="tn-s2"></span></span></div>
+  </div>
+  <svg class="world" width="1920" height="1080"><path class="baseline" d="M820 485 L1100 485"/><path class="glowline" id="tn-line" d="M820 485 L1100 485"/></svg>
+  <div class="card" id="tn-now" style="left:1100px;top:250px;width:520px;height:470px">
+    <div class="abs label" style="left:44px;top:42px;color:var(--red-hot)">Last 4-5 years</div>
+    <div class="abs" id="tn-i3" style="left:44px;top:140px">
+      <span class="icon" data-i="laptop" style="width:110px;height:110px;color:var(--gold);filter:drop-shadow(0 0 16px rgba(201,162,74,.6))"></span>
+      <div class="h" style="font-size:84px;margin-top:22px;color:var(--cream);text-shadow:0 0 40px rgba(181,49,31,.55)">Virtual</div>
+    </div>
+  </div>
+</div></div>
+
+<!-- 4. THE SYSTEM: set it, or learn to close it -->
+<div class="scene" id="machine">
+  <div class="abs" id="m-title" style="left:0;right:0;top:120px;text-align:center"><span class="h" style="font-size:62px">The </span><span class="script" style="font-size:96px">system</span></div>
+  <div class="cam" id="m-cam">
+  <svg class="world" width="1920" height="1080" id="m-svg"></svg>
+  <div id="m-nodes"></div>
+  <div class="abs" id="m-or" style="left:780px;top:640px"><span class="label" style="display:inline-block;padding:10px 16px;border-radius:6px;background:#1a1613;color:var(--gold-hot);border:1px solid rgba(201,162,74,.5);font-size:20px">OR</span></div>
+</div></div>
+
+<!-- 5. THE SPLIT -->
+<div class="scene" id="split"><div class="cam">
+  <div class="abs" id="sp-free" style="left:0;right:0;top:110px;text-align:center"><span class="pill">Free to set</span></div>
+  <div class="card node" id="sp-you" style="left:430px;top:230px;width:400px"><div class="ic icon" data-i="user"></div><div class="t">You</div><div class="s">set the appointment</div></div>
+  <svg class="world" width="1920" height="1080"><path class="baseline" d="M830 360 L1090 360"/><path class="glowline" id="sp-line" d="M830 360 L1090 360"/></svg>
+  <div class="card node" id="sp-me" style="left:1090px;top:230px;width:400px"><div class="ic icon" data-i="badge-check"></div><div class="t">Chase</div><div class="s">closes it</div></div>
+  <div class="abs" id="sp-barwrap" style="left:430px;top:560px;width:1060px">
+    <div style="position:relative;height:96px;border-radius:20px;background:rgba(255,255,255,.05);border:1px solid var(--line);overflow:hidden">
+      <div id="sp-l" class="abs" style="left:0;top:0;bottom:0;background:linear-gradient(90deg,#8f2416,var(--red));box-shadow:0 0 40px rgba(181,49,31,.5)"></div>
+      <div id="sp-r" class="abs" style="right:0;top:0;bottom:0;background:linear-gradient(90deg,var(--sand),var(--cream))"></div>
+      <div class="abs" style="left:50%;top:-10px;bottom:-10px;width:4px;margin-left:-2px;background:var(--bg)"></div>
+      <div id="sp-ln" class="abs serif" style="left:36px;top:12px;font-size:66px;color:#fff">50%</div>
+      <div id="sp-rn" class="abs serif" style="right:36px;top:12px;font-size:66px;color:#15130F">50%</div>
+    </div>
+    <div class="abs label" style="left:0;top:118px">Your side</div><div class="abs label" style="right:0;top:118px">Closer side</div>
+  </div>
+  <div class="abs script" id="sp-simple" style="left:0;right:0;top:655px;text-align:center;font-size:88px">pretty simple.</div>
+</div></div>
+
+<!-- 6. TRAINING: not just setting -->
+<div class="scene" id="training"><div class="cam">
+  <div id="tr-a">
+    <div class="abs" style="left:0;right:0;top:110px;text-align:center"><span class="h" style="font-size:54px">Everyone else stops at </span><span class="script" style="font-size:86px">the setting</span></div>
+    <div class="card" id="tr-most" style="left:360px;top:260px;width:1200px;height:150px">
+      <div class="abs label" style="left:44px;top:62px;width:300px">Most programs</div>
+      <div class="abs h" style="left:400px;top:50px;font-size:46px;color:var(--mute);position:absolute">Just set the appointment<span class="strike" id="tr-strike"></span></div>
+    </div>
+    <div class="card hot" id="tr-here" style="left:360px;top:450px;width:1200px;height:150px">
+      <div class="abs label" style="left:44px;top:62px;width:300px;color:var(--red-hot)">Here</div>
+      <div class="abs h" style="left:400px;top:50px;font-size:46px;color:var(--cream);text-shadow:0 0 30px rgba(181,49,31,.45)">Learn to close it yourself</div>
+    </div>
+    <div class="abs" id="tr-free" style="left:0;right:0;top:660px;text-align:center"><span class="pill">Training is free</span></div>
+  </div>
+  <div id="tr-b">
+    <div class="card" id="tr-cal" style="left:660px;top:170px;width:600px;height:600px;overflow:hidden">
+      <div class="abs" style="left:0;right:0;top:0;height:140px;background:var(--red);display:flex;align-items:center;justify-content:center">
+        <span class="h" style="font-size:66px;color:#fff">Wednesday</span></div>
+      <div class="abs serif" id="tr-time" style="left:0;right:0;top:200px;text-align:center;font-size:190px;line-height:1">1:00</div>
+      <div class="abs" style="left:0;right:0;top:400px;text-align:center;font:700 44px Inter;letter-spacing:.06em">PM <span style="color:var(--gold-hot)">ET</span></div>
+      <div class="abs" style="left:0;right:0;top:500px;text-align:center;display:flex;justify-content:center;align-items:center;gap:16px">
+        <span id="tr-live" style="width:18px;height:18px;border-radius:50%;background:var(--red-hot);box-shadow:0 0 18px var(--red-hot)"></span>
+        <span class="label" style="color:var(--sand)">Live training call</span></div>
+    </div>
+  </div>
+</div></div>
+
+<!-- 7. THE MARKET -->
+<div class="scene" id="market"><div class="cam">
+  <svg class="world" width="1920" height="1080">
+    <defs><linearGradient id="mk-fill" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="rgba(201,162,74,.28)"/><stop offset="1" stop-color="rgba(201,162,74,0)"/></linearGradient></defs>
+    <path id="mk-area" fill="url(#mk-fill)" d=""/>
+    <path class="glowline" id="mk-line" style="stroke-width:4" d="M100 990 C 520 985, 900 960, 1220 870 S 1640 660, 1830 540"/>
+  </svg>
+  <div class="dot" id="mk-dot"></div>
+  <div class="abs" style="left:0;right:0;top:250px;text-align:center"><span class="label" id="mk-lab" style="font-size:26px;color:var(--sand)">2025 U.S. annuity sales</span></div>
+  <div class="abs serif" id="mk-num" style="left:0;right:0;top:300px;text-align:center;font-size:230px;line-height:1;text-shadow:0 0 60px rgba(181,49,31,.3)">$0</div>
+  <div class="abs" id="mk-rec" style="left:0;right:0;top:570px;text-align:center"><span class="pill">Four record years in a row</span></div>
+  <div class="abs label" id="mk-src" style="left:0;right:0;top:672px;text-align:center;font-size:30px;color:var(--sand)">Source: LIMRA, final 2025 results</div>
+</div></div>
+
+<!-- 8. CTA -->
+<div class="scene" id="cta"><div class="cam">
+  <div class="card" id="ct-win" style="left:460px;top:150px;width:1000px;height:600px;overflow:hidden">
+    <div class="abs" style="left:0;right:0;top:0;height:56px;background:rgba(255,255,255,.04);border-bottom:1px solid var(--line);display:flex;align-items:center;gap:10px;padding:0 22px">
+      <i style="width:14px;height:14px;border-radius:50%;background:rgba(241,234,221,.22)"></i><i style="width:14px;height:14px;border-radius:50%;background:rgba(241,234,221,.22)"></i><i style="width:14px;height:14px;border-radius:50%;background:rgba(241,234,221,.22)"></i>
+      <div style="margin-left:26px;flex:1;height:34px;border-radius:9px;background:rgba(0,0,0,.35);border:1px solid rgba(255,255,255,.07);display:flex;align-items:center;gap:10px;padding:0 16px">
+        <span class="icon" data-i="lock" style="width:16px;height:16px;color:var(--gold-hot)"></span><span style="font:500 19px Inter;color:var(--sand);letter-spacing:.01em">setmoreannuities.com</span></div></div>
+    <div class="abs" style="left:0;right:0;top:120px;text-align:center"><span class="h" style="font-size:54px">Create your </span><span class="script" style="font-size:84px">free account</span></div>
+    <div class="abs" style="left:220px;right:220px;top:260px;height:70px;border-radius:14px;background:rgba(0,0,0,.35);border:1px solid rgba(255,255,255,.08)"></div>
+    <div class="abs" style="left:220px;right:220px;top:350px;height:70px;border-radius:14px;background:rgba(0,0,0,.35);border:1px solid rgba(255,255,255,.08)"></div>
+    <div class="abs" id="ct-btn" style="left:220px;right:220px;top:450px;height:86px;border-radius:6px;display:flex;align-items:center;justify-content:center;gap:14px;
+      font:700 32px Inter;color:#fff;background:var(--red);box-shadow:0 0 24px rgba(181,49,31,.3)">
+      <span id="ct-btxt">Create your free account →</span></div>
+    <div class="abs" id="ct-ripple" style="width:40px;height:40px;border-radius:50%;border:3px solid var(--cream);margin:-20px 0 0 -20px"></div>
+  </div>
+  <div class="abs" id="ct-cur" style="width:54px;height:54px;color:var(--cream);filter:drop-shadow(0 4px 10px rgba(0,0,0,.6))"><span class="icon" data-i="mouse-pointer-2" style="width:54px;height:54px"></span></div>
+</div></div>
+
+<!-- 9. END CARD: the frame that stays on the page -->
+<div class="scene" id="endcard"><div class="cam">
+  <div class="abs" id="ec-top" style="left:0;right:0;top:170px;text-align:center"><span class="script" style="font-size:96px">your next step</span></div>
+  <div class="abs" id="ec-btn" style="left:330px;width:1260px;top:330px;height:190px;border-radius:10px;display:flex;align-items:center;justify-content:center;
+    background:var(--red);box-shadow:0 0 40px rgba(181,49,31,.35)">
+    <span style="font:700 66px Inter;color:#fff;letter-spacing:-.01em">Create your free account →</span></div>
+  <div class="abs" id="ec-sub" style="left:0;right:0;top:560px;text-align:center"><span class="serif" style="font-size:56px;color:var(--cream)">setmoreannuities<span style="color:var(--gold-hot)">.com</span></span></div>
+  <div class="abs" id="ec-sub2" style="left:0;right:0;top:638px;text-align:center"><span class="label" style="font-size:24px;color:var(--sand)">Free. Nothing moves. Takes about a minute. &nbsp;·&nbsp; Live training Wednesdays 1 PM ET</span></div>
+  <div class="abs" id="ec-arrow" style="left:0;right:0;top:700px;text-align:center;font:900 110px/1 Montserrat;color:var(--red-hot);text-shadow:0 0 40px rgba(181,49,31,.6)">&#8595;</div>
+  <div class="abs" id="ec-lab" style="left:0;right:0;top:830px;text-align:center"><span class="label" style="font-size:26px;color:var(--mute)">Click the button below this video</span></div>
+</div></div>
+
+<div id="vig"></div>
+<canvas id="grain" width="960" height="540"></canvas>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const cl = (x) => Math.max(0, Math.min(1, x));
+const lerp = (a, b, k) => a + (b - a) * k;
+const E = {
+  out: (x) => 1 - Math.pow(1 - x, 3),
+  inout: (x) => (x < .5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2),
+  back: (x) => { const c1 = 1.70158, c3 = c1 + 1; return 1 + c3 * Math.pow(x - 1, 3) + c1 * Math.pow(x - 1, 2); },
+};
+const P = (t, t0, d = .5) => cl((t - t0) / d);
+const CFG = window.CFG || { scene: "machine", dur: 14, cues: {} };
+const C = (k, fallback = 0) => (k in CFG.cues ? CFG.cues[k] : fallback);
+
+function icons() {
+  document.querySelectorAll("[data-i]").forEach((el) => { el.innerHTML = (window.ICONS || {})[el.dataset.i] || ""; });
+}
+// enter: fade + rise + de-blur (the house move); exit is the same backwards
+function enter(el, t, t0, o = {}) {
+  const d = o.d ?? .55, dy = o.dy ?? 28, blur = o.blur ?? 16, s0 = o.s ?? .94, ease = o.ease ?? E.out;
+  const k = ease(P(t, t0, d));
+  const ko = o.out != null ? 1 - E.inout(P(t, o.out, o.od ?? .35)) : 1;
+  el.style.opacity = Math.min(cl(P(t, t0, d * .6)), ko);
+  el.style.transform = `translateY(${(1 - k) * dy}px) scale(${lerp(s0, 1, k)})` + (o.extra || "");
+  el.style.filter = `blur(${(1 - k) * blur + (1 - ko) * 12}px)`;
+  return k;
+}
+function draw(path, k) {
+  const L = path.getTotalLength();
+  path.style.strokeDasharray = L;
+  path.style.strokeDashoffset = L * (1 - k);
+  return path.getPointAtLength(L * cl(k));
+}
+function grain(t) {   // deterministic film grain
+  const c = $("grain"), x = c.getContext("2d"), im = x.createImageData(c.width, c.height);
+  let s = (Math.floor(t * 30) * 9301 + 49297) % 233280;
+  for (let i = 0; i < im.data.length; i += 4) { s = (s * 9301 + 49297) % 233280; const v = (s / 233280) * 255; im.data[i] = im.data[i + 1] = im.data[i + 2] = v; im.data[i + 3] = 255; }
+  x.putImageData(im, 0, 0);
+}
+function camera(el, t, from, to) {   // slow dolly over the whole scene
+  const k = E.inout(cl(t / CFG.dur));
+  el.style.transform = `perspective(1800px) scale(${lerp(from.s, to.s, k)}) rotateX(${lerp(from.rx || 0, to.rx || 0, k)}deg) rotateY(${lerp(from.ry || 0, to.ry || 0, k)}deg) translate(${lerp(from.x || 0, to.x || 0, k)}px, ${lerp(from.y || 0, to.y || 0, k)}px)`;
+}
+
+/* ---------- scene builders ---------- */
+const S = {};
+
+S.crm = {
+  build() {
+    const rows = [["LM", "Linda M.", "Mortgage protection · $138/mo", "#F1EADD"], ["RK", "Robert K.", "Term life · $162/mo", "#E3D3B5"],
+      ["DW", "Denise W.", "Final expense · $104/mo", "#F1EADD"], ["JT", "James T.", "Mortgage protection · $177/mo", "#E3D3B5"],
+      ["CP", "Carol P.", "Term life · $121/mo", "#F1EADD"], ["MR", "Michael R.", "Mortgage protection · $149/mo", "#E3D3B5"]];
+    $("crm-rows").innerHTML = rows.map((r, i) => `<div class="row" id="crm-r${i}" style="top:${118 + i * 88}px"><div class="av" style="background:${r[3]}">${r[0]}</div>
+      <div class="nm">${r[1]}</div><div class="pr">${r[2]}</div><div class="tagslot" id="crm-t${i}"></div></div>`).join("");
+    $("crm-t1").innerHTML = `<span class="chip" id="crm-c1">401(K)</span>`;
+    $("crm-t3").innerHTML = `<span class="chip" id="crm-c3">IRA</span>`;
+    $("crm-t4").innerHTML = `<span class="chip" id="crm-c4">OLD STOCK ACCOUNT</span>`;
+  },
+  render(t) {
+    camera(document.querySelector("#crm .cam"), t, { s: 1.0, rx: 10, y: 10 }, { s: 1.07, rx: 3, y: -6 });
+    enter($("crm-head"), t, .05);
+    enter($("crm-panel"), t, 0, { d: .6, dy: 40 });
+    const hits = { 1: C("c401", 3), 3: C("cira", 3.7), 4: C("cstock", 4.4) };
+    const dimAt = C("csit", 6.3);
+    for (let i = 0; i < 6; i++) {
+      const r = $("crm-r" + i);
+      enter(r, t, .12 + i * .07, { d: .5, dy: 18, blur: 8 });
+      const hot = i in hits && t >= hits[i];
+      r.classList.toggle("hot", hot);
+      if (!(i in hits)) r.style.opacity = Math.min(+r.style.opacity, 1 - .6 * E.out(P(t, dimAt, .5)));
+    }
+    for (const i of [1, 3, 4]) {
+      const c = $("crm-c" + i), k = E.back(P(t, hits[i], .4));
+      c.style.opacity = cl(P(t, hits[i], .15)); c.style.transform = `scale(${lerp(.4, 1, k)})`;
+    }
+    enter($("crm-note"), t, dimAt, { d: .5, dy: 16, extra: " rotate(-4deg)", out: CFG.dur - 0.5 });
+  },
+};
+
+S.call = {
+  lines: [["c1", "Hey, I have a 401(k)…"], ["c2", "I have an IRA…"], ["c3", "I don't know what I'm going to do in retirement."]],
+  build() {
+    $("call-bubbles").innerHTML = this.lines.map((l, i) => `<div class="bubble" id="cb${i}" style="top:${170 + i * 135}px"><span id="cbt${i}"></span></div>
+      <div class="sig" id="cs${i}" style="top:${186 + i * 135}px"><span class="chip"><span class="icon" data-i="check" style="width:24px;height:24px"></span>MONEY SIGNAL</span></div>`).join("");
+    $("call-wave").innerHTML = Array.from({ length: 16 }, (_, i) => `<div class="bar" id="wb${i}" style="left:${i * 12.5}px"></div>`).join("");
+  },
+  render(t) {
+    camera(document.querySelector("#call .cam"), t, { s: 1.02, ry: -6 }, { s: 1.08, ry: 2 });
+    enter($("call-title"), t, .1, { extra: " rotate(-2deg)" });
+    enter($("call-card"), t, 0, { d: .6, dy: 40 });
+    const sec = 252 + Math.floor(t);
+    $("call-timer").textContent = `On a call · ${String(Math.floor(sec / 60)).padStart(2, "0")}:${String(sec % 60).padStart(2, "0")}`;
+    for (let i = 0; i < 16; i++) $("wb" + i).style.height = `${10 + 34 * Math.abs(Math.sin(t * 9 + i * 1.7) * Math.sin(t * 3.3 + i))}px`;
+    this.lines.forEach(([cue, text], i) => {
+      const t0 = C(cue, 1 + i), b = $("cb" + i);
+      enter(b, t, t0 - .08, { d: .35, dy: 14, blur: 6 });
+      const n = Math.round(text.length * cl((t - t0) / Math.max(.45, text.length * .022)));
+      $("cbt" + i).textContent = text.slice(0, n);
+      const done = t0 + Math.max(.45, text.length * .022);
+      const s = $("cs" + i), k = E.back(P(t, done, .35));
+      s.style.opacity = cl(P(t, done, .12)); s.style.transform = `scale(${lerp(.5, 1, k)})`;
+      b.style.borderColor = t > done ? "rgba(201,162,74,.7)" : "rgba(241,234,221,.1)";
+    });
+  },
+};
+
+S.thennow = {
+  build() {},
+  render(t) {
+    camera(document.querySelector("#thennow .cam"), t, { s: 1.0 }, { s: 1.06 });
+    enter($("tn-then"), t, 0, { d: .55 });
+    enter($("tn-i1"), t, C("cperson", .3), { dy: 14, blur: 8 });
+    enter($("tn-i2"), t, C("cpaper", 1.1), { dy: 14, blur: 8 });
+    const lk = E.inout(P(t, C("cnow", 1.8), .9));
+    draw($("tn-line"), lk);
+    enter($("tn-title"), t, C("cchanged", 3.4));
+    enter($("tn-now"), t, C("cnow", 1.8) + .55, { d: .55 });
+    if (t < C("cnow", 1.8) + .55) { const n = $("tn-now"); n.style.opacity = .16; n.style.filter = "none"; n.style.transform = "none"; }
+    enter($("tn-i3"), t, C("cvirtual", 4.6), { d: .5, s: .8, ease: E.back });
+    const v = E.out(P(t, C("cvirtual", 4.6), .5));
+    $("tn-now").classList.toggle("hot", t >= C("cvirtual", 4.6));
+    $("tn-then").style.filter = `grayscale(1) brightness(${1 - .45 * v})`;
+    $("tn-s1").style.transform = `scaleX(${E.out(P(t, C("cvirtual", 4.6) + .1, .35))})`;
+    $("tn-s2").style.transform = `scaleX(${E.out(P(t, C("cvirtual", 4.6) + .25, .35))})`;
+  },
+};
+
+S.machine = {
+  nodes: [
+    ["you", 160, 330, "user", "You", "the agent", "cyou"],
+    ["set", 560, 330, "calendar", "Set the appointment", "", "cset"],
+    ["q", 960, 330, "search", "2-3 questions", "find the money", "cfind"],
+    ["close", 1360, 330, "handshake", "Specialist closes", "they run with it", "cspec"],
+    ["learn", 960, 640, "graduation-cap", "Learn to close it yourself", "we teach you", "clearn"],
+  ],
+  build() {
+    $("m-nodes").innerHTML = this.nodes.map(([id, x, y, ic, t, s]) => `<div class="card node" id="mn-${id}" style="left:${x}px;top:${y}px">
+      <div class="ic icon" data-i="${ic}"></div><div class="t">${t}</div>${s ? `<div class="s">${s}</div>` : ""}</div>`).join("");
+    const paths = { a: "M460 450 L560 450", b: "M860 450 L960 450", c: "M1260 450 L1360 450", d: "M710 570 L710 760 L960 760" };
+    $("m-svg").innerHTML = Object.entries(paths).map(([k, d]) => `<path class="baseline" d="${d}"/><path class="glowline" id="ml-${k}" d="${d}"/>`).join("");
+    document.querySelector("#machine").insertAdjacentHTML("beforeend", Object.keys(paths).map((k) => `<div class="dot" id="md-${k}" style="opacity:0"></div>`).join(""));
+  },
+  render(t) {
+    // camera follows the active node, then pulls back to the whole map
+    const keys = [[0, 1.2, 0, 200], [C("cyou", .8), 1.45, 520, 120], [C("cset", 2.8), 1.35, 180, 120], [C("cfind", 5), 1.3, -150, 120],
+      [C("cspec", 9), 1.25, -420, 120], [C("cor", 11.3), 0.98, 0, -40], [C("clearn", 12.4), 1.04, 0, -110]];
+    let s = keys[0][1], x = keys[0][2], y = keys[0][3];
+    for (let i = 1; i < keys.length; i++) {
+      const k = E.inout(P(t, keys[i][0] - .15, .8));
+      s = lerp(s, keys[i][1], k); x = lerp(x, keys[i][2], k); y = lerp(y, keys[i][3], k);
+    }
+    $("m-cam").style.transform = `scale(${s}) translate(${x}px, ${y}px)`;
+    enter($("m-title"), t, .05, { out: C("cyou", .8) - .3 });
+    for (const [id, , , , , , cue] of this.nodes) {
+      const t0 = C(cue, 1);
+      enter($("mn-" + id), t, t0 - .1, { d: .5, s: .85, ease: E.back });
+    }
+    const act = (id, a, b) => $("mn-" + id).classList.toggle("hot", t >= a && t < b);
+    act("you", C("cyou", .8), C("cset", 2.8));
+    act("set", C("cset", 2.8), C("cfind", 5));
+    act("q", C("cfind", 5), C("cspec", 9));
+    act("close", C("cspec", 9), C("cor", 11.3));
+    act("learn", C("clearn", 12.4), 99);
+    const L = { a: [C("cset", 2.8) - .35, .4], b: [C("cfind", 5) - .35, .4], c: [C("cspec", 9) - .35, .4], d: [C("cor", 11.3), .9] };
+    for (const [k, [t0, d]] of Object.entries(L)) {
+      const kk = E.inout(P(t, t0, d));
+      const pt = draw($("ml-" + k), kk);
+      const dot = $("md-" + k);
+      dot.style.opacity = kk > 0 && kk < 1 ? 1 : 0;
+      // the dot lives outside the camera, so map world -> screen
+      dot.style.left = `${960 + (pt.x - 960 + x) * s}px`; dot.style.top = `${486 + (pt.y - 486 + y) * s}px`;
+    }
+    enter($("m-or"), t, C("cor", 11.3), { d: .4, s: .6, ease: E.back });
+  },
+};
+
+S.split = {
+  build() {},
+  render(t) {
+    camera(document.querySelector("#split .cam"), t, { s: 1.0, y: 10 }, { s: 1.05, y: -10 });
+    enter($("sp-free"), t, C("cfree", .15), { s: .7, ease: E.back, out: CFG.dur - .3 });
+    enter($("sp-you"), t, C("cyou", 1.2), { s: .85, ease: E.back, out: CFG.dur - .3 });
+    if (t < C("cyou", 1.2)) { const n = $("sp-you"); n.style.opacity = .16; n.style.filter = "none"; n.style.transform = "none"; }
+    const lk = E.inout(P(t, C("ccome", 2.2), .7));
+    draw($("sp-line"), lk);
+    enter($("sp-me"), t, C("cclose", 3), { s: .85, ease: E.back, out: CFG.dur - .3 });
+    if (t < C("cclose", 3)) { const n = $("sp-me"); n.style.opacity = .16; n.style.filter = "none"; n.style.transform = "none"; }
+    $("sp-you").classList.toggle("hot", t >= C("cyou", 1.2) && t < C("cclose", 3));
+    $("sp-me").classList.toggle("hot", t >= C("cclose", 3));
+    const b = C("csplit", 4), k = E.out(P(t, b, .8));
+    enter($("sp-barwrap"), t, b - .25, { dy: 20, out: CFG.dur - .3 });
+    $("sp-l").style.width = `${50 * k}%`; $("sp-r").style.width = `${50 * k}%`;
+    $("sp-ln").textContent = `${Math.round(50 * k)}%`; $("sp-rn").textContent = `${Math.round(50 * k)}%`;
+    enter($("sp-simple"), t, C("csimple", 5), { extra: " rotate(-3deg)", out: CFG.dur - .3 });
+    document.querySelector("#split svg.world").style.opacity = 1 - E.inout(P(t, CFG.dur - .3, .25));
+  },
+};
+
+S.training = {
+  build() {},
+  render(t) {
+    camera(document.querySelector("#training .cam"), t, { s: 1.0 }, { s: 1.05 });
+    const sw = C("cwed", 3.3) - .2;
+    const a = $("tr-a"), ka = 1 - E.inout(P(t, sw, .35));
+    a.style.opacity = ka; a.style.filter = `blur(${(1 - ka) * 14}px)`; a.style.transform = `scale(${lerp(1.06, 1, ka)})`;
+    enter($("tr-most"), t, .05, { dy: 20 });
+    $("tr-strike").style.transform = `scaleX(${E.out(P(t, C("clearn", 1.4) - .3, .35))})`;
+    $("tr-most").style.filter += ` grayscale(1) brightness(${1 - .3 * E.out(P(t, C("clearn", 1.4), .4))})`;
+    enter($("tr-here"), t, C("clearn", 1.4), { s: .9, ease: E.back });
+    enter($("tr-free"), t, C("cfree", 2.7), { s: .7, ease: E.back });
+    const b = $("tr-b"), kb = E.out(P(t, sw + .1, .45)), ko = 1 - E.inout(P(t, CFG.dur - .3, .25));
+    b.style.opacity = kb * ko; b.style.filter = `blur(${(1 - kb) * 14 + (1 - ko) * 10}px)`; b.style.transform = `scale(${lerp(.92, 1, kb) * lerp(.96, 1, ko)})`;
+    const tk = E.out(P(t, C("cpm", 4.2) - .2, .4));
+    $("tr-time").style.color = tk > .5 ? "var(--gold-hot)" : "var(--ink)";
+    $("tr-time").style.textShadow = `0 0 ${60 * tk}px rgba(181,49,31,.5)`;
+    $("tr-live").style.opacity = .4 + .6 * Math.abs(Math.sin(t * 4));
+  },
+};
+
+S.market = {
+  build() {},
+  render(t) {
+    camera(document.querySelector("#market .cam"), t, { s: 1.0, y: 0 }, { s: 1.06, y: -8 });
+    const lk = E.inout(P(t, .05, 2.2));
+    const pt = draw($("mk-line"), lk);
+    const line = $("mk-line"), L = line.getTotalLength(), pts = [];
+    for (let i = 0; i <= 60; i++) { const q = line.getPointAtLength(L * lk * i / 60); pts.push(`${q.x} ${q.y}`); }
+    $("mk-area").setAttribute("d", `M120 1080 L${pts.join(" L")} L${pt.x} 1080 Z`);
+    const d = $("mk-dot"); d.style.left = pt.x + "px"; d.style.top = pt.y + "px"; d.style.opacity = lk > .02 ? 1 : 0;
+    enter($("mk-lab"), t, .1);
+    const nk = E.out(P(t, .2, 1.7));
+    const n = $("mk-num"); enter(n, t, .15, { s: .9 });
+    n.textContent = "$" + Math.round(464 * nk) + "B";
+    n.style.color = nk >= 1 ? "var(--gold-hot)" : "var(--ink)";
+    enter($("mk-rec"), t, 1.95, { s: .6, ease: E.back });
+    enter($("mk-src"), t, 2.2);
+  },
+};
+
+S.cta = {
+  build() {},
+  render(t) {
+    camera(document.querySelector("#cta .cam"), t, { s: 1.0, rx: 6 }, { s: 1.08, rx: 0 });
+    enter($("ct-win"), t, 0, { d: .5, dy: 40 });
+    const ck = C("cclick", 1.4);
+    const mk = E.inout(P(t, .3, ck - .4));
+    const cur = $("ct-cur");
+    cur.style.left = `${lerp(1500, 1010, mk)}px`; cur.style.top = `${lerp(900, 650, mk)}px`;
+    cur.style.opacity = cl(P(t, .25, .2));
+    const press = P(t, ck, .12) * (1 - P(t, ck + .12, .15));
+    $("ct-btn").style.transform = `scale(${1 - .05 * press})`;
+    const rk = E.out(P(t, ck, .5)), r = $("ct-ripple");
+    r.style.left = "550px"; r.style.top = "493px";
+    r.style.transform = `scale(${1 + 10 * rk})`; r.style.opacity = t >= ck ? 1 - rk : 0;
+    $("ct-btxt").textContent = t >= ck + .15 ? "✓  You're in" : "Create your free account →";
+  },
+};
+
+S.endcard = {
+  build() {},
+  render(t) {
+    enter($("ec-top"), t, .05, { extra: " rotate(-2deg)" });
+    enter($("ec-btn"), t, .12, { d: .55, s: .8, ease: E.back });
+    $("ec-btn").style.boxShadow = `0 0 ${30 + 20 * Math.abs(Math.sin(t * 2.6))}px rgba(181,49,31,.35)`;
+    enter($("ec-sub"), t, .35);
+    enter($("ec-sub2"), t, .45);
+    const a = $("ec-arrow"); enter(a, t, .5, { s: .6, ease: E.back });
+    a.style.transform += ` translateY(${18 * Math.abs(Math.sin(t * 3.2))}px)`;
+    enter($("ec-lab"), t, .6);
+  },
+};
+
+window.render = function (t) {
+  for (const el of document.querySelectorAll(".scene")) el.style.display = el.id === CFG.scene ? "block" : "none";
+  S[CFG.scene].render(t);
+  $("grid").style.transform = `translate(${-t * 6}px, ${-t * 3}px)`;
+  grain(t);
+};
+icons();
+S[CFG.scene].build();
+icons();
+window.READY = true;
+</script>
+</body>
+</html>

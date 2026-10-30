@@ -1,0 +1,12 @@
+output/
+inbox/*
+!inbox/.keep
+*.mp4
+*.mov
+*.MOV
+*.MP4
+*.wav
+*.mkv
+!tools/music_industrial_cinematic.mp3
+__pycache__/
+.DS_Store

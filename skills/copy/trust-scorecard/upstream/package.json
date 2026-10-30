@@ -1,0 +1,25 @@
+{
+  "name": "psyop-scorecard",
+  "version": "1.0.0",
+  "description": "NCI Engineered Reality Scoring System — interactive CLI psyop assessment tool",
+  "main": "index.js",
+  "bin": {
+    "psyop-scorecard": "./index.js"
+  },
+  "scripts": {
+    "start": "node index.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "dependencies": {
+    "boxen": "^8.0.1",
+    "chalk": "^5.6.2",
+    "cli-table3": "^0.6.5",
+    "figlet": "^1.11.0",
+    "gradient-string": "^3.0.0",
+    "inquirer": "^9.3.8",
+    "ora": "^9.4.1"
+  }
+}
