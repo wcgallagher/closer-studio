@@ -24,7 +24,10 @@ STYLES = {
 
 
 def chunk(ws, lo=2, hi=4):
-    """Split a run of words into caption chunks of lo..hi words, at clause ends and pauses, off function words."""
+    """Split a run of words into caption chunks of lo..hi words, at clause ends and pauses, off function words.
+    Clauses longer than hi words are split by a dynamic program over the cut positions (linear in the clause length):
+    groups near hi words, a group of one word costs extra, a cut on a function word costs 2 per side, a cut at a pause
+    of more than 150 ms earns 2."""
     clauses, cur = [], []
     for w in ws:
         cur.append(w)
@@ -41,27 +44,28 @@ def chunk(ws, lo=2, hi=4):
     out = []
     for c in merged:
         n = len(c)
-        if n <= hi - 1:
+        if n <= hi:
             out.append(c); continue
-        k, best = max(1, math.ceil(n / (hi - 0.5))), None
-        while best is None:
-            for cuts in itertools.combinations(range(1, n), k - 1):
-                sizes = [b - a for a, b in zip((0,) + cuts, cuts + (n,))]
-                if max(sizes) > hi or min(sizes) < 1:
-                    continue
-                score = -0.5 * (max(sizes) - min(sizes)) - sum(1 for z in sizes if z == 1)
-                for cp in cuts:
-                    if norm(c[cp]["w"]) in FUNC: score -= 2
-                    if norm(c[cp - 1]["w"]) in FUNC: score -= 2
-                    if c[cp]["s"] - c[cp - 1]["e"] > 0.15: score += 2
-                if best is None or score > best[0]:
-                    best = (score, cuts)
-            if best is None:
-                k += 1
-                if k > n:
-                    best = (0, tuple(range(hi - 1, n, hi - 1)))
-        cuts = best[1]
-        out += [c[a:b] for a, b in zip((0,) + cuts, cuts + (n,))]
+        INF = 1e9
+        best = [INF] * (n + 1); back = [0] * (n + 1)
+        best[0] = 0.0
+        for i in range(1, n + 1):
+            for size in range(1, hi + 1):
+                j = i - size
+                if j < 0:
+                    break
+                cost = best[j] + 0.5 * (hi - size) + (3.0 if size == 1 else 0.0)
+                if j > 0:
+                    if norm(c[j]["w"]) in FUNC: cost += 2
+                    if norm(c[j - 1]["w"]) in FUNC: cost += 2
+                    if c[j]["s"] - c[j - 1]["e"] > 0.15: cost -= 2
+                if cost < best[i]:
+                    best[i], back[i] = cost, j
+        cuts, i = [], n
+        while i > 0:
+            cuts.append(back[i]); i = back[i]
+        cuts = sorted(set(cuts) - {0})
+        out += [c[a:b] for a, b in zip([0] + cuts, cuts + [n])]
     final = []
     for c in out:
         if final and (c[-1]["e"] - c[0]["s"]) < 0.3 and len(final[-1]) + len(c) <= hi:
