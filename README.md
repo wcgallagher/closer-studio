@@ -1,60 +1,60 @@
 # Closer Studio
 
-Everything Claude Code needs to cut reels, VSLs and long-form video for Become The Closer and Set More Annuities,
-with the brand, the writing rules and the sales thinking already loaded. Built by Chase's Claude; made for Owen.
+Raw clips in, finished videos out, with only Claude Code on your Mac. Built for Become The Closer and Set More
+Annuities; works for any brand you add. It cuts reels, reframes anything to vertical with a face-tracked camera,
+burns captions in four house styles, cleans the voice, grades the picture, adds the hook and the end card, lands the
+right loudness for each platform, runs the checks, and ships the SRT and cover frame. Long-form VSLs with animated
+cutaways use the same kit.
 
 ## Set up (once, about 5 minutes, Mac)
 
-1. Get the `closer-studio` folder onto your Mac. Either unzip the file Chase sent you, or on this GitHub page click
-   the green **Code** button, then **Download ZIP**, then double-click the zip. Put the folder somewhere you can find it
-   (your home folder or Documents is fine).
-2. Open the **Claude Code** app. Choose **Open folder** and pick the `closer-studio` folder.
-3. Type: `set me up` and press Enter. Claude installs what it needs (a video engine and a speech-to-text package).
-   It will ask for permission a few times: click **Allow**. If your Mac asks for your password, that is normal.
+1. Get this folder onto your Mac: on this GitHub page click the green **Code** button, then **Download ZIP**, then
+   double-click the zip. Put the `closer-studio` folder in your home folder or Documents.
+2. Open the **Claude Code** app, choose **Open folder**, pick `closer-studio`.
+3. Type `set me up` and press Enter. Claude installs the video engine and the speech-to-text package. Click **Allow**
+   when it asks. If your Mac asks for your password, that is normal.
 4. When Claude says **Done**, you are set.
 
-No Terminal, no commands to remember.
+No Terminal, no commands to remember. Windows users: install WSL first, then the same three steps inside it.
 
 ## Every time you want to edit
 
-1. Put your raw video files in the folder `closer-studio/inbox` (Finder: open the `closer-studio` folder, then `inbox`).
-2. Open the `closer-studio` folder in the Claude Code app (it remembers it under recent projects).
-3. Type what you want, in plain words. Examples:
+1. Put raw videos in `closer-studio/inbox`.
+2. Open `closer-studio` in the Claude Code app.
+3. Say what you want:
    - `make a reel from the video in inbox`
-   - `cut three reels from this call: the part about objections, the part about the quiz, and the close`
-   - `make a VSL from these three takes for becomethecloser.com`
-   - `write the caption and hook for this reel`
-4. Finished videos land in `closer-studio/output`. Claude tells you the file name.
-
-## If something goes wrong
-
-Tell Claude "this failed" and paste whatever it showed you. It fixes it. If it cannot, send it to Chase.
-
-## Terminal users (optional)
-
-If you use the Claude Code command line instead of the app: open Terminal in the folder, run `bash install.sh` once,
-then start Claude with the double-click file **Start Closer Studio.command** or by typing `claude`.
-
-Windows: the installer is written for Mac. On Windows use WSL and ask Chase to walk through it once.
+   - `cut three reels from this call: objections, the quiz, the close`
+   - `make this vertical for TikTok`
+   - `export the reel for Shorts and LinkedIn too`
+   - `make a VSL from these three takes`
+   - `is this actually good?` (runs the cold review)
+4. Finished files land in `closer-studio/output/<job>/`. Claude tells you the file name, the length, and what it did.
 
 ## What is inside
 
 | Folder | What it is |
 |---|---|
-| `skills/video/reel-editor` | 9:16 reels: cut dead air, punch-ins, big captions, hook, brand end card, clean voice, graded picture |
-| `skills/video/vsl-producer` | long-form VSLs with animated cutaways, the way the Set More Annuities VSL was built |
-| `skills/sales/closer-mentality` | the house sales thinking, so every hook, caption and cut sells the way we sell |
-| `skills/copy/*` | long-form copy, a trust scorecard that catches manipulative or fake-sounding copy, delivery and authority notes |
-| `skills/media-buying/*` | 49 skills for ads, audits, landing pages, SEO, reports |
-| `skills/core/zero-context-auditor` | the rule that no skill or claim ships without a source |
-| `brand/` | the colour, type and copy sheets for becomethecloser.com and setmoreannuities.com |
-| `tools/` | the scripts the skills run (you never run them yourself) |
-| `HOUSE_RULES.md` | writing rules that apply to everything: no em dashes, no hype words, no invented numbers |
+| `tools/closer.py` | the one command: `analyze`, `reel`, `reframe`, `export`, `review`, `brands`, `platforms` |
+| `tools/studio/` | the engine: transcription and moments, face tracking and virtual camera, the cut, captions, voice, grade, cards, render, review |
+| `skills/video/` | reel-editor, auto-reframe, caption-styles, platform-formatter, edit-grammar, cold-review, vsl-producer, video-use |
+| `skills/brand/brand-kit` | add a brand in five minutes from its website |
+| `skills/sales/closer-mentality` | how we sell, loaded before any hook or caption |
+| `skills/copy/*`, `skills/media-buying/*` | copy, trust scoring, ads and growth skills |
+| `brand/` | brand tokens (colours, fonts, CTA, banned words) as JSON plus the scrape notes |
+| `EDITING_GRAMMAR.md` | the house editing brain: the measured retention laws and the Hormozi / Gadzhi / Nelk dialects |
+| `RESEARCH.md` | every repo and source we studied, what we took, what we left |
+| `HOUSE_RULES.md`, `CREDITS.md`, `GO_PUBLIC.md` | writing rules, licences, how to publish and share this kit |
 
-The skills are also wired into this folder's own `.claude/skills`, so they load the moment the folder is open in the
-app, even before setup finishes.
+## For the technical
 
-## Credits and licences
+```bash
+bash install.sh                       # once; add --deep-filter for DeepFilterNet noise removal
+python3 tools/closer.py analyze inbox/clip.mp4 --out output/job
+python3 tools/closer.py reel inbox/clip.mp4 --out output/job --start 12 --end 41 --brand btc --platform ig_reels,tiktok --hook "Your hook line"
+python3 tools/closer.py reframe inbox/wide.mp4 --out output/wide_vertical.mp4 --platform ig_reels
+python3 tools/closer.py export output/job/clip_ig_reels.mp4 --out output/job/exports --platforms yt_shorts,fb_reels
+python3 tools/closer.py review output/job
+```
 
-See `CREDITS.md`. Fonts are Open Font License, icons ISC, the bundled music track is Kevin MacLeod (CC BY 4.0, credit
-him when you use it).
+Needs ffmpeg, Python 3.10+, and the packages `install.sh` adds (numpy, scipy, pillow, faster-whisper, opencv-python-headless,
+scenedetect). Everything runs on the CPU. The face detector (YuNet, 230 KB) ships in the repo.

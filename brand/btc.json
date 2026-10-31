@@ -1,0 +1,13 @@
+{
+  "id": "btc",
+  "name": "Become The Closer",
+  "site": "becomethecloser.com",
+  "handle": "@_owensantos_",
+  "colors": {"bg": "#0C0806", "accent": "#F3680F", "accent_soft": "#F9A36B", "text": "#EFEAE2", "muted": "#9C8F80", "panel": "#2E2017"},
+  "fonts": {"caption": "Montserrat Black", "caption_file": "Montserrat-Black.ttf", "caption_2": "Montserrat ExtraBold", "caption_2_file": "Montserrat-ExtraBold.ttf",
+            "display": "Fraunces Display", "display_file": "FrauncesDisplay-Bold.ttf", "mono": "JetBrains Mono"},
+  "cta": {"line": "Take the closer quiz", "sub": "becomethecloser.com"},
+  "style": {"captions": "impact", "lut": "btc_ember", "music": "", "grain": 0.0},
+  "words": {"never": ["free", "no cost", "guarantee", "guaranteed"], "result_disclaimer": "Individual experiences. Results vary."},
+  "source": "brand/becomethecloser.md (Firecrawl branding scrape of becomethecloser.com, 2026-10-30)"
+}

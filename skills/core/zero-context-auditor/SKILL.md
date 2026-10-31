@@ -23,7 +23,7 @@ Read the draft line by line and list each:
 |---|---|
 | Fact | "$3.8M placed in 2025", "average deal $120K", "50/50 split" |
 | Name | people, companies, products, domains, handles |
-| Path | `vsl/frame_map/take1.json`, `vsl/pipeline/render_vsl.sh` |
+| Path | a file of the Set More Annuities repo, the VSL render script of that repo |
 | Command / tool | `python x.py --flag`, `mcp__server__tool`, an ffmpeg filter |
 | Behaviour claim | "this script trims silences", "the API returns X" |
 | Rule | "never say annuity in client copy" |
@@ -67,7 +67,7 @@ not exist, or a number, dollar figure or percentage in the skill has no row in t
 |---|---|---|
 | $3.8M placed in 2025 | VERIFIED | CLAUDE.md:9 "Chase Gallagher proved manually: $3.8M in annuity premium placed in 2025" |
 | sellmoreannuities.com | VERIFIED | CLAUDE.md:9 "SellMoreAnnuities.com (SMA) is an AI agent platform" |
-| `vsl/pipeline/v3_build.py` | RUN | `python3 vsl/pipeline/v3_build.py ... --preview` exit 0 |
+| the VSL build script of the Set More Annuities repo | RUN | `python3 vsl/pipeline/v3_build.py ... --preview` exit 0 |
 ```
 
 Commit AUDIT.md with the skill. A skill without one is a draft, not a skill.

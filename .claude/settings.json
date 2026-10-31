@@ -3,13 +3,16 @@
     "allow": [
       "Bash(bash install.sh)",
       "Bash(bash install.sh:*)",
+      "Bash(python3 tools/closer.py:*)",
+      "Bash(~/.closer-studio/venv/bin/python tools/closer.py:*)",
+      "Bash(~/.closer-studio/venv/bin/python:*)",
+      "Bash(python3:*)",
       "Bash(ffmpeg:*)",
       "Bash(ffprobe:*)",
-      "Bash(python3:*)",
-      "Bash(~/.closer-studio/venv/bin/python:*)",
       "Bash(ls:*)",
       "Bash(cat:*)",
-      "Bash(mkdir:*)"
+      "Bash(mkdir:*)",
+      "Bash(open:*)"
     ]
   }
 }

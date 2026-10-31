@@ -1,76 +1,88 @@
 ---
 name: reel-editor
-description: Cuts a finished 9:16 reel (Instagram, TikTok, Shorts) from one or more raw talking-head clips for Become The Closer or Set More Annuities. Transcribes, cuts dead air, alternates punch-ins, grades the picture, cleans the voice, burns word-highlight captions and a hook, adds the brand end card, lands loudness. Use when someone drops footage in inbox/ and asks for a reel, a short, a clip, or "cut this up".
+description: Cuts finished short-form video (Instagram Reels, TikTok, YouTube Shorts, LinkedIn, square) from raw talking-head clips with one command. Transcribes, finds the best window, cuts dead air, tracks the face into the frame, alternates punch-ins on emphasis words, grades, cleans the voice, burns captions in the house style, adds the hook and the brand end card, lands loudness, runs the checks. Use when someone drops footage in inbox/ and asks for a reel, a short, a clip, a TikTok, or "cut this up".
 ---
 
 # Reel editor
 
-One command does the whole edit. Your job is to pick the right 20 to 45 seconds, write the hook, and check the result.
+One command does the edit. Your job is to choose the window, write the hook, read the report, and look at the frames.
 
-## 1. Find the kit and the footage
-
-```bash
-KIT="$(cat ~/.closer-studio/kit_path 2>/dev/null || pwd)"; ls "$KIT/inbox"
-```
-
-If the person did not say which clip or which part, transcribe first and choose for them:
+## 0. Where things are
 
 ```bash
-"$HOME/.closer-studio/venv/bin/python" "$KIT/tools/reel_build.py" "$KIT/inbox/<file>" --out "$KIT/output/<job>" --end 1
+KIT="$(cat ~/.closer-studio/kit_path 2>/dev/null || pwd)"
+PY="$HOME/.closer-studio/venv/bin/python"; [ -x "$PY" ] || PY=python3
+ls "$KIT/inbox"
 ```
 
-That writes the transcript file (transcript.json inside the job folder) for the first second only; for the whole clip run the real command below with
-`--preview` (fast, low quality), read the transcript file, then pick the window. A reel is one idea: the moment that makes
-a closer feel seen, called out, or shown a move. 20 to 45 seconds. Start on a sentence that stands alone without the
-setup before it.
+## 1. Analyze before you cut
+
+```bash
+"$PY" "$KIT/tools/closer.py" analyze "$KIT/inbox/<file>" --out "$KIT/output/<job>"
+```
+
+It prints the word count, fillers, emphasised words, face coverage, and the eight best windows ranked (start, end,
+score, opening line), and writes transcript.txt next to analysis.json in the job folder. Read the transcript. A reel is one idea,
+18 to 45 s, that starts on a sentence which stands alone and ends on a payoff line. The ranked windows are suggestions;
+the person's brief wins. If they named the part they want, find it in the transcript and use those times.
 
 ## 2. Write the hook
 
-The hook is the first 2.6 seconds on screen. It is the one line that makes a commission-only closer stop scrolling.
-Pull it from `skills/sales/closer-mentality/SKILL.md` and `brand/becomethecloser.md`: name the pain in their words
-("'I want to think about it' is stealing your commissions"), or the identity ("There are only four types of closers").
-Four to seven words. No hype words (see `HOUSE_RULES.md`). Never a number you cannot source.
+Four to seven words that make the viewer stop. The first word is about them. Pull the pain or the identity line from
+`skills/sales/closer-mentality/SKILL.md` and the brand sheet in `brand/`. No number you cannot source, no banned word
+(the engine refuses a hook with one). Offer two alternatives in your reply.
 
 ## 3. Cut
 
 ```bash
-"$HOME/.closer-studio/venv/bin/python" "$KIT/tools/reel_build.py" "$KIT/inbox/<file>" \
-  --out "$KIT/output/<job>" --start <s> --end <s> --brand btc --hook "YOUR HOOK LINE" [--music "$KIT/tools/music_industrial_cinematic.mp3"]
+"$PY" "$KIT/tools/closer.py" reel "$KIT/inbox/<file>" --out "$KIT/output/<job>" \
+  --start <s> --end <s> --brand btc --platform ig_reels --hook "YOUR HOOK LINE"
 ```
 
-Options: `--brand sma` for Set More Annuities (red and gold, "Create your free account"); `--cta "line"` to change the
-end card line; `--face-x 0.5 --face-y 0.38` if his face is not centred (fractions of the frame); `--keep-silence` for a
-clip where the pauses are the point; `--model medium.en` for a mumbled recording; `--preview` for a fast draft.
+Options you will use:
 
-What the script does (so you can explain it in one sentence): cuts every pause over 0.35 s, alternates 100 / 110 / 120%
-punch-ins with one crop anchor so the eye line never jumps, grades with `tools/vsl/luts/sma_pro.cube` plus a fill light
-on the face, runs the voice chain (low band gated between words, mud cut at 500 Hz, 2.2 kHz tamed, light denoise, air),
-burns Montserrat Black captions with the brand accent on the spoken word, puts the hook top-centre for 2.6 s, adds a
-2 s end card (brand background, call to action, site, handle), mixes a whoosh under each punch-in and the optional
-music bed ducked under the voice, and lands at -14 LUFS with one safety limiter. It also writes `captions.srt` for the
-platform's own caption upload.
+- `--platform` takes a comma list: `ig_reels,tiktok,yt_shorts` renders one file per platform into sub-folders, each
+  with that platform's safe zones and loudness. `ig_feed`, `linkedin` and `square` re-crop to 4:5 or 1:1 with the
+  face tracked. `youtube` and `x` are 16:9.
+- `--style impact` (caps, spoken word in the accent colour), `clean` (mixed case, weight on the operative word),
+  `serif` (one editorial line), `boxed` (dark plate). The brand file sets the default. Read
+  `skills/video/caption-styles/SKILL.md` before changing it.
+- `--brand sma` for Set More Annuities; add a brand with `skills/brand/brand-kit/SKILL.md`.
+- `--fillers cut` removes the ums (corporate or scripted briefs only; talking-head reels keep them).
+- `--riser` adds a riser into the end card; `--music file.mp3` adds a ducked bed; `--no-sfx` drops the whooshes and hits.
+- `--camera static --face-x 0.5 --face-y 0.38` when the face tracker reports coverage under 50 %
+- `--safe ads` when the reel will run as a paid placement (Meta and Google reserve more of the frame for ad UI) (two people, a
+  mask, heavy backlight). `--grade cinematic` or `--grade none` to change the picture.
+- `--denoise deep` uses DeepFilterNet when `install.sh --deep-filter` has been run (noisy rooms, wind).
+- `--preview` for a fast draft to check the cut; drop it for the delivery.
 
-## 4. Check before you say done
+What the engine does, so you can explain it in one sentence: cuts every pause over 0.35 s, alternates 100 / 110 / 120 %
+punch-ins with one crop anchor so the eye line never jumps, lands framing changes on emphasised words, follows the face
+with a damped virtual camera, grades with the brand LUT plus a fill light, cleans the voice, burns word-timed captions
+inside the platform's caption band, puts the hook on screen for the first 2.6 s, adds a 2 s end card, mixes a whoosh under
+each punch-in and a hit under each emphasis cut, and lands the platform's loudness with one limiter. It writes
+`captions.srt` for the platform's own caption upload and `cover.jpg` for the cover frame.
 
-```bash
-ffmpeg -v error -y -i "$KIT/output/<job>/<file>_reel.mp4" -vf "fps=1,scale=216:-2,tile=8x6" -frames:v 1 "$KIT/output/<job>/sheet.jpg"
-```
+## 4. Read the report, look at the frames
 
-Look at the sheet. Captions must be below the chin and above the bottom 320 px (the apps put their own UI there);
-nothing over the face; the hook readable; the end card last. Read `captions.srt` top to bottom: a wrong word on screen
-is a reshoot of the caption, not a shrug. If a caption is wrong, fix the word in the transcript file and run the command
-again (it reuses the pieces, only the captions and the final pass re-render).
+The run ends with the review (report.md and sheet.jpg in the job folder). Every line must say PASS: hook by 2.5 s, ends
+on the payoff, no static stretch over 8 s, length fits the platform, loudness on target, captions clear of the face, no
+banned words, no low-confidence caption words. Open `sheet.jpg` and look: captions below the chin, nothing over the
+face, the hook readable, the end card last. Read `captions.srt` top to bottom. A wrong word on screen is a fix in
+the job's analysis.json (the `w` field of that word) and a re-run, which reuses the rendered pieces.
+
+For a client-facing or paid-traffic reel, run `skills/video/cold-review/SKILL.md` before you say done.
 
 ## 5. Hand it over
 
-Tell the person: the file name in `output/<job>/`, the length, the hook you used, and one sentence on the cut. Offer two
-alternative hooks. Stop.
+Tell the person: the file name(s) in `output/<job>/`, the length, the hook you used, one sentence on the cut, and the
+two alternative hooks. Stop.
 
 ## Rules
 
-- One idea per reel. If the clip has two, make two reels.
-- The first word on screen is about them, never about us.
+- One idea per reel. Two ideas, two reels.
+- The voice is theirs. Never speed it past 1.05x, never pitch it.
+- Music is optional and quiet; a reel with a bed must still work muted.
 - Never "free", "guarantee", "no cost" on a Become The Closer reel. A result on screen carries the site's own line:
   individual experiences, results vary.
-- The voice is his. Never speed it up past 1.05x, never pitch it.
-- Music is optional and quiet. The platforms add their own; a reel with a bed should still work muted.
+- Never invent a number, a name or a result for the hook or the captions.
