@@ -39,7 +39,7 @@ def transcribe(a: np.ndarray, model_name: str, prompt: str | None = None, langua
             t = w.word.strip()
             if not t:
                 continue
-            if words and (t.startswith("-") or words[-1]["w"].endswith("-")) and len(t) > 1:
+            if words and (t.startswith(("-", ".")) or words[-1]["w"].endswith("-")) and len(t) > 1 and not t[1:2].isspace():
                 # Whisper splits hyphenated words ("cross", "-selling", "50", "-50"): keep them as one word
                 words[-1]["w"] = words[-1]["w"] + t
                 words[-1]["e"] = round(float(w.end), 3)

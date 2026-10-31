@@ -95,7 +95,15 @@ def static_crop(sw: int, shh: int, W: int, H: int, fx: float, fy: float) -> str:
 
 
 def piece_jobs(video, out, segs, cam, base_crop, W, H, lut, grain, preset, crf, start, push=0.03):
-    """ffmpeg commands for the footage pieces that are not rendered yet."""
+    """ffmpeg commands for the footage pieces that are not rendered yet. Cached pieces are dropped when the cut changed."""
+    import hashlib, os
+    sig = hashlib.sha1(json.dumps([(sg["in"], sg["frames"], sg["zoom"]) for sg in segs] + [W, H, str(lut), grain, preset]).encode()).hexdigest()
+    sig_file = out / "segs" / ".sig"
+    if not sig_file.exists() or sig_file.read_text() != sig:
+        for f in (out / "segs").glob("*"):
+            if f.is_file() and f.name != ".sig":
+                os.remove(f)
+        sig_file.write_text(sig)
     jobs = []
     for k, sg in enumerate(segs):
         dst = out / "segs" / f"{k:03d}.mp4"

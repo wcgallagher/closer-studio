@@ -41,9 +41,9 @@ def build(words, sil, keep_silence=False, fillers="keep", punch=True, zooms=ZOOM
         cuts, last = [], words[i0]["s"]
         if punch:
             for i in range(i0 + 1, i1 + 1):
-                gap_ok = words[i]["s"] - words[i - 1]["e"] >= 0.04
-                tail_ok = words[i1]["e"] - words[i]["s"] >= 1.2
                 due = words[i]["s"] - last
+                gap_ok = words[i]["s"] - words[i - 1]["e"] >= 0.04 or due >= punch_every + 1.2
+                tail_ok = words[i1]["e"] - words[i]["s"] >= 1.2
                 # land the framing change on an emphasis word when one is near the ideal spot
                 if tail_ok and gap_ok and (due >= punch_every or (due >= punch_every - 0.8 and words[i].get("emph"))):
                     cuts.append(i)

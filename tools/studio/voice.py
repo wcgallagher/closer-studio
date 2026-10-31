@@ -52,7 +52,7 @@ def measure(path: Path, lufs: float = -14, tp: float = -1.5) -> dict:
 def final_filter(input_i: float, lufs: float = -14, tp: float = -1.5) -> str:
     """One fixed gain to the target, one limiter. alimiter's ceiling is not literal; 0.81 lands about -1.2 dBTP."""
     gain = lufs - input_i
-    lim = {-1.0: 0.84, -1.5: 0.80, -1.2: 0.81, -2.0: 0.74, -4.0: 0.60}.get(tp, 0.80)
+    lim = {-1.0: 0.82, -1.2: 0.79, -1.5: 0.76, -2.0: 0.72, -4.0: 0.58}.get(tp, 0.76)
     return f"volume={gain:.2f}dB,alimiter=limit={lim}:attack=5:release=60:level=false,aresample=48000"
 
 

@@ -58,7 +58,7 @@ python3 tools/closer.py analyze inbox/clip.mp4 --out output/job
 python3 tools/closer.py formats
 python3 tools/closer.py reel inbox/clip.mp4 --out output/job --start 12 --end 41 --brand btc --format organic_reel --platform ig_reels,tiktok --hook "Your hook line"
 python3 tools/closer.py reel inbox/call.mp4 --out output/auto --auto 3 --brand btc            # the three best windows
-python3 tools/closer.py longform inbox/talk.mp4 --out output/yt --brand btc --format youtube_long --chapters "0:The setup,95:The mistake" --quotes "the line you want on a card" --broll inbox/broll --title "Four words max"
+python3 tools/closer.py longform inbox/talk.mp4 --out output/yt --brand btc --format youtube_long --chapters "0:The setup,95:The mistake" --quotes "the line you want on a card" --pops "four types|objection" --broll inbox/broll --title "Four words max"
 python3 tools/closer.py cover output/yt --title "Four words max" --brand btc --out output/yt/cover
 python3 tools/closer.py reframe inbox/wide.mp4 --out output/wide_vertical.mp4 --platform ig_reels
 python3 tools/closer.py export output/job/clip_ig_reels.mp4 --out output/job/exports --platforms yt_shorts,fb_reels

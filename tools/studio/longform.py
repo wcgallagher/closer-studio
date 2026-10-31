@@ -75,17 +75,28 @@ def find_quote(words: list, line: str) -> tuple[float, float] | None:
     return words[best[1]]["s"], words[best[2]]["e"]
 
 
+POP_STOP = {"right", "really", "actually", "thing", "things", "gonna", "wanna", "okay", "yeah", "welcome", "name", "basically",
+            "literally", "little", "pretty", "about", "there", "where", "which", "would", "could", "should", "every", "going",
+            "people", "someone", "something", "anything", "everything", "today", "again", "still", "maybe", "already"}
+
+
 def pops_from_words(segs, words, every: float = 7.0, show: float = 1.15) -> list[tuple[float, float, str]]:
-    """Keyword pops: emphasised content words, at most one per `every` seconds. (out_t, dur, text)."""
+    """Keyword pops: emphasised content words (a stoplist drops filler-like words and names), one or two words,
+    at most one per `every` seconds. (out_t, dur, text)."""
     out, last = [], -99.0
     for sg in segs:
-        for w in words[sg["w0"]:sg["w1"] + 1]:
-            if not w.get("emph") or w.get("func") or len(norm(w["w"])) < 4:
+        ws = words[sg["w0"]:sg["w1"] + 1]
+        for k, w in enumerate(ws):
+            n = norm(w["w"])
+            if not w.get("emph") or w.get("func") or len(n) < 5 or n in POP_STOP or w["w"][0].isupper() and k > 0 and not ws[k - 1]["w"].endswith((".", "?", "!")):
                 continue
             t = sg["out_t"] + (w["s"] - sg["in"])
             if t - last < every:
                 continue
             txt = w["w"].strip(",.?!;:")
+            if k + 1 < len(ws) and not ws[k + 1].get("func") and not w["w"].endswith((".", ",", "?", "!")) and len(norm(ws[k + 1]["w"])) >= 4 \
+                    and norm(ws[k + 1]["w"]) not in POP_STOP:
+                txt += " " + ws[k + 1]["w"].strip(",.?!;:")
             out.append((round(t, 3), show, txt[0].upper() + txt[1:]))
             last = t
     return out
@@ -119,7 +130,7 @@ def png_clip(png: Path, dst: Path, dur: float, preset, crf):
 def longform(video: Path, out: Path, an: dict, brand: dict, plat: dict, fmt: dict, chapters: str | None = None,
              quotes: list[str] | None = None, pops: str = "auto", broll: Path | None = None, music: str | None = None,
              fillers: str | None = None, caps: str | None = None, cta: str | None = None, title: str | None = None,
-             grade_preset: str | None = None, preview: bool = False, denoise: str = "chain", log=print) -> dict:
+             grade_preset: str | None = None, preview: bool = False, denoise: str = "chain", change_every: float | None = None, log=print) -> dict:
     W, H = plat["w"], plat["h"]
     out.mkdir(parents=True, exist_ok=True)
     (out / "segs").mkdir(exist_ok=True)
@@ -132,7 +143,7 @@ def longform(video: Path, out: Path, an: dict, brand: dict, plat: dict, fmt: dic
     segs, speech_end = cutmod.build(words, sil, keep_silence=False, fillers=fillers, punch_every=4.5, zooms=(1.0, 1.15))
     if not segs:
         raise SystemExit("no speech in that window")
-    total = round(speech_end + (HOLD_S + 0.5 if end_card else 0.4), 4)
+    total = round(speech_end + (HOLD_S + 0.5 if end_card else 0.0), 4)      # no card: the cut ends on the last word
     start = an["start"]
     cta = cta or brand["cta"]["line"]
     off = brands.check_copy(brand, f"{cta} {title or ''}")
@@ -180,7 +191,7 @@ def longform(video: Path, out: Path, an: dict, brand: dict, plat: dict, fmt: dic
         d = min(max((b or a + 2.5) - a + 0.4, 2.0), QUOTE_MAX_S)
         png = cards.quote_card(q, brand, W, H, out / "cutaways" / f"q{qi:02d}.png")
         cutaways.append((a, d, png_clip(png, out / "cutaways" / f"q{qi:02d}.mp4", d, preset, crf), "quote"))
-    every = float(fmt.get("change_every_s", 40))
+    every = float(change_every or fmt.get("change_every_s", 40))
     if broll:
         clips = sorted([p for p in Path(broll).iterdir() if p.suffix.lower() in (".mp4", ".mov", ".mkv", ".m4v")])
         ends = sentence_ends_out(an, segs)
@@ -210,7 +221,24 @@ def longform(video: Path, out: Path, an: dict, brand: dict, plat: dict, fmt: dic
     else:
         head = captions.header(W, H, brand, "clean", band_bottom)
         ev = []
-    pop_list = pops_from_words(segs, words) if (pops == "auto" and caps in ("pops", "none") and caps != "none") else []
+    if caps == "pops" and pops == "auto":
+        pop_list = pops_from_words(segs, words)
+    elif caps == "pops" and pops not in ("auto", "off", None):
+        pop_list = []
+        for phrase in [x.strip() for x in str(pops).split("|") if x.strip()]:
+            span = find_quote(words, phrase) if len(phrase.split()) >= 3 else None
+            if span is None:                                   # one or two words: first occurrence
+                toks = [norm(x) for x in phrase.split()]
+                for i in range(len(words) - len(toks) + 1):
+                    if [norm(w["w"]) for w in words[i:i + len(toks)]] == toks:
+                        span = (words[i]["s"], words[i + len(toks) - 1]["e"]); break
+            if span is None:
+                log(f"pop not found in the speech: {phrase}"); continue
+            t = cutmod.src_to_out(segs, span[0])
+            if t is not None:
+                pop_list.append((round(t, 3), max(1.15, min(2.5, span[1] - span[0] + 0.6)), phrase))
+    else:
+        pop_list = []
     for t, d, txt in pop_list:
         if any(c[0] <= t <= c[0] + c[1] for c in cutaways):
             continue

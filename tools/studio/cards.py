@@ -71,7 +71,7 @@ def quote_card(text: str, brand: dict, W: int, H: int, out: Path, attribution: s
     img = Image.new("RGB", (W, H), c["bg"])
     d = ImageDraw.Draw(img)
     ff = FONTS / brand["fonts"]["display_file"]
-    lines, px = wrap(text, ff, int(W * 0.80), int(H * 0.06), floor=int(H * 0.03), max_lines=5)
+    lines, px = wrap(text, ff, int(W * 0.80), int(H * (0.085 if W > H else 0.06)), floor=int(H * 0.035), max_lines=5)
     f = ImageFont.truetype(str(ff), px)
     ls = lines.split("\\N")
     lh = int(px * 1.2); total = lh * len(ls)
