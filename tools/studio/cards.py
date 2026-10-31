@@ -37,9 +37,16 @@ def hook_event(text: str, brand: dict, W: int, H: int, dur: float = 2.6, serif: 
             f"\\fscx106\\fscy106\\t(0,180,\\fscx100\\fscy100)}}{lines}")
 
 
-def pop_event(text: str, t: float, dur: float, W: int, H: int) -> str:
-    """A 1 to 4 word keyword that lands on the spoken word, top zone, display face."""
-    return (f"Dialogue: 5,{ts(t)},{ts(t + dur)},Pop,,0,0,0,,{{\\fad(60,160)\\fscx88\\fscy88\\t(0,120,\\fscx100\\fscy100)}}{text}")
+def pop_event(text: str, t: float, dur: float, W: int, H: int, side: str = "top") -> str:
+    """A 1 to 4 word keyword that lands on the spoken word, in the display face. side: top (centred in the top zone),
+    left or right (mid-height, in the clear third beside the face)."""
+    if side == "left":
+        pos = f"\\an4\\pos({int(W * 0.06)},{int(H * 0.34)})"
+    elif side == "right":
+        pos = f"\\an6\\pos({int(W * 0.94)},{int(H * 0.34)})"
+    else:
+        pos = ""
+    return (f"Dialogue: 5,{ts(t)},{ts(t + dur)},Pop,,0,0,0,,{{{pos}\\fad(60,160)\\fscx88\\fscy88\\t(0,120,\\fscx100\\fscy100)}}{text}")
 
 
 def pill_events(items: list[tuple[float, float, str]]) -> list[str]:

@@ -239,10 +239,18 @@ def longform(video: Path, out: Path, an: dict, brand: dict, plat: dict, fmt: dic
                 pop_list.append((round(t, 3), max(1.15, min(2.5, span[1] - span[0] + 0.6)), phrase))
     else:
         pop_list = []
+    # where the pops go: the top zone when the head sits low, else the clear third beside the face
+    side = "top"
+    if cam is not None:
+        import numpy as np
+        dets = [d for d in an["track"]["dets"] if "cx" in d]
+        top_min = np.percentile([(d["cy"] - d["fh"] / 2) for d in dets], 5) * H if dets else H
+        if top_min < H * 0.30:
+            side = "left" if (np.median([d["cx"] for d in dets]) >= 0.5) else "right"
     for t, d, txt in pop_list:
         if any(c[0] <= t <= c[0] + c[1] for c in cutaways):
             continue
-        ev.append(cards.pop_event(txt, t, d, W, H))
+        ev.append(cards.pop_event(txt, t, d, W, H, side))
     (out / "captions.ass").write_text(head + "\n".join(ev) + "\n")
     captions.write_srt(out / "captions.srt", srt)
 
