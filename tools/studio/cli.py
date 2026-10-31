@@ -6,7 +6,7 @@ import json
 import sys
 from pathlib import Path
 
-from . import analyze as an_mod, brands, grade, platforms, render, review
+from . import analyze as an_mod, brands, cover as cover_mod, formats, grade, longform as long_mod, platforms, render, review
 
 
 def _an(video: Path, out: Path, a):
@@ -29,23 +29,73 @@ def cmd_analyze(a):
 def cmd_reel(a):
     video, out = Path(a.video).resolve(), Path(a.out).resolve()
     brand = brands.load(a.brand)
-    style = a.style or brand["style"].get("captions", "impact")
+    fmt = formats.get(a.format) if a.format else None
+    style = a.style or (fmt["captions"] if fmt and fmt["captions"] in ("impact", "clean", "serif", "boxed") else None) or brand["style"].get("captions", "impact")
+    safe = a.safe or (fmt["safe"] if fmt else "organic")
+    fillers = a.fillers or (fmt["fillers"] if fmt else "keep")
+    end_card = not (fmt and fmt.get("cta") == "none")
     d = _an(video, out, a)
+    windows = [(a.start, d["end"], out)]
+    if a.auto:
+        windows = []
+        for k, m in enumerate(d["moments"][:a.auto]):
+            windows.append((m["s"] + d["start"], m["e"] + d["start"], out / f"auto_{k + 1}"))
+            print(f"auto {k + 1}: {m['s']:.1f}-{m['e']:.1f} s  {m['hook_line'][:80]}")
     results = []
-    for pid in a.platform.split(","):
-        plat = platforms.get(pid.strip(), a.safe)
-        job = out if len(a.platform.split(",")) == 1 else out / plat["id"]
-        if job != out:
-            job.mkdir(parents=True, exist_ok=True)
-            (job / "analysis.json").write_text(json.dumps(d))
-        s = render.reel(video, job, d, brand, plat, style=style, hook=a.hook, cta=a.cta, music=a.music or (brand["style"].get("music") or None),
-                        grade_preset=a.grade, mode=a.camera, face=(a.face_x, a.face_y), preview=a.preview, fillers=a.fillers,
-                        keep_silence=a.keep_silence, sfx=not a.no_sfx, riser=a.riser, voice_chain=a.voice, denoise=a.denoise,
-                        caps_max=a.caps_max, hook_serif=a.hook_serif)
-        results.append(s)
-        if not a.no_review:
-            review.run(job)
+    for (ws, we, wout) in windows:
+        if a.auto:
+            sub = argparse.Namespace(**vars(a)); sub.start, sub.end = ws, we
+            dd = _an(video, wout, sub)
+        else:
+            dd = d
+        if fmt:
+            warn = formats.check_length(fmt, dd["dur"])
+            if warn:
+                print(f"note: {warn}")
+        for pid in a.platform.split(","):
+            plat = platforms.get(pid.strip(), safe)
+            job = wout if len(a.platform.split(",")) == 1 else wout / plat["id"]
+            if job != wout:
+                job.mkdir(parents=True, exist_ok=True)
+                (job / "analysis.json").write_text(json.dumps(dd))
+            s = render.reel(video, job, dd, brand, plat, style=style, hook=a.hook if not a.auto else "", cta=a.cta,
+                            music=a.music or (brand["style"].get("music") or None), grade_preset=a.grade, mode=a.camera, face=(a.face_x, a.face_y),
+                            preview=a.preview, fillers=fillers, keep_silence=a.keep_silence, sfx=not a.no_sfx, riser=a.riser, voice_chain=a.voice,
+                            denoise=a.denoise, caps_max=a.caps_max, hook_serif=a.hook_serif, end_card=end_card)
+            s["format"] = a.format
+            results.append(s)
+            if not a.no_review:
+                review.run(job)
     print(json.dumps(results, indent=1))
+
+
+def cmd_longform(a):
+    video, out = Path(a.video).resolve(), Path(a.out).resolve()
+    brand = brands.load(a.brand)
+    fmt = formats.get(a.format)
+    plat = platforms.get(a.platform or fmt["platforms"][0], fmt.get("safe", "organic"))
+    d = _an(video, out, a)
+    quotes = [q.strip() for q in a.quotes.split("|")] if a.quotes else None
+    s = long_mod.longform(video, out, d, brand, plat, fmt, chapters=a.chapters, quotes=quotes, pops=a.pops, broll=Path(a.broll) if a.broll else None,
+                          music=a.music, fillers=a.fillers, caps=a.captions, cta=a.cta, title=a.title, grade_preset=a.grade, preview=a.preview, denoise=a.denoise)
+    if not a.no_review:
+        review.run(out)
+    print(json.dumps(s, indent=1, default=str))
+
+
+def cmd_cover(a):
+    src = Path(a.source).resolve()
+    brand = brands.load(a.brand)
+    an = None; video = src; start = 0.0; end = None
+    if src.is_dir():
+        an = json.loads((src / "analysis.json").read_text())
+        video = Path(an["video"]); start, end = an["start"], an["end"]
+    r = cover_mod.build(video, Path(a.out).resolve(), brand, a.title, an, at=a.at, start=start, end=end)
+    print(json.dumps(r))
+
+
+def cmd_formats(a):
+    print(formats.table())
 
 
 def cmd_reframe(a):
@@ -96,12 +146,28 @@ def main(argv=None):
     p.add_argument("--hook", default=""); p.add_argument("--hook-serif", action="store_true"); p.add_argument("--cta", default=None)
     p.add_argument("--music", default=None); p.add_argument("--grade", default=None, help="sma_pro, btc_ember, clean, cinematic, none")
     p.add_argument("--face-x", type=float, default=0.5); p.add_argument("--face-y", type=float, default=0.38)
-    p.add_argument("--fillers", default="keep", choices=["keep", "cut"]); p.add_argument("--keep-silence", action="store_true")
+    p.add_argument("--fillers", default=None, choices=["keep", "cut"]); p.add_argument("--keep-silence", action="store_true")
     p.add_argument("--no-sfx", action="store_true"); p.add_argument("--riser", action="store_true")
     p.add_argument("--voice", default="v3", choices=["v3", "light", "none"]); p.add_argument("--denoise", default="chain", choices=["chain", "deep"])
     p.add_argument("--caps-max", type=int, default=None); p.add_argument("--preview", action="store_true"); p.add_argument("--no-review", action="store_true")
-    p.add_argument("--safe", default="organic", choices=["organic", "ads"], help="UI safe zones: a normal post (organic) or an ad placement")
+    p.add_argument("--safe", default=None, choices=["organic", "ads"], help="UI safe zones: a normal post (organic) or an ad placement")
+    p.add_argument("--format", default=None, help="organic_reel, ad_reel, show_reminder, testimonial ... (see `formats`)")
+    p.add_argument("--auto", type=int, default=0, help="cut the N best windows the analysis found (no hook text; you add it after)")
     p.set_defaults(f=cmd_reel)
+    p = sub.add_parser("longform", help="16:9 (or any) long-form master: YouTube, VSL, Skool lesson, replay, confirmation video"); common(p)
+    p.add_argument("--brand", default="btc"); p.add_argument("--format", default="youtube_long"); p.add_argument("--platform", default=None)
+    p.add_argument("--chapters", default=None, help="'0:Title,95:Next title' in seconds from --start, or auto")
+    p.add_argument("--quotes", default=None, help="spoken lines to show as quote cards, separated by |")
+    p.add_argument("--pops", default="auto", choices=["auto", "off"]); p.add_argument("--broll", default=None, help="folder of clips for cutaways")
+    p.add_argument("--captions", default=None, help="pops (default per format), none, or a burned style: impact, clean, serif, boxed")
+    p.add_argument("--music", default=None); p.add_argument("--fillers", default=None, choices=["keep", "cut"]); p.add_argument("--cta", default=None)
+    p.add_argument("--title", default=None, help="thumbnail title, 2 to 4 words"); p.add_argument("--grade", default=None)
+    p.add_argument("--denoise", default="chain", choices=["chain", "deep"]); p.add_argument("--preview", action="store_true"); p.add_argument("--no-review", action="store_true")
+    p.set_defaults(f=cmd_longform)
+    p = sub.add_parser("cover", help="thumbnail (1280x720) and cover (1080x1920) from the best face frame with a title")
+    p.add_argument("source", help="a video file or a job folder"); p.add_argument("--title", required=True); p.add_argument("--brand", default="btc")
+    p.add_argument("--out", required=True); p.add_argument("--at", type=float, default=None); p.set_defaults(f=cmd_cover)
+    p = sub.add_parser("formats", help="the format table (what a video is for decides how it is cut)"); p.set_defaults(f=cmd_formats)
     p = sub.add_parser("reframe", help="auto-reframe any clip to a platform with face tracking")
     p.add_argument("video"); p.add_argument("--out", required=True); p.add_argument("--platform", default="ig_reels")
     p.add_argument("--start", type=float, default=0.0); p.add_argument("--end", type=float, default=None)

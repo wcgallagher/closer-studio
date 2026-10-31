@@ -86,3 +86,25 @@ def quote_card(text: str, brand: dict, W: int, H: int, out: Path, attribution: s
         d.text(((W - w) / 2, y + lh * 0.9), attribution, font=f2, fill=c["muted"])
     img.save(out)
     return out
+
+
+def chapter_card(num: int, title: str, brand: dict, W: int, H: int, out: Path, eyebrow: str = "CHAPTER"):
+    """A chapter title card on the brand plate: small mono eyebrow, the title in the display face, an accent rule."""
+    from PIL import Image, ImageDraw, ImageFont
+    c = brand["colors"]
+    img = Image.new("RGB", (W, H), c["bg"])
+    d = ImageDraw.Draw(img)
+    f_small = ImageFont.truetype(str(FONTS / brand["fonts"]["caption_2_file"]), int(H * 0.028))
+    eb = f"{eyebrow} {num:02d}"
+    d.text(((W - f_small.getlength(eb)) / 2, H * 0.36), eb, font=f_small, fill=c["accent"])
+    ff = FONTS / brand["fonts"]["display_file"]
+    lines, px = wrap(title, ff, int(W * 0.78), int(H * 0.085), floor=int(H * 0.04), max_lines=3)
+    f = ImageFont.truetype(str(ff), px)
+    ls = lines.split("\\N")
+    lh = int(px * 1.15)
+    y = H * 0.44
+    for ln in ls:
+        d.text(((W - f.getlength(ln)) / 2, y), ln, font=f, fill=c["text"]); y += lh
+    d.rectangle([W * 0.47, y + lh * 0.35, W * 0.53, y + lh * 0.35 + max(3, H // 360)], fill=c["accent"])
+    img.save(out)
+    return out

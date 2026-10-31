@@ -2,7 +2,15 @@
 
 Say what you want in plain words; Claude picks the skill. This list is for curiosity.
 
+## Strategy
+- **format-brain**: the marketer's brain. From the goal (reach, paid clicks, booked calls that show up, a sales page, a Skool lesson, an authority video) to the format id, the brief and the command.
+
 ## Video
+- **longform-editor**: YouTube videos, VSLs, lessons and replays with the longform command: chapters, keyword pops, quote cards, B-roll on a cadence, thumbnail.
+- **funnel-vsl**: sales-funnel VSLs, short and long, with structure and timing, proof, CTA placement and compliance.
+- **show-rate-videos**: the confirmation-page video, reminder clips and pre-call clips that get booked calls to show up.
+- **skool-content**: welcome video, classroom modules, replays, win clips and posts for a Skool community.
+- **hooks-titles-covers**: hooks, on-screen hook text, titles, thumbnails and cover frames; ad hook variants.
 - **reel-editor**: raw clip in, finished reel(s) out for any platform (analysis, cut, tracked camera, captions, hook, end card, voice, grade, loudness, checks).
 - **auto-reframe**: any clip to 9:16, 4:5 or 1:1 with a face-tracked virtual camera.
 - **caption-styles**: the four caption looks, placement, the hook card, keyword pops, the listicle pill.

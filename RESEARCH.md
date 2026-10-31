@@ -32,6 +32,16 @@ Date: 2026-10-31. Every technique in the engine traces back to one of these rows
 | "How to Edit Videos Like NELK" (YouTube n3FS2en3HdE, transcript) | Teal-and-orange grade with letterbox bars on montages; everything cut to the beat; the drop uses three sounds (build-up, a bang, a bass boom); montage ends with a smash to black and the next scene opens on an establishing drone shot; subtitles in Futura heavy italic with a red and blue drop shadow (RGB split); a sliding "pop tag" when a new person appears; mood music under every scene. Encoded as the `cinematic` grade, the synthesized riser and hit, the montage recipe in `EDITING_GRAMMAR.md` |
 | Meta Instagram Reels ad specs; Google Ads vertical safe zones; TikTok in-feed template (measured by upload-post.com) | The safe zones in `tools/studio/platforms.py` |
 
+## Long-form engineering notes (2026-10-31, second pass)
+
+| Decision | Why |
+|---|---|
+| Cutaways (chapter cards, quote cards, B-roll) are composited over the finished footage base with `overlay` enabled between timestamps, each cutaway clip shifted with `setpts` and faded on its alpha | one encode, the voice never stops, and a cutaway can be added or moved without re-rendering the pieces |
+| Keyword pops instead of burned captions on long formats (`captions: pops`) | the 502-frame study found zero burned captions on top long-form channels; pops at the spoken word carry emphasis |
+| A visible layout change at least every `change_every_s` (40 s for YouTube, 30 s for VSL and lessons) is a review check, and B-roll fills the gaps at sentence ends | the measured 20 to 40 s alternation rule; the engine reports every gap it could not fill |
+| Chapter titles must be written by a person (`--chapters auto` only finds the boundaries and the review flags placeholder titles) | a chapter title is a promise; a transcript fragment is not |
+| Thumbnail and cover from the best face frame (largest face, highest detector score, inside the first 8 s) with 2 to 4 words in the caption face on a dark gradient band | thumbnail rules in the YouTube sources in FORMATS.md; the band keeps the text readable on bright footage |
+
 ## What is still open
 
 - Forced alignment (WhisperX) for speakers faster than about 4 words per second.

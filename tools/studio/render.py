@@ -93,11 +93,106 @@ def static_crop(sw: int, shh: int, W: int, H: int, fx: float, fy: float) -> str:
     return f"crop={cw}:{ch}:{cx}:{cy}"
 
 
+
+def piece_jobs(video, out, segs, cam, base_crop, W, H, lut, grain, preset, crf, start, push=0.03):
+    """ffmpeg commands for the footage pieces that are not rendered yet."""
+    jobs = []
+    for k, sg in enumerate(segs):
+        dst = out / "segs" / f"{k:03d}.mp4"
+        if dst.exists():
+            continue
+        z, D = sg["zoom"], sg["frames"] / FPS
+        t0, t1 = sg["in"], sg["in"] + D
+        first = trk.vf_track(cam, t0, t1 + 0.05) if cam else base_crop
+        kexpr = f"(1.02+{push:.3f}*t/{D:.3f})"
+        vf = (f"setpts=PTS-STARTPTS,{first},crop=iw/{z}:ih/{z}:(iw-iw/{z})/2:(ih-ih/{z})*{KY},"
+              f"scale=w='trunc({W}*{kexpr}/2)*2':h=-2:eval=frame:flags=bicubic,crop={W}:{H}:x='(iw-{W})/2':y='(ih-{H})*0.4'")
+        if lut:
+            vf += f",lut3d=file={lut}"
+        post = grade.POST + (f",noise=alls={int(grain * 100)}:allf=t" if grain > 0 else "")
+        graph = f"[0:v]{vf}[g];movie={out / 'fill.png'}[f];[g][f]overlay=format=auto:eof_action=repeat,{post},setsar=1,fps={FPS},format=yuv420p[v]"
+        gfile = out / "segs" / f"{k:03d}.graph"
+        gfile.write_text(graph)
+        jobs.append(["ffmpeg", "-v", "error", "-y", "-ss", f"{start + t0:.3f}", "-i", video, "-an", "-frames:v", sg["frames"],
+                     "-filter_complex_script", gfile, "-map", "[v]", "-c:v", "libx264", "-preset", preset, "-crf", crf, "-threads", "2", dst])
+    return jobs
+
+
+def prepare_voice(video, out, an, denoise, log):
+    """One clean mono 48 kHz window of the source audio (optionally through DeepFilterNet); runs are cut from it."""
+    src_wav = out / "voice_src.wav"
+    if not src_wav.exists():
+        _run(["ffmpeg", "-v", "error", "-y", "-ss", f"{an['start']:.3f}", "-t", f"{an['dur'] + 0.2:.3f}", "-i", video, "-vn", "-ac", "1", "-ar", "48000",
+              "-c:a", "pcm_s16le", src_wav])
+    if denoise == "deep":
+        df = voice.deep_filter_bin()
+        if df:
+            dfo = out / "voice_df"
+            dfo.mkdir(exist_ok=True)
+            if not (dfo / src_wav.name).exists():
+                log("running DeepFilterNet ...")
+                _run([df, "-o", dfo, src_wav])
+            return dfo / src_wav.name
+        log("deep-filter not installed; using the voice chain only (install.sh --deep-filter adds it)")
+    return src_wav
+
+
+def voice_jobs(out, segs, voice_in, chain):
+    runs, cur = [], []
+    for k, sg in enumerate(segs):
+        if sg["cont"] and cur:
+            cur.append(k)
+        else:
+            if cur: runs.append(cur)
+            cur = [k]
+    runs.append(cur)
+    jobs = []
+    for j, r in enumerate(runs):
+        dst = out / "segs" / f"r{j:03d}.wav"
+        if dst.exists():
+            continue
+        sg = segs[r[0]]; d = sum(segs[i]["frames"] for i in r) / FPS
+        fo = 0.30 if r[-1] == len(segs) - 1 else 0.03
+        jobs.append(["ffmpeg", "-v", "error", "-y", "-ss", f"{sg['in']:.3f}", "-t", f"{d + 0.1:.6f}", "-i", voice_in, "-filter_complex",
+                     f"[0:a:0]{chain},afade=t=in:st=0:d=0.03,afade=t=out:st={max(0, d - fo):.6f}:d={fo},apad,atrim=0:{d:.6f}[a]",
+                     "-map", "[a]", "-ac", "2", "-ar", "48000", "-c:a", "pcm_s16le", dst])
+    return jobs
+
+
+def concat(out):
+    (out / "v.txt").write_text("".join(f"file '{p}'\n" for p in sorted((out / "segs").glob("*.mp4"))))
+    (out / "a.txt").write_text("".join(f"file '{p}'\n" for p in sorted((out / "segs").glob("r*.wav"))))
+    _run(["ffmpeg", "-v", "error", "-y", "-f", "concat", "-safe", "0", "-i", out / "v.txt", "-f", "concat", "-safe", "0", "-i", out / "a.txt",
+          "-map", "0:v", "-map", "1:a", "-c", "copy", out / "base.mkv"])
+
+
+def mix(out, total, speech_end, hits, music):
+    """Voice plus sound design plus an optional ducked bed -> mix.wav. hits: [(file, at_s, gain)]."""
+    inputs = ["-i", out / "base.mkv"]
+    chains, labels, idx = [], [], 1
+    if music:
+        _run(["ffmpeg", "-v", "error", "-y", "-stream_loop", "-1", "-i", music, "-t", f"{total + 0.5:.3f}", "-af", voice.BED, "-ac", "2", "-c:a", "pcm_s16le", out / "bed.wav"])
+        inputs += ["-i", out / "bed.wav"]
+        env = (f"if(lt(t\\,0.6)\\,t/0.6\\,1)*if(gt(t\\,{speech_end:.3f})\\,max(0.4\\,1-(t-{speech_end:.3f})/0.5)\\,1)"
+               f"*if(gt(t\\,{total - 1.2:.3f})\\,max(0\\,({total:.3f}-t)/1.2)\\,1)")
+        chains.append(f"[1:a]volume='{env}':eval=frame[bedv];[bedv][key]{voice.DUCK}[bed]")
+        labels.append("[bed]"); idx = 2
+    for j, (f, at, g) in enumerate(hits):
+        inputs += ["-i", f]
+        ms = max(0, int(at * 1000))
+        chains.append(f"[{idx + j}:a]volume={g},adelay={ms}|{ms},aresample=48000[s{j}]")
+        labels.append(f"[s{j}]")
+    graph = ("[0:a]asplit=2[vo][key];" if music else "[0:a]anull[vo];") + (";".join(chains) + ";" if chains else "") + \
+            f"[vo]{''.join(labels)}amix=inputs={1 + len(labels)}:normalize=0:duration=first[mix]"
+    _run(["ffmpeg", "-v", "error", "-y", *inputs, "-filter_complex", graph, "-map", "[mix]", "-c:a", "pcm_s16le", out / "mix.wav"])
+    return out / "mix.wav"
+
+
 def reel(video: Path, out: Path, an: dict, brand: dict, plat: dict, style: str = "impact", hook: str = "",
          cta: str | None = None, music: str | None = None, grade_preset: str | None = None, mode: str = "track",
          face=(0.5, 0.38), preview: bool = False, fillers: str = "keep", keep_silence: bool = False, sfx: bool = True,
          riser: bool = False, voice_chain: str = "v3", denoise: str = "chain", caps_max: int | None = None,
-         hook_serif: bool = False, log=print) -> dict:
+         hook_serif: bool = False, end_card: bool = True, log=print) -> dict:
     W, H = plat["w"], plat["h"]
     out.mkdir(parents=True, exist_ok=True)
     (out / "segs").mkdir(exist_ok=True)
@@ -105,7 +200,7 @@ def reel(video: Path, out: Path, an: dict, brand: dict, plat: dict, style: str =
     segs, speech_end = cutmod.build(words, sil, keep_silence=keep_silence, fillers=fillers)
     if not segs:
         sys.exit("no speech in that window")
-    total = round(speech_end + HOLD_S, 4)
+    total = round(speech_end + (HOLD_S if end_card else 0.3), 4)
     start = an["start"]
     cta = cta or brand["cta"]["line"]
     offenders = brands.check_copy(brand, f"{hook} {cta}")
@@ -128,71 +223,17 @@ def reel(video: Path, out: Path, an: dict, brand: dict, plat: dict, style: str =
     grade.write_fill(fill, W, H, 0.5, 0.36)
     crf, preset = ("26", "veryfast") if preview else ("18", "medium")
 
-    jobs = []
-    for k, sg in enumerate(segs):
-        dst = out / "segs" / f"{k:03d}.mp4"
-        if dst.exists():
-            continue
-        z, D = sg["zoom"], sg["frames"] / FPS
-        t0, t1 = sg["in"], sg["in"] + D
-        first = trk.vf_track(cam, t0, t1 + 0.05) if cam else base_crop
-        kexpr = f"(1.02+0.03*t/{D:.3f})"
-        vf = (f"setpts=PTS-STARTPTS,{first},crop=iw/{z}:ih/{z}:(iw-iw/{z})/2:(ih-ih/{z})*{KY},"
-              f"scale=w='trunc({W}*{kexpr}/2)*2':h=-2:eval=frame:flags=bicubic,crop={W}:{H}:x='(iw-{W})/2':y='(ih-{H})*0.4'")
-        if lut:
-            vf += f",lut3d=file={lut}"
-        post = grade.POST + (f",noise=alls={int(grain * 100)}:allf=t" if grain > 0 else "")
-        graph = f"[0:v]{vf}[g];movie={fill}[f];[g][f]overlay=format=auto:eof_action=repeat,{post},setsar=1,fps={FPS},format=yuv420p[v]"
-        gfile = out / "segs" / f"{k:03d}.graph"
-        gfile.write_text(graph)
-        jobs.append(["ffmpeg", "-v", "error", "-y", "-ss", f"{start + t0:.3f}", "-i", video, "-an", "-frames:v", sg["frames"],
-                     "-filter_complex_script", gfile, "-map", "[v]", "-c:v", "libx264", "-preset", preset, "-crf", crf, "-threads", "2", dst])
-
-    # voice: one clean window, then runs cut from it
-    src_wav = out / "voice_src.wav"
-    if not src_wav.exists():
-        _run(["ffmpeg", "-v", "error", "-y", "-ss", f"{start:.3f}", "-t", f"{an['dur'] + 0.2:.3f}", "-i", video, "-vn", "-ac", "1", "-ar", "48000",
-              "-c:a", "pcm_s16le", src_wav])
-    voice_in = src_wav
-    if denoise == "deep":
-        df = voice.deep_filter_bin()
-        if df:
-            dfo = out / "voice_df"
-            dfo.mkdir(exist_ok=True)
-            if not (dfo / src_wav.name).exists():
-                log("running DeepFilterNet ...")
-                _run([df, "-o", dfo, src_wav])
-            voice_in = dfo / src_wav.name
-        else:
-            log("deep-filter not installed; using the voice chain only (install.sh --deep-filter adds it)")
-    runs, cur = [], []
-    for k, sg in enumerate(segs):
-        if sg["cont"] and cur:
-            cur.append(k)
-        else:
-            if cur: runs.append(cur)
-            cur = [k]
-    runs.append(cur)
-    chain = voice.chain(voice_chain)
-    for j, r in enumerate(runs):
-        dst = out / "segs" / f"r{j:03d}.wav"
-        if dst.exists():
-            continue
-        sg = segs[r[0]]; d = sum(segs[i]["frames"] for i in r) / FPS
-        fo = 0.30 if r[-1] == len(segs) - 1 else 0.03
-        jobs.append(["ffmpeg", "-v", "error", "-y", "-ss", f"{sg['in']:.3f}", "-t", f"{d + 0.1:.6f}", "-i", voice_in, "-filter_complex",
-                     f"[0:a:0]{chain},afade=t=in:st=0:d=0.03,afade=t=out:st={max(0, d - fo):.6f}:d={fo},apad,atrim=0:{d:.6f}[a]",
-                     "-map", "[a]", "-ac", "2", "-ar", "48000", "-c:a", "pcm_s16le", dst])
+    jobs = piece_jobs(video, out, segs, cam, base_crop, W, H, lut, grain, preset, crf, start)
+    voice_in = prepare_voice(video, out, an, denoise, log)
+    jobs += voice_jobs(out, segs, voice_in, voice.chain(voice_chain))
     log(f"{len(segs)} pieces, {speech_end:.1f} s of speech; rendering {len(jobs)} parts ...")
     with ThreadPoolExecutor(max_workers=4) as ex:
         list(ex.map(_run, jobs))
 
-    cards.end_card(brand, W, H, HOLD_S, out / "segs" / "zzz_end.mp4", cta, preset, crf)
-    _run(["ffmpeg", "-v", "error", "-y", "-f", "lavfi", "-i", "anullsrc=r=48000:cl=stereo", "-t", f"{HOLD_S:.3f}", "-c:a", "pcm_s16le", out / "segs" / "r999_end.wav"])
-    (out / "v.txt").write_text("".join(f"file '{p}'\n" for p in sorted((out / "segs").glob("*.mp4"))))
-    (out / "a.txt").write_text("".join(f"file '{p}'\n" for p in sorted((out / "segs").glob("r*.wav"))))
-    _run(["ffmpeg", "-v", "error", "-y", "-f", "concat", "-safe", "0", "-i", out / "v.txt", "-f", "concat", "-safe", "0", "-i", out / "a.txt",
-          "-map", "0:v", "-map", "1:a", "-c", "copy", out / "base.mkv"])
+    if end_card:
+        cards.end_card(brand, W, H, HOLD_S, out / "segs" / "zzz_end.mp4", cta, preset, crf)
+        _run(["ffmpeg", "-v", "error", "-y", "-f", "lavfi", "-i", "anullsrc=r=48000:cl=stereo", "-t", f"{HOLD_S:.3f}", "-c:a", "pcm_s16le", out / "segs" / "r999_end.wav"])
+    concat(out)
 
     # captions + hook, placed from the clearance pass
     hook_end = 2.6 if hook else 0.0
@@ -211,23 +252,7 @@ def reel(video: Path, out: Path, an: dict, brand: dict, plat: dict, style: str =
         hits += [(sfx_files["hit"], sg["out_t"], 0.30) for sg in segs if sg["kick"] and not sg["cont"]]
     if riser:
         hits.append((sfx_files["riser"], max(0.0, speech_end - 1.3), 0.28))
-    inputs = ["-i", out / "base.mkv"]
-    chains, labels, idx = [], [], 1
-    if music:
-        _run(["ffmpeg", "-v", "error", "-y", "-stream_loop", "-1", "-i", music, "-t", f"{total + 0.5:.3f}", "-af", voice.BED, "-ac", "2", "-c:a", "pcm_s16le", out / "bed.wav"])
-        inputs += ["-i", out / "bed.wav"]
-        env = (f"if(lt(t\\,0.6)\\,t/0.6\\,1)*if(gt(t\\,{speech_end:.3f})\\,max(0.4\\,1-(t-{speech_end:.3f})/0.5)\\,1)"
-               f"*if(gt(t\\,{total - 1.2:.3f})\\,max(0\\,({total:.3f}-t)/1.2)\\,1)")
-        chains.append(f"[1:a]volume='{env}':eval=frame[bedv];[bedv][key]{voice.DUCK}[bed]")
-        labels.append("[bed]"); idx = 2
-    for j, (f, at, g) in enumerate(hits):
-        inputs += ["-i", f]
-        ms = max(0, int(at * 1000))
-        chains.append(f"[{idx + j}:a]volume={g},adelay={ms}|{ms},aresample=48000[s{j}]")
-        labels.append(f"[s{j}]")
-    graph = ("[0:a]asplit=2[vo][key];" if music else "[0:a]anull[vo];") + (";".join(chains) + ";" if chains else "") + \
-            f"[vo]{''.join(labels)}amix=inputs={1 + len(labels)}:normalize=0:duration=first[mix]"
-    _run(["ffmpeg", "-v", "error", "-y", *inputs, "-filter_complex", graph, "-map", "[mix]", "-c:a", "pcm_s16le", out / "mix.wav"])
+    mix(out, total, speech_end, hits, music)
     m = voice.measure(out / "mix.wav", plat["lufs"], plat["tp"])
     name = f"{video.stem}_{plat['id']}.mp4"
     final = out / name

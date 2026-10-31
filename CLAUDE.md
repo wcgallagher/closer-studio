@@ -22,7 +22,13 @@ fails, read the error, fix what you can (usually re-run it), then explain in pla
 
 | They say | You do |
 |---|---|
+| what should I make, which format, more calls, more show-ups, a funnel video, "for the Skool", an ad | `skills/strategy/format-brain/SKILL.md` first: it names the format id, the brief and the command |
 | a reel, a short, a clip, "cut this up", TikTok, Shorts | `skills/video/reel-editor/SKILL.md` (one command; you pick the window and write the hook) |
+| a YouTube video, a lesson, a replay, anything over 3 minutes | `skills/video/longform-editor/SKILL.md` (chapters, pops, cards, B-roll, thumbnail) |
+| a VSL for the sales page, the opt-in page, an application | `skills/video/funnel-vsl/SKILL.md` with `skills/video/vsl-producer/SKILL.md` for animated cutaways |
+| people not showing up, confirmation video, reminders | `skills/video/show-rate-videos/SKILL.md` |
+| welcome video, module, classroom, community post | `skills/video/skool-content/SKILL.md` |
+| hooks, titles, thumbnails, covers, "make it clickable" | `skills/video/hooks-titles-covers/SKILL.md` |
 | make it vertical, reframe, crop for Reels | `skills/video/auto-reframe/SKILL.md` |
 | different captions, Hormozi captions, cleaner, bigger, captions on the face | `skills/video/caption-styles/SKILL.md` |
 | export for other platforms, what size, too long | `skills/video/platform-formatter/SKILL.md` |
@@ -33,7 +39,7 @@ fails, read the error, fix what you can (usually re-run it), then explain in pla
 | hooks, captions, emails, pages, ads | `skills/copy/*`, `skills/media-buying/*`, through `HOUSE_RULES.md` and `skills/sales/closer-mentality/SKILL.md` |
 
 Before anything goes on screen or on a page, read `skills/sales/closer-mentality/SKILL.md` once. Before any edit
-decision, read `EDITING_GRAMMAR.md` once. Default brand is `btc`; `sma` when the topic is annuities or Set More
+decision, read `EDITING_GRAMMAR.md` once; before choosing what to make, `FORMATS.md` once. Default brand is `btc`; `sma` when the topic is annuities or Set More
 Annuities.
 
 ## Rules that never bend
@@ -54,6 +60,7 @@ Annuities.
 
 ## Where things are
 
-- `tools/closer.py`: the command. `tools/studio/`: the engine. `tools/vsl/`: the VSL pipeline, motion scenes, LUT.
+- `tools/closer.py`: the command (`formats`, `analyze`, `reel`, `longform`, `cover`, `reframe`, `export`, `review`). `tools/studio/`: the engine.
+  `tools/vsl/`: the VSL motion-graphics pipeline, scenes, LUT. `formats.json`: the format defaults the engine reads.
 - `brand/<id>.json`: colours, fonts, CTA, banned words. `fonts/`: Montserrat and Fraunces Display.
 - `RESEARCH.md`: where every technique came from. Add a row when you add one.

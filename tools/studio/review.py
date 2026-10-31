@@ -18,6 +18,8 @@ def contact_sheet(video: Path, out: Path, every: float = 1.0, cols: int = 8, row
 def run(job: Path, log=print) -> dict:
     j = json.load(open(job / "job.json"))
     s, segs = j["summary"], j["segs"]
+    if s.get("kind") == "long":
+        return run_long(job, j, log)
     an = json.load(open(job / "analysis.json")) if (job / "analysis.json").exists() else None
     plat = platforms.get(s["platform"])
     brand = brands.load(s["brand"])
@@ -73,6 +75,49 @@ def run(job: Path, log=print) -> dict:
     md = [f"# Review: {final.name}", "", f"{info['dur']:.1f} s, {plat['name']}, brand {brand['name']}, captions {s['style']}", ""]
     md += [f"- {'PASS' if c['ok'] else 'FIX '}  {c['check']}: {c['detail']}" for c in checks]
     md += ["", f"Contact sheet: {sheet}", "", "Cold review: open the contact sheet and the file, then answer the three questions in skills/video/cold-review/SKILL.md."]
+    (job / "report.md").write_text("\n".join(md) + "\n")
+    for c in checks:
+        log(f"{'PASS' if c['ok'] else 'FIX '}  {c['check']}: {c['detail']}")
+    return report
+
+
+def run_long(job: Path, j: dict, log=print) -> dict:
+    s, segs = j["summary"], j["segs"]
+    an = json.load(open(job / "analysis.json")) if (job / "analysis.json").exists() else None
+    plat = platforms.get(s["platform"])
+    brand = brands.load(s["brand"])
+    final = Path(s["file"])
+    info = probe(final)
+    checks = []
+
+    def add(name, ok, detail):
+        checks.append({"check": name, "ok": bool(ok), "detail": detail})
+
+    words = an["words"] if an else []
+    first_t = max(0.0, segs[0]["out_t"] + (words[segs[0]["w0"]]["s"] - segs[0]["in"])) if an else 0.0
+    add(f"opens by {s['hook_deadline_s']} s", first_t <= s["hook_deadline_s"], f"first word at {first_t:.2f} s")
+    tail = info["dur"] - s["speech_s"]
+    add("ends on the payoff", tail <= 3.0, f"{tail:.1f} s after the last word")
+    add(f"a layout change at least every {s['change_every_s']:.0f} s", not s["layout_gaps_over_limit"],
+        f"gaps: {s['layout_gaps_over_limit']}" if s["layout_gaps_over_limit"] else f"{len(s['cutaways'])} cutaways on the cadence")
+    stat = cutmod.static_stretches(segs, 8.0)
+    add("no static stretch over 8 s", not stat, f"{stat}" if stat else "framing changes at least every 8 s")
+    add("length fits the format", not s.get("length_warning"), s.get("length_warning") or f"{info['dur']:.0f} s")
+    m = voice.measure(final, plat["lufs"], plat["tp"])
+    add("loudness on target", abs(m["i"] - plat["lufs"]) <= 1.0 and m["tp"] <= plat["tp"] + 0.3, f"{m['i']:.1f} LUFS, {m['tp']:.1f} dBTP")
+    add("chapters written by a person", not s.get("auto_chapter_titles"), "chapters.txt has placeholder titles: write real ones and re-run" if s.get("auto_chapter_titles") else (f"{len(s['chapters'])} chapters" if s["chapters"] else "no chapters (fine under 4 min)"))
+    add("every quote found in the speech", not s.get("missing_quotes"), f"not found: {s.get('missing_quotes')}" if s.get("missing_quotes") else "all matched")
+    txt = (job / "captions.srt").read_text() if (job / "captions.srt").exists() else ""
+    off = brands.check_copy(brand, txt)
+    add("no banned words in the speech", not off, f"found in the transcript: {off} (a cut or a bleep, or the brand allows it)" if off else "clean")
+    low = [w["w"] for w in words if w.get("p", 1) < 0.5]
+    add("caption words to proofread", len(low) <= 5, f"low-confidence words: {low[:12]}" if low else "none")
+    sheet = contact_sheet(final, job / "sheet.jpg", every=max(2.0, info["dur"] / 48))
+    report = {"file": str(final), "duration_s": round(info["dur"], 2), "checks": checks, "sheet": str(sheet), "passed": all(c["ok"] for c in checks)}
+    json.dump(report, open(job / "report.json", "w"), indent=1)
+    md = [f"# Review: {final.name}", "", f"{info['dur']:.0f} s, {plat['name']}, format {s['format']}, brand {brand['name']}", ""]
+    md += [f"- {'PASS' if c['ok'] else 'FIX '}  {c['check']}: {c['detail']}" for c in checks]
+    md += ["", f"Contact sheet: {sheet}", f"Chapters: {job / 'chapters.txt'}", f"Thumbnail: {s['cover']['thumbnail']}", ""]
     (job / "report.md").write_text("\n".join(md) + "\n")
     for c in checks:
         log(f"{'PASS' if c['ok'] else 'FIX '}  {c['check']}: {c['detail']}")

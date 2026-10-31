@@ -1,10 +1,11 @@
 # Closer Studio
 
 Raw clips in, finished videos out, with only Claude Code on your Mac. Built for Become The Closer and Set More
-Annuities; works for any brand you add. It cuts reels, reframes anything to vertical with a face-tracked camera,
-burns captions in four house styles, cleans the voice, grades the picture, adds the hook and the end card, lands the
-right loudness for each platform, runs the checks, and ships the SRT and cover frame. Long-form VSLs with animated
-cutaways use the same kit.
+Annuities; works for any brand you add. It starts from what the video is for (reach, paid clicks, a booked call that
+shows up, a sales page, a Skool lesson, an authority video) and cuts to that format: short reels with a face-tracked
+camera and four caption styles, long-form masters with keyword pops, chapter and quote cards, B-roll on a cadence,
+thumbnails and covers, cleaned voice, graded picture, platform loudness, checks, SRT and chapters. Funnel VSLs with
+animated cutaways use the same kit.
 
 ## Set up (once, about 5 minutes, Mac)
 
@@ -24,9 +25,11 @@ No Terminal, no commands to remember. Windows users: install WSL first, then the
 3. Say what you want:
    - `make a reel from the video in inbox`
    - `cut three reels from this call: objections, the quiz, the close`
-   - `make this vertical for TikTok`
-   - `export the reel for Shorts and LinkedIn too`
-   - `make a VSL from these three takes`
+   - `what should I make from this recording to get more booked calls?` (the format brain picks)
+   - `make a YouTube video from this with chapters` or `cut this into a Skool lesson`
+   - `make the confirmation-page video for the call` or `a 20 second reminder clip`
+   - `make this vertical for TikTok`, `export it for Shorts and LinkedIn too`
+   - `make a VSL from these three takes`, `make me a thumbnail that says ...`
    - `is this actually good?` (runs the cold review)
 4. Finished files land in `closer-studio/output/<job>/`. Claude tells you the file name, the length, and what it did.
 
@@ -34,13 +37,15 @@ No Terminal, no commands to remember. Windows users: install WSL first, then the
 
 | Folder | What it is |
 |---|---|
-| `tools/closer.py` | the one command: `analyze`, `reel`, `reframe`, `export`, `review`, `brands`, `platforms` |
-| `tools/studio/` | the engine: transcription and moments, face tracking and virtual camera, the cut, captions, voice, grade, cards, render, review |
-| `skills/video/` | reel-editor, auto-reframe, caption-styles, platform-formatter, edit-grammar, cold-review, vsl-producer, video-use |
+| `tools/closer.py` | the one command: `formats`, `analyze`, `reel`, `longform`, `cover`, `reframe`, `export`, `review`, `brands`, `platforms` |
+| `tools/studio/` | the engine: formats, transcription and moments, face tracking and virtual camera, the cut, captions, cards, voice, grade, render, long-form, cover, review |
+| `skills/strategy/format-brain` | the marketer's brain: from the goal to the format, the brief and the command |
+| `skills/video/` | reel-editor, longform-editor, funnel-vsl, show-rate-videos, skool-content, hooks-titles-covers, auto-reframe, caption-styles, platform-formatter, edit-grammar, cold-review, vsl-producer, video-use |
 | `skills/brand/brand-kit` | add a brand in five minutes from its website |
 | `skills/sales/closer-mentality` | how we sell, loaded before any hook or caption |
 | `skills/copy/*`, `skills/media-buying/*` | copy, trust scoring, ads and growth skills |
 | `brand/` | brand tokens (colours, fonts, CTA, banned words) as JSON plus the scrape notes |
+| `FORMATS.md`, `formats.json` | what each video is for and how it is cut: lengths, structure, captions, CTA, cover, checks, with sources |
 | `EDITING_GRAMMAR.md` | the house editing brain: the measured retention laws and the Hormozi / Gadzhi / Nelk dialects |
 | `RESEARCH.md` | every repo and source we studied, what we took, what we left |
 | `HOUSE_RULES.md`, `CREDITS.md`, `GO_PUBLIC.md` | writing rules, licences, how to publish and share this kit |
@@ -50,7 +55,11 @@ No Terminal, no commands to remember. Windows users: install WSL first, then the
 ```bash
 bash install.sh                       # once; add --deep-filter for DeepFilterNet noise removal
 python3 tools/closer.py analyze inbox/clip.mp4 --out output/job
-python3 tools/closer.py reel inbox/clip.mp4 --out output/job --start 12 --end 41 --brand btc --platform ig_reels,tiktok --hook "Your hook line"
+python3 tools/closer.py formats
+python3 tools/closer.py reel inbox/clip.mp4 --out output/job --start 12 --end 41 --brand btc --format organic_reel --platform ig_reels,tiktok --hook "Your hook line"
+python3 tools/closer.py reel inbox/call.mp4 --out output/auto --auto 3 --brand btc            # the three best windows
+python3 tools/closer.py longform inbox/talk.mp4 --out output/yt --brand btc --format youtube_long --chapters "0:The setup,95:The mistake" --quotes "the line you want on a card" --broll inbox/broll --title "Four words max"
+python3 tools/closer.py cover output/yt --title "Four words max" --brand btc --out output/yt/cover
 python3 tools/closer.py reframe inbox/wide.mp4 --out output/wide_vertical.mp4 --platform ig_reels
 python3 tools/closer.py export output/job/clip_ig_reels.mp4 --out output/job/exports --platforms yt_shorts,fb_reels
 python3 tools/closer.py review output/job
