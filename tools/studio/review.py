@@ -38,6 +38,8 @@ def run(job: Path, log=print) -> dict:
     stat = cutmod.static_stretches(segs, 8.0)
     add("no static stretch over 8 s", not stat, f"{stat}" if stat else "framing changes at least every 8 s")
     add("length fits the platform", not plat["max_s"] or info["dur"] <= plat["max_s"], f"{info['dur']:.1f} s (limit {plat['max_s'] or 'none'} s)")
+    if s.get("format"):
+        add("length fits the format", not s.get("length_warning"), s.get("length_warning") or f"{info['dur']:.0f} s is inside the {s['format']} band")
     m = voice.measure(final, plat["lufs"], plat["tp"])
     add("loudness on target", abs(m["i"] - plat["lufs"]) <= 1.0 and m["tp"] <= plat["tp"] + 0.3, f"{m['i']:.1f} LUFS, {m['tp']:.1f} dBTP (target {plat['lufs']} / {plat['tp']})")
     # face vs the caption block actually used
@@ -65,7 +67,7 @@ def run(job: Path, log=print) -> dict:
     else:
         add("captions clear of the face", True, "static camera: check the contact sheet by eye")
     txt = (job / "captions.srt").read_text() if (job / "captions.srt").exists() else ""
-    off = brands.check_copy(brand, txt + " " + (s.get("hook") or ""))
+    off = brands.check_copy(brand, txt + " " + (s.get("hook") or ""), s.get("audience"))
     add("no banned words on screen", not off, f"found: {off}" if off else "clean")
     low = [w["w"] for w in words if w.get("p", 1) < 0.5]
     add("caption words to proofread", len(low) <= 3, f"low-confidence words: {low[:12]}" if low else "none")
@@ -98,8 +100,11 @@ def run_long(job: Path, j: dict, log=print) -> dict:
     add(f"opens by {s['hook_deadline_s']} s", first_t <= s["hook_deadline_s"], f"first word at {first_t:.2f} s")
     tail = info["dur"] - s["speech_s"]
     add("ends on the payoff", tail <= 3.0, f"{tail:.1f} s after the last word")
-    add(f"a layout change at least every {s['change_every_s']:.0f} s", not s["layout_gaps_over_limit"],
-        f"gaps: {s['layout_gaps_over_limit']}" if s["layout_gaps_over_limit"] else f"{len(s['cutaways'])} cutaways on the cadence")
+    if s["change_every_s"] > 0:
+        add(f"a layout change at least every {s['change_every_s']:.0f} s", not s["layout_gaps_over_limit"],
+            f"gaps: {s['layout_gaps_over_limit']}" if s["layout_gaps_over_limit"] else f"{len(s['cutaways'])} cutaways on the cadence")
+    else:
+        add("no layout cadence required", True, "this format is a single take (change_every_s 0)")
     stat = cutmod.static_stretches(segs, 8.0)
     add("no static stretch over 8 s", not stat, f"{stat}" if stat else "framing changes at least every 8 s")
     add("length fits the format", not s.get("length_warning"), s.get("length_warning") or f"{info['dur']:.0f} s")
@@ -108,7 +113,7 @@ def run_long(job: Path, j: dict, log=print) -> dict:
     add("chapters written by a person", not s.get("auto_chapter_titles"), "chapters.txt has placeholder titles: write real ones and re-run" if s.get("auto_chapter_titles") else (f"{len(s['chapters'])} chapters" if s["chapters"] else "no chapters (fine under 4 min)"))
     add("every quote found in the speech", not s.get("missing_quotes"), f"not found: {s.get('missing_quotes')}" if s.get("missing_quotes") else "all matched")
     txt = (job / "captions.srt").read_text() if (job / "captions.srt").exists() else ""
-    off = brands.check_copy(brand, txt)
+    off = brands.check_copy(brand, txt, s.get("audience"))
     add("no banned words in the speech", not off, f"found in the transcript: {off} (a cut or a bleep, or the brand allows it)" if off else "clean")
     low = [w["w"] for w in words if w.get("p", 1) < 0.5]
     add("caption words to proofread", len(low) <= 5, f"low-confidence words: {low[:12]}" if low else "none")

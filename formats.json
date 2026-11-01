@@ -1,0 +1,1413 @@
+[
+ {
+  "id": "organic_reel",
+  "name": "Organic reel",
+  "goal": "Reach people who do not follow the account yet and earn watch time and sends. The viewer leaves with one action (a send or a comment keyword) that leads to the closer quiz (BTC) or the account page (SMA).",
+  "funnel_stage": "Top: discovery and warm-up",
+  "kind": "short",
+  "platforms": [
+   "ig_reels",
+   "tiktok",
+   "yt_shorts",
+   "fb_reels"
+  ],
+  "placements": [
+   "Instagram Reels",
+   "TikTok",
+   "YouTube Shorts",
+   "Facebook Reels"
+  ],
+  "length_s": {
+   "min": 15,
+   "ideal": 60,
+   "max": 180
+  },
+  "captions": "impact",
+  "safe": "organic",
+  "cta": "spoken_plus_card",
+  "hook_deadline_s": 3,
+  "change_every_s": 5,
+  "payoff_window_pct": [
+   20,
+   85
+  ],
+  "structure": [
+   {
+    "beat": "Proposition on screen",
+    "when": "0:00 to 0:03",
+    "purpose": "Say what the viewer gets, as burned text plus voice, inside 3 s (TikTok creative best practices)."
+   },
+   {
+    "beat": "Hook completes",
+    "when": "0:03 to 0:06",
+    "purpose": "Add the tension or the question the video answers; TikTok puts the hook window at the first 6 s."
+   },
+   {
+    "beat": "One idea, shown",
+    "when": "0:06 to end minus 5 s",
+    "purpose": "One point and no second topic. A quotable moment in the middle feeds the reshare and watch-through predictions Instagram ranks on."
+   },
+   {
+    "beat": "Ask",
+    "when": "Last 5 s",
+    "purpose": "One spoken ask with a matching word card: send this to someone, or comment the keyword. End placement is a house choice; Wistia's first-quarter CTA finding is hosted-video data."
+   }
+  ],
+  "cover": "Instagram cover 420x654 px (1:1.55), face or key words centered for the taller profile grid; it cannot be edited after upload. 1 to 4 words of text on the cover (house choice carried from the thumbnail rules).",
+  "music": "faint",
+  "fillers": "cut",
+  "checks": [
+   "Length 15 to 180 s: max from the Instagram and YouTube Shorts 3-minute caps; min and ideal are house choices informed by Buffer's TikTok data (videos over 60 s got 43.2% more reach than 30 to 60 s).",
+   "Burned hook text visible by 3.0 s (OCR on frames 0 to 3 s); the engine's hook-by-2.5 s review satisfies this.",
+   "No text or logo box inside the top 14%, bottom 35% or 6% side margins (Meta safe zone, applied to every 9:16 target as a house choice).",
+   "Short side >= 720 px and fps >= 30 (Instagram reel spec).",
+   "No third-party watermark, no letterbox borders, text is not the majority of frame area across the runtime (Instagram ranking explainer).",
+   "Audio track present and not silent; voice in the first second with music under it (Meta: Reels default to sound on).",
+   "Post caption: searchable keywords in the first line, at most 5 hashtags, none left for the comments (Instagram search explainer and hashtag cap).",
+   "Originality: the client's own footage and a cut not posted on this account before (Instagram originality rule; a trial of already-posted content gets limited reach).",
+   "Brand lint set on transcript and burned text (BTC words; SMA client-facing word).",
+   "Post-publish read at 24 h: average watch time, likes per reach, sends per reach (Mosseri, January 2025). On YouTube read viewed vs swiped away and engaged views, not public views.",
+   "New hook: publish as a trial reel first; metrics at about 24 h, auto-share decided inside 72 h (Instagram help)."
+  ],
+  "sources": [
+   "https://ads.tiktok.com/help/article/creative-best-practices",
+   "https://www.facebook.com/business/help/980593475366490",
+   "https://about.instagram.com/blog/announcements/instagram-ranking-explained",
+   "https://help.instagram.com/1038071743007909",
+   "https://www.socialmediatoday.com/news/instagram-implements-new-limits-on-hashtag-use/808309/",
+   "https://buffer.com/resources/longer-tiktoks-get-more-views-data/",
+   "https://blog.youtube/news-and-events/tall-updates-coming-to-shorts/",
+   "https://www.socialmediatoday.com/news/instagram-officially-expands-reels-length-to-3-minutes/737766/",
+   "https://www.socialmediatoday.com/news/instagram-shares-algorithm-insights-2025/738034/",
+   "https://creators.instagram.com/blog/rewarding-original-creators-on-instagram",
+   "https://help.instagram.com/1013292530224018",
+   "https://about.instagram.com/blog/announcements/break-down-how-instagram-search-works",
+   "https://support.google.com/youtube/answer/12942217?hl=en-GB&co=YOUTUBE._YTVideoType%3Dshorts",
+   "https://wistia.com/blog/using-video-ctas"
+  ]
+ },
+ {
+  "id": "paid_ad_reel",
+  "name": "Paid ad reel (9:16)",
+  "goal": "Buy a click to the closer quiz (BTC) or the account page (SMA) from cold or warm traffic. Judged on outbound CTR and cost per result; hook rate and hold rate are diagnostics.",
+  "funnel_stage": "Top to mid: paid acquisition",
+  "kind": "short",
+  "platforms": [
+   "ig_reels",
+   "fb_reels",
+   "tiktok",
+   "yt_shorts",
+   "ig_story"
+  ],
+  "placements": [
+   "Meta Reels and Stories (9:16)",
+   "Meta Feed (9:16)",
+   "TikTok in-feed",
+   "YouTube Shorts ads",
+   "Facebook in-stream reels"
+  ],
+  "length_s": {
+   "min": 6,
+   "ideal": 30,
+   "max": 60
+  },
+  "captions": "boxed",
+  "safe": "ads",
+  "cta": "spoken_plus_card",
+  "hook_deadline_s": 3,
+  "change_every_s": 4,
+  "payoff_window_pct": [
+   20,
+   87
+  ],
+  "structure": [
+   {
+    "beat": "Recognition hook plus brand mark",
+    "when": "0:00 to 0:03",
+    "purpose": "Name the viewer's situation in their words and show the brand (Meta: brand and key message in the first 3 s). Problem-first hooks beat claim-first 9 of 12 times on paid cold traffic (Green Frog, vendor data)."
+   },
+   {
+    "beat": "Hook completes",
+    "when": "0:03 to 0:06",
+    "purpose": "TikTok's hook window closes at 6 s."
+   },
+   {
+    "beat": "Steps and risk",
+    "when": "0:06 to 0:20",
+    "purpose": "Show the legitimate steps the viewer takes (Google) and how the outcome is delivered, naming the risk (TikTok deceptive practices policy). No income figure."
+   },
+   {
+    "beat": "First ask",
+    "when": "By 25% of runtime (0:07 on a 30 s cut)",
+    "purpose": "Wistia's CTA data for videos under a minute favours the first quarter; hosted-video data, so a hypothesis to test."
+   },
+   {
+    "beat": "Proof or founder line",
+    "when": "0:20 to 0:26",
+    "purpose": "Motion 2026 hit rates by visual format: Founder 8.57%, Testimonial 6.57%, Expert explainer 5.96% (DTC-heavy, reference only)."
+   },
+   {
+    "beat": "Closing ask",
+    "when": "Last 4 s",
+    "purpose": "A specific, benefit-led line with a matching card; TikTok reports a specific line beats Buy now."
+   }
+  ],
+  "cover": "The first frame is the hook frame: bright, one face, proposition text inside the safe zone. Reels placements show no separate thumbnail (house choice).",
+  "music": "faint",
+  "fillers": "cut",
+  "checks": [
+   "Length: TikTok policy sets 5 to 60 s and its guide says 21 to 34 s performs best; Meta says 6 to 15 s is the effective range (Feed best under 15 s, Stories under 10 s); Google recommends Shorts ads under 60 s. Ideal 30 s is a house choice inside TikTok's band; always produce a 15 s cutdown for Stories and Feed.",
+   "Text and logo boxes outside the top 14%, bottom 35% and 6% sides; with a disclaimer card the bottom 40% stays clear (Meta).",
+   "Brand mark and proposition text present by 3.0 s (OCR).",
+   "SRT sidecar generated and named filename.en_US.srt (Meta); burned captions mid-frame.",
+   "No licensed music, no camera or face effects (Meta Reels spec).",
+   "Policy lint on transcript and burned text: no income figure as a likely outcome; no you plus a financial attribute (debt, bankrupt, broke); no overnight-success phrasing; no fake UI text such as swipe up; the steps to the result are spoken (Google, Meta, TikTok policies).",
+   "US Meta delivery for SMA: Financial products and services special ad category set (required since January 21, 2025); investment language absent unless the advertiser is Meta-verified.",
+   "Landing page headline matches the ad's proposition text (TikTok consistency rule; Vidalytics headline-match rule).",
+   "Primary text short enough to read before the truncation point (house choice; check the live preview, no published character count was found).",
+   "Post-launch: hook rate = 3-second plays / impressions; hold rate = ThruPlays / 3-second plays, numerator labelled and never mixed with 15-second plays. Compare to the account median for the placement, not to vendor bands (Triple Whale, Motion).",
+   "Testing cadence: up to 10 creatives per ad set, at least 4 days, keep the top 5 (Meta); 3 to 5 creatives per ad group and 3 to 5 ad groups per campaign (TikTok); Finance small tier 4.7 new creatives a week, winners about 5 to 8% of launches (Motion 2026).",
+   "Brand lint set."
+  ],
+  "sources": [
+   "https://www.facebook.com/business/ads-guide/update/video/instagram-reels",
+   "https://www.facebook.com/business/help/980593475366490",
+   "https://www.facebook.com/business/help/188534925073536",
+   "https://www.facebook.com/business/help/1675722002698686",
+   "https://www.facebook.com/business/help/1792720544284355",
+   "https://www.triplewhale.com/blog/facebook-ad-analytics",
+   "https://motionapp.com/blog/key-creative-performance-metrics",
+   "https://runneth.com/thumbstop-pulse/creative-benchmarks-2026",
+   "https://motionapp.com/library/talk/meta-ads-in-2026-how-many-creatives-do-you-actually-need-to-launch/",
+   "https://motionapp.com/library/research/creative-benchmarks-2026/top-hook-tactics",
+   "https://ads.tiktok.com/business/en/guides/video-advertising-guide",
+   "https://ads.tiktok.com/resources/help/article/creative-best-practices",
+   "https://ads.tiktok.com/resources/help/article/tiktok-ads-policy-ad-format-and-functionality",
+   "https://ads.tiktok.com/resources/help/article/tiktok-ads-policy-deceptive-practices",
+   "https://ads.tiktok.com/resources/help/article/tiktok-ads-policy-financial-services",
+   "https://business.google.com/us/ad-solutions/youtube-ads/shorts-ads/",
+   "https://support.google.com/adspolicy/answer/10249050",
+   "https://support.google.com/adspolicy/answer/15936857",
+   "https://transparency.meta.com/policies/ad-standards/restricted-goods-services/financial-services/",
+   "https://www.facebook.com/business/help/2220749868045706",
+   "https://transparency.meta.com/policies/ad-standards/objectionable-content/privacy-violations-personal-attributes/",
+   "https://wistia.com/blog/using-video-ctas",
+   "https://greenfroglabs.com/blog/what-is-vsl"
+  ]
+ },
+ {
+  "id": "paid_ad_feed",
+  "name": "Paid ad, Meta feed variants (4:5 and 1:1)",
+  "goal": "The same click as paid_ad_reel, recut for Meta feed placements where a 9:16 crop would lose the face or the text. The 1:1 cut is also the home for screen-plus-webcam demo ads.",
+  "funnel_stage": "Top to mid: paid acquisition",
+  "kind": "short",
+  "platforms": [
+   "ig_feed",
+   "square"
+  ],
+  "placements": [
+   "Meta Feed 4:5 (Facebook and Instagram)",
+   "Meta Feed 1:1",
+   "Screen-plus-webcam demo ad (1:1 or 4:5)"
+  ],
+  "length_s": {
+   "min": 6,
+   "ideal": 15,
+   "max": 60
+  },
+  "captions": "boxed",
+  "safe": "ads",
+  "cta": "spoken_plus_card",
+  "hook_deadline_s": 3,
+  "change_every_s": 4,
+  "payoff_window_pct": [
+   33,
+   80
+  ],
+  "structure": [
+   {
+    "beat": "Brand and proposition",
+    "when": "0:00 to 0:03",
+    "purpose": "Brand and key message in the first 3 s (Meta)."
+   },
+   {
+    "beat": "Hook completes",
+    "when": "0:03 to 0:05",
+    "purpose": "The recognition line finishes before the body starts (house choice, aligned with the 6 s TikTok window on the 9:16 master)."
+   },
+   {
+    "beat": "Steps and one proof line",
+    "when": "0:05 to 0:12",
+    "purpose": "The how and one proof line, compressed from the 9:16 master; no income figure."
+   },
+   {
+    "beat": "Ask and end card",
+    "when": "0:12 to 0:15",
+    "purpose": "Action verb spoken with a matching card."
+   }
+  ],
+  "cover": "Frame 0 is the hook frame with the face centered. Derive 4:5 and 1:1 from the 9:16 master through the tracked camera, not a center crop (house choice).",
+  "music": "faint",
+  "fillers": "cut",
+  "checks": [
+   "Length: Meta says Feed video under 15 s performs best; max 60 s is a house choice with drop-off watched.",
+   "Aspect exactly 4:5 (1080x1350) or 1:1 (1080x1080); no letterbox.",
+   "Face box fully inside the frame on every frame after reframe (YuNet track).",
+   "Proposition text visible by 3.0 s (OCR).",
+   "Text boxes keep a 10% margin from every edge (house choice; no 4:5 safe zone is published in the pack).",
+   "Screen-plus-webcam source: split 700/380 px for 1:1 and 878/472 px for 4:5, webcam inset detected before the split (vidpipe layout numbers).",
+   "Same policy lint, SRT rule and special ad category rule as paid_ad_reel.",
+   "Brand lint set."
+  ],
+  "sources": [
+   "https://www.facebook.com/business/help/188534925073536",
+   "https://www.facebook.com/business/help/980593475366490",
+   "https://www.facebook.com/business/help/1675722002698686",
+   "https://raw.githubusercontent.com/htekdev/vidpipe/main/docs/research-aspect-ratios.md",
+   "https://support.google.com/adspolicy/answer/10249050",
+   "https://ads.tiktok.com/resources/help/article/creative-best-practices"
+  ]
+ },
+ {
+  "id": "ad_instream_169",
+  "name": "YouTube skippable in-stream ad (16:9)",
+  "goal": "The same click as paid_ad_reel on YouTube in-stream, where the viewer can skip at 5 s and a view counts only past 10 s. Two cuts: Action (15 to 20 s) and Consideration (2:00 to 3:00).",
+  "funnel_stage": "Top to mid: paid acquisition",
+  "kind": "short",
+  "platforms": [
+   "youtube",
+   "square"
+  ],
+  "placements": [
+   "YouTube skippable in-stream 16:9 (1920x1080)",
+   "YouTube skippable in-stream 1:1 (1080x1080)"
+  ],
+  "length_s": {
+   "min": 15,
+   "ideal": 20,
+   "max": 180
+  },
+  "captions": "clean",
+  "safe": "ads",
+  "cta": "spoken_plus_card",
+  "hook_deadline_s": 3,
+  "change_every_s": 4,
+  "payoff_window_pct": [
+   25,
+   75
+  ],
+  "structure": [
+   {
+    "beat": "Proposition before the skip",
+    "when": "0:00 to 0:03",
+    "purpose": "Brand and proposition on screen by 3 s (Meta rule applied as house practice; Google gives no 3 s figure)."
+   },
+   {
+    "beat": "Hook sentence ends before 0:05",
+    "when": "0:03 to 0:05",
+    "purpose": "The skip button appears at 5 s (Google)."
+   },
+   {
+    "beat": "Steps and one proof line",
+    "when": "0:05 to 0:12",
+    "purpose": "Inside the first 10 s so a counted view saw the how and the proof (Google counts views past 10 s)."
+   },
+   {
+    "beat": "Ask and end card",
+    "when": "0:12 to end",
+    "purpose": "Spoken ask; headline <= 15 characters and CTA <= 10 characters (Google). The Consideration cut adds mechanism and proof blocks between the hook and the ask, 2:00 to 3:00 total (Google)."
+   }
+  ],
+  "cover": "Frame 0 is the hook frame with the face centered; Google recommends 1080p for horizontal and square.",
+  "music": "faint",
+  "fillers": "cut",
+  "checks": [
+   "Length: Google's best-practice length is :15 to :20 for Awareness and Action and 2:00 to 3:00 for Consideration (any length accepted). The engine tags a cut over 60 s as a Consideration cut.",
+   "Aspect exactly 16:9 (1920x1080) or 1:1 (1080x1080); no letterbox.",
+   "A complete hook sentence ends by 5.0 s (skip point); proposition text visible by 3.0 s.",
+   "The how and one proof line land inside 10 s (view-count threshold).",
+   "Headline <= 15 characters, CTA <= 10 characters (Google).",
+   "Face box inside the frame on every frame after reframe; 1:1 derived through the tracked camera (house choice).",
+   "Policy lint as paid_ad_reel (Google unreliable claims and YouTube feed ad requirements).",
+   "Brand lint set."
+  ],
+  "sources": [
+   "https://support.google.com/google-ads/answer/6055025",
+   "https://support.google.com/google-ads/answer/13547298",
+   "https://support.google.com/adspolicy/answer/10249050",
+   "https://support.google.com/adspolicy/answer/15936857",
+   "https://www.facebook.com/business/help/188534925073536"
+  ]
+ },
+ {
+  "id": "confirmation_how",
+  "name": "Confirmation page HOW video",
+  "goal": "Turn a booking into a kept call: say what happens next, point to the Add to Calendar button and set up the text confirmation.",
+  "funnel_stage": "Bottom: booked, not yet shown (sales call, or the SMA Wednesday 1 PM ET training)",
+  "kind": "short",
+  "platforms": [
+   "web_vsl"
+  ],
+  "placements": [
+   "Confirmation page embed (web)",
+   "GoHighLevel confirmation email",
+   "Skool event page (SMA training)",
+   "Calendar invite description link"
+  ],
+  "length_s": {
+   "min": 60,
+   "ideal": 90,
+   "max": 120
+  },
+  "captions": "clean",
+  "safe": "organic",
+  "cta": "spoken_plus_card",
+  "hook_deadline_s": 10,
+  "change_every_s": 30,
+  "payoff_window_pct": [
+   11,
+   72
+  ],
+  "structure": [
+   {
+    "beat": "Tentative framing",
+    "when": "0:00 to 0:10",
+    "purpose": "Your call is tentatively scheduled, in the first line; the page headline carries the same words so the viewer keeps reading (SalesKick)."
+   },
+   {
+    "beat": "Logistics",
+    "when": "0:10 to 0:40",
+    "purpose": "Date, time, time zone and join link, then an arrow to the Add to Calendar button (SalesKick traced about 15% show-rate drops to Google's May 2023 invite change; the button is the fix)."
+   },
+   {
+    "beat": "Text confirmation",
+    "when": "0:40 to 1:05",
+    "purpose": "A team member will text you; reply so we know we have the right number (SalesKick's lead-nurture cadence starts with that reply)."
+   },
+   {
+    "beat": "Next step",
+    "when": "1:05 to 1:30",
+    "purpose": "Point to the WHY video below and give the one spoken ask with its card."
+   }
+  ],
+  "cover": "Still of the person the prospect will meet, looking into the lens; no sound-on autoplay (Vidyard: pre-meet the rep; Fluxi: no sound-on autoplay).",
+  "music": "none",
+  "fillers": "cut",
+  "checks": [
+   "Length: SalesKick specifies a 90-second HOW video; Fluxi gives about 90 s; max 120 s and min 60 s are house choices.",
+   "Transcript contains calendar before 0:45 and text or reply before 1:10 (keyword by time).",
+   "Exactly one CTA sentence inside the final 20 s, with a card carrying the same words.",
+   "Speaker metadata = the closer or the host of the call (Vidyard: the rep the prospect will meet).",
+   "Captions burned; no music under speech (house choice).",
+   "Page-level: headline contains tentatively, Add to Calendar button present, written steps under both videos (SalesKick).",
+   "Brand lint set."
+  ],
+  "sources": [
+   "https://www.saleskick.com/blog/increase-show-rates",
+   "https://fluxi.co/en/blog/what-is-a-vsl/",
+   "https://www.vidyard.com/video-in-motion-benchmark-report/",
+   "https://www.vidyard.com/blog/reduce-no-shows-recover-meetings/",
+   "https://getwebinarkit.com/blog/increase-webinar-show-up-rates"
+  ]
+ },
+ {
+  "id": "confirmation_why",
+  "name": "Confirmation page WHY video",
+  "goal": "Sell the value of showing up, shaped like a short training rather than a pitch, so the prospect arrives wanting the call (SalesKick: a VSL disguised as a simple training).",
+  "funnel_stage": "Bottom: booked, not yet shown",
+  "kind": "long",
+  "platforms": [
+   "web_vsl"
+  ],
+  "placements": [
+   "Confirmation page embed, under the HOW video",
+   "Pre-call email sequence",
+   "GoHighLevel 24-hour reminder link",
+   "Skool Start Here post (SMA)"
+  ],
+  "length_s": {
+   "min": 180,
+   "ideal": 300,
+   "max": 420
+  },
+  "captions": "clean",
+  "safe": "organic",
+  "cta": "spoken_plus_card",
+  "hook_deadline_s": 30,
+  "change_every_s": 60,
+  "payoff_window_pct": [
+   10,
+   80
+  ],
+  "structure": [
+   {
+    "beat": "Recognition",
+    "when": "0:00 to 0:30",
+    "purpose": "Name their situation in their words; hook inside the first 10 to 30 s (Fluxi)."
+   },
+   {
+    "beat": "What happens on the call",
+    "when": "0:30 to 1:30",
+    "purpose": "The first of Inflo's pre-call breakout topics."
+   },
+   {
+    "beat": "The questions we will ask",
+    "when": "1:30 to 2:30",
+    "purpose": "Inflo's second topic; the prospect can prepare, which lowers the fear of being put on the spot."
+   },
+   {
+    "beat": "What success looks like, and who this is not for",
+    "when": "2:30 to 4:00",
+    "purpose": "Inflo's third topic with Fluxi's filter: say who it is not for; for high ticket the full price is not revealed here."
+   },
+   {
+    "beat": "Single ask",
+    "when": "Last 30 s",
+    "purpose": "Add it to the calendar and reply to the text; card with the same words."
+   }
+  ],
+  "cover": "Same still as confirmation_how.",
+  "music": "none",
+  "fillers": "cut",
+  "checks": [
+   "Length: no source publishes a WHY video length (open question). The band is a house choice set against Inflo's 5 to 6 minute cut for warm, pre-educated audiences.",
+   "Transcript contains a not for sentence (filter present).",
+   "No price stated for BTC; brand lint set.",
+   "Exactly one CTA sentence in the final 30 s.",
+   "Captions burned; a title card at each topic change (house choice).",
+   "Topic order: call before question before success in the transcript (house check)."
+  ],
+  "sources": [
+   "https://www.saleskick.com/blog/increase-show-rates",
+   "https://www.inflopartners.com/blog/vsl-funnel-high-ticket-coaching",
+   "https://www.inflopartners.com/blog/vsl-length-high-ticket-sales",
+   "https://fluxi.co/en/blog/what-is-a-vsl/",
+   "https://ksadvantage.com/"
+  ]
+ },
+ {
+  "id": "reminder_clip",
+  "name": "Reminder clip",
+  "goal": "Get a reply or a calendar add before the call or the training. The person they will meet says what will be covered and why it is worth the time.",
+  "funnel_stage": "Bottom: booked, not yet shown",
+  "kind": "short",
+  "platforms": [
+   "ig_story",
+   "square"
+  ],
+  "placements": [
+   "Email at 24 h (embedded or GIF linking out)",
+   "SMS link at 1 h",
+   "GoHighLevel workflow step",
+   "Skool post before the training"
+  ],
+  "length_s": {
+   "min": 30,
+   "ideal": 60,
+   "max": 90
+  },
+  "captions": "clean",
+  "safe": "organic",
+  "cta": "spoken_plus_card",
+  "hook_deadline_s": 5,
+  "change_every_s": 0,
+  "payoff_window_pct": [
+   8,
+   75
+  ],
+  "structure": [
+   {
+    "beat": "Name and face",
+    "when": "0:00 to 0:05",
+    "purpose": "The closer on camera; the prospect's first name where the clip is personalised (Vidyard: feature the rep the prospect will meet)."
+   },
+   {
+    "beat": "What we will cover",
+    "when": "0:05 to 0:25",
+    "purpose": "Vidyard's pre-meeting script, first element."
+   },
+   {
+    "beat": "Why it is worth their time",
+    "when": "0:25 to 0:45",
+    "purpose": "Vidyard's second script element."
+   },
+   {
+    "beat": "How to prepare",
+    "when": "0:45 to 0:55",
+    "purpose": "One thing to bring or do (Vidyard's third element)."
+   },
+   {
+    "beat": "One ask",
+    "when": "Last 5 to 10 s",
+    "purpose": "Reply YES (24 h) or tap to join (1 h), with a card carrying the same words."
+   }
+  ],
+  "cover": "First frame: the closer's face mid-sentence, used as the GIF frame in the email (WebinarKit: embed the video or a GIF that links out).",
+  "music": "none",
+  "fillers": "cut",
+  "checks": [
+   "Length: WebinarKit specifies a 60 to 90 s personal video for the 24-hour email; Vidyard's scripts run 30 to 45 s.",
+   "Speaker metadata = the rep or host on the call.",
+   "Exactly one CTA, spoken inside the last 10 s.",
+   "Send times anchored to appointment start, never to booking time: 24 h and 1 h, plus the 15-minute link (SalesKick; RevenueHero 24 h / 1 h / 30 min; HL Growth Partner on wait-step anchoring).",
+   "The 24 h touch sends only when the booking is 36 h or more out (SalesKick cadence).",
+   "SMA live training schedule: personalised reminders at D-3, D-1 and day-of (Livestorm's above-average teams), plus 1 h and 15 min with the direct join link (WebinarKit); registration stays open until start (Livestorm: 15.3% of registrations land on the day).",
+   "Not sent after a cancellation (AgentATM).",
+   "SMS consent captured at booking before any SMS step runs (RevenueHero).",
+   "SMS carries a link to the hosted clip, never the file (MMS size caps sit far below a 9:16 clip; house choice). No send between 9 pm and 8 am in the contact's time zone, and a 1 h touch that would land inside that window moves to the morning.",
+   "Captions burned; brand lint set."
+  ],
+  "sources": [
+   "https://getwebinarkit.com/blog/increase-webinar-show-up-rates",
+   "https://www.vidyard.com/blog/reduce-no-shows-recover-meetings/",
+   "https://www.vidyard.com/video-in-motion-benchmark-report/",
+   "https://www.saleskick.com/blog/increase-show-rates",
+   "https://www.revenuehero.io/blog/ways-to-reduce-no-show-rates-in-sales-calls",
+   "https://hlgrowthpartner.com/post/gohighlevel-appointment-reminder-workflows-no-shows",
+   "https://livestorm.co/webinar-benchmark-report-2026",
+   "https://agentatms.com/pages/reduce-life-insurance-recruiting-interview-no-shows",
+   "https://pubmed.ncbi.nlm.nih.gov/30130032/",
+   "https://pmc.ncbi.nlm.nih.gov/articles/PMC2438329/"
+  ]
+ },
+ {
+  "id": "noshow_recovery_clip",
+  "name": "No-show recovery clip",
+  "goal": "Rebook a missed slot without guilt, inside the hour, with one tap. HL Growth Partner reports 30 to 50% recovery when the message goes out within the hour; Vidyard's video follow-ups converted 63% of event no-shows to MQL.",
+  "funnel_stage": "Bottom: booked, missed",
+  "kind": "short",
+  "platforms": [
+   "ig_story",
+   "square"
+  ],
+  "placements": [
+   "SMS link within 60 minutes of the missed slot",
+   "GoHighLevel no-show branch",
+   "Email fallback"
+  ],
+  "length_s": {
+   "min": 20,
+   "ideal": 45,
+   "max": 60
+  },
+  "captions": "clean",
+  "safe": "organic",
+  "cta": "spoken_plus_card",
+  "hook_deadline_s": 5,
+  "change_every_s": 0,
+  "payoff_window_pct": [
+   12,
+   75
+  ],
+  "structure": [
+   {
+    "beat": "No-guilt open",
+    "when": "0:00 to 0:05",
+    "purpose": "We missed you, not you missed us; the closer on camera, first name where personalised (HL Growth Partner: no-guilt rebooking message)."
+   },
+   {
+    "beat": "One reason to rebook",
+    "when": "0:05 to 0:25",
+    "purpose": "Tied to what they asked for on the application or the qualifying question (SalesKick: reference the application)."
+   },
+   {
+    "beat": "What happens next",
+    "when": "0:25 to 0:35",
+    "purpose": "Slots are open for the next 2 days only (SalesKick rolling window; Focus Digital: same-day no-shows near 7%, two weeks out 42 to 67%)."
+   },
+   {
+    "beat": "One-click rebook link",
+    "when": "Last 10 s",
+    "purpose": "Spoken ask with the link card; nothing else on screen."
+   }
+  ],
+  "cover": "First frame: the closer's face, plain background, used as the GIF frame in the email fallback (WebinarKit).",
+  "music": "none",
+  "fillers": "keep",
+  "checks": [
+   "Length 20 to 60 s: house choice (no source gives a recovery clip length).",
+   "Fires within 60 minutes of the missed slot (HL Growth Partner).",
+   "No-show status stamped on the slot before the clip sends; without the stamp there is no show rate to manage (HL Growth Partner; Ziel Lab).",
+   "Word list: we missed you passes; you missed, no-show and wasted fail (house rule).",
+   "One rebook link, slots limited to the next 2 days (SalesKick; Focus Digital).",
+   "Not sent after a cancellation (AgentATM).",
+   "Speaker metadata = the closer; one raw take, fillers kept (house choice: speed over polish).",
+   "Brand lint set."
+  ],
+  "sources": [
+   "https://hlgrowthpartner.com/post/gohighlevel-appointment-reminder-workflows-no-shows",
+   "https://www.vidyard.com/blog/reduce-no-shows-recover-meetings/",
+   "https://www.revenuehero.io/blog/ways-to-reduce-no-show-rates-in-sales-calls",
+   "https://www.saleskick.com/blog/increase-show-rates",
+   "https://focus-digital.co/average-no-show-rate-for-booked-sales-meetings-by-booking-channel/",
+   "https://ziellab.com/post/sales-meeting-no-show-rate-b2b-revops-guide",
+   "https://agentatms.com/pages/reduce-life-insurance-recruiting-interview-no-shows",
+   "https://getwebinarkit.com/blog/increase-webinar-show-up-rates"
+  ]
+ },
+ {
+  "id": "vsl_book_call",
+  "name": "Book-a-call VSL (4 to 12 min)",
+  "goal": "Move an opted-in or warm visitor to book the call (BTC) or open the account and register for the training (SMA). The only CTA is a booking or an application. Likely what BVSL means; confirm with the owner.",
+  "funnel_stage": "Mid to bottom: quiz result page (BTC), opt-in thank-you page, website VSL page (SMA)",
+  "kind": "long",
+  "platforms": [
+   "web_vsl"
+  ],
+  "placements": [
+   "Opt-in thank-you page",
+   "Website VSL page (setmoreannuities.com)",
+   "Quiz result page (BTC)",
+   "Application page"
+  ],
+  "length_s": {
+   "min": 240,
+   "ideal": 420,
+   "max": 720
+  },
+  "captions": "clean",
+  "safe": "organic",
+  "cta": "in_band",
+  "hook_deadline_s": 30,
+  "change_every_s": 8,
+  "payoff_window_pct": [
+   29,
+   57
+  ],
+  "structure": [
+   {
+    "beat": "Hook",
+    "when": "0:00 to 0:30",
+    "purpose": "Who it is for, the one result, a reason to stay (Vidalytics template); open on the viewer's situation rather than the ad's claim (Green Frog, vendor data). Inflo gives the hook 30 s."
+   },
+   {
+    "beat": "Problem",
+    "when": "0:30 to 2:00",
+    "purpose": "Inflo: 1 minute 30 seconds. Vidalytics: 80% of viewers watch the first 2 to 3 minutes, the widest audience the video will have."
+   },
+   {
+    "beat": "Authority and proof",
+    "when": "2:00 to 4:00",
+    "purpose": "Inflo: 2 minutes. Proof before mechanism for a warm viewer."
+   },
+   {
+    "beat": "Escape-hatch ask",
+    "when": "About 2:30 to 3:00, inside the proof block",
+    "purpose": "If that is all you need to hear, book below (Roezan's breakdown of the closers.io VSL). The booking button reveals here and stays."
+   },
+   {
+    "beat": "Objection handling",
+    "when": "4:00 to 5:30",
+    "purpose": "Inflo: 1 minute 30 seconds. Answer the two or four objections the closers hear most, out loud (Digistore24)."
+   },
+   {
+    "beat": "Ask with a reason to act now, and who it is not for",
+    "when": "5:30 to 7:00",
+    "purpose": "Inflo: 1 minute 30 seconds. Fluxi: the high-ticket CTA filters by saying who it is not for; full price not revealed."
+   }
+  ],
+  "cover": "Poster frame matches the page headline, which matches the ad's first line (Vidalytics). Autoplay only with a restart on unmute so the hook is heard; never a pause lock (Vidalytics: pause lock dropped engagement to 15% vs 30%; the restart version converted 49% better).",
+  "music": "none",
+  "fillers": "cut",
+  "checks": [
+   "Length: Inflo's rule is 6 to 9 min with 7 as the target, never under 4 and never over 12; warm audiences 5 to 6 min, cold 7 to 9; Palmer's short-form band is 3 to 10 min; Roezan's closers.io example runs about 5 min. Warm cut 300 to 360 s, cold cut 420 to 540 s.",
+   "Hook complete by 0:30: audience line and result line both in the transcript before 30 s.",
+   "First booking ask between 2:00 and 3:30; final ask inside the last 90 s.",
+   "No agitation stretch over 90 s continuous (Green Frog, vendor: longer agitation is where viewers feel manipulated).",
+   "One CTA type only (book or apply); no second offer in the transcript.",
+   "Page config: the button reveal timestamp equals the escape-hatch timestamp (timed CTA tied to video time, not page time); player controls visible; text version of the offer under the player; one open-text qualifying question above the application (Vidalytics, Digistore24, Inflo).",
+   "B-roll share <= 40% of runtime; at most one cutaway per 12 s; none in the first 3 s or last 1 s (SupoClip planner rules, borrowed).",
+   "Captions burned; one key-line card per section (VSL by Baran).",
+   "Brand lint set; no income figure framed as a likely outcome; SMA page copy never names the product.",
+   "Post-launch: pull the second-by-second curve and fix the earliest cliff first (Digistore24). Vidalytics' 40% still watching at the CTA is a purchase-funnel reference, not a book-a-call benchmark."
+  ],
+  "sources": [
+   "https://www.inflopartners.com/blog/vsl-length-high-ticket-sales",
+   "https://www.inflopartners.com/blog/vsl-funnel-high-ticket-coaching",
+   "https://www.roezan.com/post/vsl-script-template",
+   "https://www.vidalytics.com/video-sales-letter",
+   "https://www.digistore24.com/blog/video-sales-letter/",
+   "https://greenfroglabs.com/blog/what-is-vsl",
+   "https://fluxi.co/en/blog/what-is-a-vsl/",
+   "https://vslbybaran.com/video-sales-letter-editor",
+   "https://robpalmer.com/blog/what-is-a-vsl",
+   "https://github.com/fujiwarachoki/supoclip/issues/268",
+   "https://www.clickfunnels.com/blog/how-to-create-a-video-sales-funnel/"
+  ]
+ },
+ {
+  "id": "vsl_long",
+  "name": "Long VSL (program sale, 15 to 45 min)",
+  "goal": "Sell the program or a considered application to a buyer who needs mechanism and proof before the ask. One CTA, revealed at the offer.",
+  "funnel_stage": "Bottom: sales page or application page, after the call funnel or for a direct-purchase tier",
+  "kind": "long",
+  "platforms": [
+   "web_vsl"
+  ],
+  "placements": [
+   "Sales page",
+   "Application page",
+   "Email-list replay page",
+   "Unlisted YouTube embed (house choice)"
+  ],
+  "length_s": {
+   "min": 900,
+   "ideal": 1500,
+   "max": 2700
+  },
+  "captions": "clean",
+  "safe": "organic",
+  "cta": "in_band",
+  "hook_deadline_s": 15,
+  "change_every_s": 10,
+  "payoff_window_pct": [
+   44,
+   68
+  ],
+  "structure": [
+   {
+    "beat": "Hook",
+    "when": "0:00 to 0:45",
+    "purpose": "Vidalytics part 1. Palmer: the hook lands in the first 5 to 15 s."
+   },
+   {
+    "beat": "Problem and root cause",
+    "when": "0:45 to 3:00",
+    "purpose": "Vidalytics part 2. Green Frog's warning stands: no single agitation stretch over 90 s."
+   },
+   {
+    "beat": "Mechanism",
+    "when": "3:00 to 7:00",
+    "purpose": "Vidalytics part 3: why the obvious fixes fail and what works instead (Digistore24 order)."
+   },
+   {
+    "beat": "Proof",
+    "when": "7:00 to 11:00",
+    "purpose": "Vidalytics part 4; testimonial_clip cuts drop in here."
+   },
+   {
+    "beat": "Offer and value stack",
+    "when": "11:00 to 15:00",
+    "purpose": "Vidalytics part 5; the button reveals when the offer is stated (Benson's example at 16:34, Vidalytics' at 16:45)."
+   },
+   {
+    "beat": "Objections out loud",
+    "when": "15:00 to 18:00 (house placement)",
+    "purpose": "Digistore24's part 7: answer the objections in the viewer's words before the close."
+   },
+   {
+    "beat": "Ask and terms",
+    "when": "18:00 to end",
+    "purpose": "Vidalytics part 6. One call to action, repeated but singular (Digistore24). BTC terms stated without the banned words."
+   },
+   {
+    "beat": "Pattern breaks (text-on-screen variant)",
+    "when": "Every 5 to 10 slides",
+    "purpose": "One sentence per slide ending in an ellipsis or colon, and a slide with only three words every 5 to 10 slides so the reader cannot run ahead (Benson)."
+   }
+  ],
+  "cover": "Poster frame = the presenter or the first slide line; the page headline matches the first spoken line (Vidalytics).",
+  "music": "none",
+  "fillers": "cut",
+  "checks": [
+   "Length: Benson runs nothing under 15 min and his most successful run 30 to 40; Palmer's long-form band is 20 to 45 min; Vidalytics' six parts reach the CTA at 15:00. Ideal 25 min is a house pick inside those bands.",
+   "Six section markers in transcript order: hook, problem, mechanism, proof, offer, close.",
+   "Offer reveal between 11:00 and 17:00 on a 15 to 25 min cut; button trigger time equals the offer reveal time.",
+   "One CTA, repeated, singular; no second offer.",
+   "Objection block present after the offer (keyword lint: you might be thinking, what if, but).",
+   "Text-on-screen cut: one sentence per slide; a slide with <= 3 words at least once per 10 slides.",
+   "Test the plain text-on-screen cut against the presenter cut (Vidalytics split test: 68% vs 49% held at 0:35).",
+   "Brand lint set; no income figure framed as a likely outcome; terms stated plainly.",
+   "Post-launch: judge the reveal time by sales, not clicks (Vidalytics); fix the earliest retention cliff first (Digistore24); only 20% of viewers stay to the end of videos over 20 min across business video (Vidyard), so the ask cannot wait for the end."
+  ],
+  "sources": [
+   "https://www.vidalytics.com/video-sales-letter",
+   "https://robpalmer.com/blog/what-is-a-vsl",
+   "https://robpalmer.com/blog/long-form-sales-letter-vs-vsl",
+   "https://ilovemarketing.com/episode-44the-one-with-jon-benson-video-sales-letters/",
+   "https://www.digistore24.com/blog/video-sales-letter/",
+   "https://greenfroglabs.com/blog/what-is-vsl",
+   "https://vslbybaran.com/video-sales-letter-editor",
+   "https://www.vidyard.com/business-video-benchmarks/",
+   "https://wistia.com/blog/optimal-video-length"
+  ]
+ },
+ {
+  "id": "yt_authority",
+  "name": "YouTube authority long-form (16:9, 8 to 20 min)",
+  "goal": "Earn watch time and subscribers from search and suggested, then send the warm viewer to the quiz (BTC) or the account page (SMA) through the description, the pinned comment and the end screen.",
+  "funnel_stage": "Top to mid: authority and nurture; the source pool for organic reels",
+  "kind": "long",
+  "platforms": [
+   "youtube"
+  ],
+  "placements": [
+   "YouTube (public)",
+   "Website blog embed",
+   "Skool Classroom page (unlisted embed)",
+   "Email newsletter link"
+  ],
+  "length_s": {
+   "min": 480,
+   "ideal": 720,
+   "max": 1200
+  },
+  "captions": "pops",
+  "safe": "organic",
+  "cta": "end_card",
+  "hook_deadline_s": 15,
+  "change_every_s": 20,
+  "payoff_window_pct": [
+   67,
+   97
+  ],
+  "structure": [
+   {
+    "beat": "Promise match",
+    "when": "0:00 to 0:15",
+    "purpose": "Restate the title and thumbnail promise and show the payoff clip; no logo sting or preamble (YouTube's Intro metric measures survival at 30 s; vidIQ: value promise inside 15 s)."
+   },
+   {
+    "beat": "Stakes",
+    "when": "0:15 to 0:30",
+    "purpose": "Why it matters to this viewer; the MrBeast memo's first-minute levers are lighting from frame one, matching the thumbnail and pre-planned opening lines."
+   },
+   {
+    "beat": "Show, do not tell",
+    "when": "0:30 to 3:00",
+    "purpose": "Compressed progression so the viewer feels invested fast (memo: minutes 1 to 3 shift from hype to execution)."
+   },
+   {
+    "beat": "Re-engagement",
+    "when": "About 3:00",
+    "purpose": "A planned segment that resets interest before boredom (memo)."
+   },
+   {
+    "beat": "Body with chapters",
+    "when": "3:00 to end minus 20 s",
+    "purpose": "Chapters of 2 to 5 min, keyword pops on emphasis words, a quote card at the strongest line; the heavier explanation goes after minute 6 (memo)."
+   },
+   {
+    "beat": "Open-loop payoff",
+    "when": "Last third",
+    "purpose": "Resolve the item teased early (vidIQ's hook-deliver cycle)."
+   },
+   {
+    "beat": "Bridge and end screen",
+    "when": "Last 20 s",
+    "purpose": "Keep talking with a one-line bridge to one specific next video; up to four end-screen elements; never signal the ending earlier (YouTube end screens; memo)."
+   }
+  ],
+  "cover": "Thumbnail 16:9 at 1280x720 as `cover` writes it (YouTube recommends 3840x2160 and accepts a minimum width of 640 px; under 2 MB when uploaded from a phone): at most 3 elements, 1 or 2 faces, 1 to 4 words, bright image, checked on a black background at phone size (Galloway, 2021 heuristic). Title under 100 characters, key words first, branding last (YouTube). Draft 10 to 20 title and thumbnail pairs and test up to 3 in YouTube's native A/B.",
+  "music": "faint",
+  "fillers": "cut",
+  "checks": [
+   "Length: vidIQ's benchmark case is a 6 to 9 min talking-head video at roughly 30% viewed; AIR's bands give a 30% median and 41% top quarter for 5 to 15 min; Wistia puts 5 to 30 min in the convert-or-nurture band. Ideal 12 min is a house pick.",
+   "First speech within 1.0 s; no logo or intro card before the first spoken line (house implementation of promise match).",
+   "Title words appear in the transcript inside the first 15 s.",
+   "Chapters: first at 00:00, at least 3, ascending, each >= 10 s (YouTube); count = max(3, min(15, round(minutes / 3))) and titles of 3 to 8 words (vidpipe); embedded as FFMETADATA with -map_metadata.",
+   "Thumbnail: 16:9, width >= 1280, file <= 2 MB; OCR word count <= 4; face count <= 2.",
+   "Title <= 100 characters; description <= 5,000 characters (YouTube).",
+   "End screen: last 5 to 20 s, video >= 25 s, <= 4 elements, custom image >= 300x300 px; right third clear of key content in the final 20 s (YouTube).",
+   "Keyword pops: 1 to 2 per caption group, on Layer 1, never over the face box; caption groups split at 800 ms gaps with <= 8 words per group (vidpipe recipe). Closed-caption track uploaded; no burned full captions on the master.",
+   "Silence removal capped at 20% of runtime (vidpipe); fillers removed.",
+   "Brand lint set on title, description, cards and transcript.",
+   "Post-launch: >= 60% still present at 0:30, strongest hooks over 65% (vidIQ); APV median 30% and stretch 41% for 5 to 15 min (AIR); CTR read against the channel's own videos by traffic source, 2 to 10% as YouTube's platform band; high CTR with low AVD flags clickbait. Diagnose in order: CTR, 30-second survival, mid-video dips, reach; one variable per upload (vidIQ).",
+   "Cadence: one upload a week without missing (vidIQ's study shows median growth rising at every frequency tier; Galloway)."
+  ],
+  "sources": [
+   "https://support.google.com/youtube/answer/9314415?hl=en",
+   "https://support.google.com/youtube/answer/12340300?hl=en",
+   "https://support.google.com/youtube/answer/72431?hl=en",
+   "https://support.google.com/youtube/answer/16391400?hl=en",
+   "https://support.google.com/youtube/answer/7628154?hl=en",
+   "https://support.google.com/youtube/answer/9884579?hl=en",
+   "https://support.google.com/youtube/answer/6388789?hl=en",
+   "https://support.google.com/youtube/answer/57404?hl=en&co=GENIE.Platform%3DDesktop",
+   "https://vidiq.com/blog/post/increase-audience-retention-youtube/",
+   "https://vidiq.com/blog/post/average-view-duration/",
+   "https://vidiq.com/research/youtube-upload-frequency-study/",
+   "https://air.io/en/youtube-hacks/watch-time-vs-average-view-duration",
+   "https://cdn.prod.website-files.com/6623bf84e83241ec49b548e4/66edaa19db6e9359bb92931f_How-To-Succeed-At-MrBeast-Production%20(2).pdf",
+   "https://x.com/PaddyG96/status/1450463472907657220",
+   "https://www.colinandsamir.com/resources/the-new-rules-of-youtube-from-paddy-galloway",
+   "https://www.marketingexamined.com/blog/paddy-galloway-youtube-guide",
+   "https://raw.githubusercontent.com/htekdev/vidpipe/main/docs/research-chapters.md",
+   "https://raw.githubusercontent.com/htekdev/vidpipe/main/docs/research-captions.md",
+   "https://voicecreator.pro/blog/burned-in-vs-closed-captions",
+   "https://wistia.com/blog/optimal-video-length"
+  ]
+ },
+ {
+  "id": "skool_welcome",
+  "name": "Skool welcome video",
+  "goal": "Get a new member to the first lesson and the next call inside their first week; a lesson completed in week one is the strongest predictor of finishing (78.2% vs 17.2%, Ruzuku).",
+  "funnel_stage": "Post-join: onboarding and retention",
+  "kind": "short",
+  "platforms": [
+   "youtube"
+  ],
+  "placements": [
+   "Skool onboarding plugin (Pro)",
+   "Pinned Start Here post",
+   "Skool AutoDM link",
+   "Welcome email"
+  ],
+  "length_s": {
+   "min": 90,
+   "ideal": 150,
+   "max": 180
+  },
+  "captions": "none",
+  "safe": "organic",
+  "cta": "spoken_plus_card",
+  "hook_deadline_s": 30,
+  "change_every_s": 45,
+  "payoff_window_pct": [
+   50,
+   90
+  ],
+  "structure": [
+   {
+    "beat": "Who I am, who this is for",
+    "when": "0:00 to 0:30",
+    "purpose": "The creator on camera (Skool asks for a creator-made tour; Welter's list starts here)."
+   },
+   {
+    "beat": "Where everything is",
+    "when": "0:30 to 1:15",
+    "purpose": "The tour: feed, Classroom, calendar and the Start Here post (Skool plugin guidance)."
+   },
+   {
+    "beat": "First lesson",
+    "when": "1:15 to 1:45",
+    "purpose": "Which lesson to open first, by name."
+   },
+   {
+    "beat": "Next call",
+    "when": "1:45 to 2:15",
+    "purpose": "When the next call is and that replays get posted."
+   },
+   {
+    "beat": "One next step",
+    "when": "Last 15 s",
+    "purpose": "Open lesson 1 now and comment on the Start Here post; plain card naming the lesson."
+   }
+  ],
+  "cover": "Creator's face at a desk, eye contact (Guo: informal desk recordings with eye contact out-engaged studio lectures).",
+  "music": "none",
+  "fillers": "cut",
+  "checks": [
+   "Length: Welter's spec is two to three minutes covering five items; min 90 s is a house choice.",
+   "Transcript keywords by 2:15: start here, lesson, call (or live) and replay.",
+   "Exactly one CTA in the last 20 s.",
+   "Native Skool upload (not a YouTube embed) so closed captions and the transcript generate; Transcript addendum added.",
+   "Face visible in >= 50% of frames (house choice).",
+   "Brand lint set.",
+   "AutoDM paired with it asks one open and one closed question (Skool plugin guidance)."
+  ],
+  "sources": [
+   "https://help.skool.com/article/176-how-to-use-plugins",
+   "https://kevinwelter.com/en/blog/skool-onboarding",
+   "https://www.ruzuku.com/learn/articles/course-completion-rates",
+   "https://up.csail.mit.edu/other-pubs/las2014-pguo-engagement.pdf",
+   "https://help.skool.com/article/58-video"
+  ]
+ },
+ {
+  "id": "skool_lesson",
+  "name": "Skool lesson module",
+  "goal": "Teach one skill per page and get the member to do one action step and post the result, so the course gets finished.",
+  "funnel_stage": "Post-join: delivery and retention; the source of wins and testimonials",
+  "kind": "long",
+  "platforms": [
+   "youtube"
+  ],
+  "placements": [
+   "Skool Classroom page (native upload)",
+   "Unlisted YouTube embed (fallback)",
+   "Loom embed for daily answers",
+   "9:16 clip to the community feed"
+  ],
+  "length_s": {
+   "min": 120,
+   "ideal": 360,
+   "max": 720
+  },
+  "captions": "none",
+  "safe": "organic",
+  "cta": "spoken_plus_card",
+  "hook_deadline_s": 15,
+  "change_every_s": 30,
+  "payoff_window_pct": [
+   58,
+   100
+  ],
+  "structure": [
+   {
+    "beat": "Objective",
+    "when": "0:00 to 0:15",
+    "purpose": "State the one micro-objective (UCSD: one micro-objective per video)."
+   },
+   {
+    "beat": "Concept",
+    "when": "0:15 to about 3:30 on a 6 min cut",
+    "purpose": "Desk shot or screen with talking-head cut-ins; draw over the slides for how-to content (Guo: Khan-style drawing held attention 1.5x to 2x longer than slides)."
+   },
+   {
+    "beat": "Worked example",
+    "when": "About 3:30 to end minus 60 s",
+    "purpose": "Show it done once, at pace."
+   },
+   {
+    "beat": "Action step and share prompt",
+    "when": "Last 45 to 60 s",
+    "purpose": "One verb-led task of 10 to 15 minutes, then post the result in the comments (Ruzuku's lesson shape: concept under 12 min, action 10 to 15 min, 3-minute share)."
+   }
+  ],
+  "cover": "Course cover: creator's face plus the module name. Skool publishes no pixel size; 1920x1080 is a house choice until verified.",
+  "music": "none",
+  "fillers": "cut",
+  "checks": [
+   "Length: Guo's 6.9M-session data puts median engagement at most 6 min regardless of length, with viewers quitting before halfway past 9 min; UCSD says under 12 min and never over 20; Ruzuku's concept video is under 12 min. Over the band the review fails the length check; split long recordings at natural breaks.",
+   "One objective: the page title names one skill and the first 15 s of transcript state it.",
+   "Timestamps typed under the video when runtime > 360 s: first at 0:00, at least 3, each >= 10 s (YouTube's rules applied so the embed fallback also works).",
+   "Action-step keyword in the last 60 s (your task, post, comment).",
+   "Speech rate inside 120 to 200 wpm (house band inside Guo's observed 48 to 254 wpm, mean 136).",
+   "Silence removal <= 20% of runtime; isolated speech bursts under 2 s removed (vidpipe; ai-video-editor).",
+   "Webcam inset detected before the 9:16 split: a face in the corner region on >= 60% of sampled frames (house threshold; vidpipe's floor is 30% confidence); split 65/35 (1248 px screen over 672 px webcam).",
+   "Native upload confirmed; Loom embeds have comments and emoji reactions switched off (Skool).",
+   "Drip or level gate set on pages after the Quick Start course (Level 2 at 5 points, Level 3 at 20).",
+   "A pinned discussion post under the lesson (up to 12 pins per course page).",
+   "Brand lint set."
+  ],
+  "sources": [
+   "https://help.skool.com/article/58-video",
+   "https://help.skool.com/article/166-what-is-classroom",
+   "https://help.skool.com/article/38-how-do-to-pin-a-post",
+   "https://help.skool.com/article/145-how-does-level-locked-courses-work",
+   "https://help.skool.com/article/53-how-to-drip-the-content",
+   "https://help.skool.com/article/225-how-to-add-loom-videos",
+   "https://up.csail.mit.edu/other-pubs/las2014-pguo-engagement.pdf",
+   "https://multimedia.ucsd.edu/best-practices/video-length.html",
+   "https://www.ruzuku.com/learn/articles/course-completion-rates",
+   "https://support.google.com/youtube/answer/9884579",
+   "https://raw.githubusercontent.com/htekdev/vidpipe/main/docs/research-aspect-ratios.md",
+   "https://github.com/htekdev/vidpipe",
+   "https://github.com/timkulbaev/ai-video-editor",
+   "https://support.atlassian.com/loom/docs/use-looms-different-capture-modes/"
+  ]
+ },
+ {
+  "id": "skool_cancel_video",
+  "name": "Skool cancellation video",
+  "goal": "Explain what a member loses by leaving, kept light, and make one ask. Skool's plugin guidance names this video; Hormozi's churn checklist lists a cancellation video among its items.",
+  "funnel_stage": "Post-join: retention at the cancel step",
+  "kind": "short",
+  "platforms": [
+   "youtube"
+  ],
+  "placements": [
+   "Skool cancellation plugin",
+   "Cancel-flow email"
+  ],
+  "length_s": {
+   "min": 45,
+   "ideal": 75,
+   "max": 120
+  },
+  "captions": "none",
+  "safe": "organic",
+  "cta": "spoken_plus_card",
+  "hook_deadline_s": 5,
+  "change_every_s": 0,
+  "payoff_window_pct": [
+   20,
+   80
+  ],
+  "structure": [
+   {
+    "beat": "Plain open",
+    "when": "0:00 to 0:05",
+    "purpose": "The creator on camera, no pressure words; say the member can leave."
+   },
+   {
+    "beat": "What a member loses, kept light",
+    "when": "0:05 to 0:40",
+    "purpose": "Name the next call by date and one recent win from the Wins category (Skool plugin guidance; Hormozi churn checklist on community calls and wins)."
+   },
+   {
+    "beat": "One question",
+    "when": "0:40 to 1:00",
+    "purpose": "What did you come for, and did you get it. Said plainly."
+   },
+   {
+    "beat": "One ask",
+    "when": "Last 15 s",
+    "purpose": "Reply to this message or come to the next call before deciding; card with the same words."
+   }
+  ],
+  "cover": "Creator's face at the desk, same framing as the welcome video.",
+  "music": "none",
+  "fillers": "cut",
+  "checks": [
+   "Length 45 to 120 s: house choice (no source gives a cancellation video length).",
+   "Transcript names the next call and one recent win (keyword check: call, win).",
+   "Exactly one ask; no second offer.",
+   "Pressure-word list fails: last chance, final, lose everything, only today (house rule); the BTC words free, no cost, guarantee and guaranteed never appear.",
+   "Native Skool upload.",
+   "Brand lint set."
+  ],
+  "sources": [
+   "https://help.skool.com/article/176-how-to-use-plugins",
+   "https://www.skool.com/acceleratoruniversity/churn-checklist-alex-hormozis-14-strategies",
+   "https://www.youtube.com/watch?v=aiPxj5np1mQ"
+  ]
+ },
+ {
+  "id": "replay",
+  "name": "Live training or webinar replay",
+  "goal": "Give the replay audience the full training with the ask kept in. Skool's CEO reports replays get at least 10 times the viewers of the live session. SMA's Wednesday 1 PM ET training is the source.",
+  "funnel_stage": "Mid: nurture to book; also post-join delivery for weekly calls",
+  "kind": "long",
+  "platforms": [
+   "youtube"
+  ],
+  "placements": [
+   "Skool post (same day)",
+   "Skool Classroom page with timestamps",
+   "Unlisted YouTube for the email list",
+   "Website replay page with a timed CTA"
+  ],
+  "length_s": {
+   "min": 1800,
+   "ideal": 2400,
+   "max": 2700
+  },
+  "captions": "none",
+  "safe": "organic",
+  "cta": "in_band",
+  "hook_deadline_s": 30,
+  "change_every_s": 180,
+  "payoff_window_pct": [
+   2,
+   88
+  ],
+  "structure": [
+   {
+    "beat": "Cold open on the promise",
+    "when": "0:00 to 0:30",
+    "purpose": "Waiting room and housekeeping cut (house choice)."
+   },
+   {
+    "beat": "Teaching block 1",
+    "when": "0:30 to about 20:00",
+    "purpose": "The core content, chapters every 2 to 5 min (vidpipe)."
+   },
+   {
+    "beat": "Reset before minute 22",
+    "when": "About 20:00 to 22:00",
+    "purpose": "A pulled-forward question or a story; Contrast's data has drop-off starting around minute 22."
+   },
+   {
+    "beat": "Teaching block 2",
+    "when": "22:00 to about 35:00",
+    "purpose": "Second block; quote cards on the strongest lines."
+   },
+   {
+    "beat": "Ask in the first and last quarters",
+    "when": "Q1 and Q4",
+    "purpose": "Wistia's lead-form data for 30 to 60 min videos: 1st and 4th quarters (50 to 51% CTR); for a 30 min cut use every quarter except the third (53 to 55%)."
+   },
+   {
+    "beat": "Q&A tail",
+    "when": "After 35:00",
+    "purpose": "Only the useful answers kept (house choice)."
+   }
+  ],
+  "cover": "The Skool calendar event's cover image reused; thumbnail per the yt_authority rules for the YouTube copy.",
+  "music": "none",
+  "fillers": "cut",
+  "checks": [
+   "Length: Wistia found replays of 31 to 45 min saw more than twice the engagement of replays under 30 min; Univid reports 86% of webinars run 30 to 60 min; ideal 40 min is a house pick.",
+   "First speech within 10 s of 0:00 (waiting room removed).",
+   "Still stretches are sped through rather than removed (auto-editor cookbook); total removal capped at 20% (vidpipe).",
+   "CTA keyword present inside the Q1 and Q4 windows; timed CTA card on the website page.",
+   "Chapters follow YouTube's rules (00:00 first, at least 3, each >= 10 s).",
+   "Posted the same day; the Skool Call recording is downloaded within 14 days or it expires (Skool).",
+   "Two-host recordings run through diarization before the speaker cut (pyannote community-1; interjections under 1.2 s ignored, cut 0.15 s before the next speaker's first word, snapped to scene cuts within 0.3 s, SupoClip rules).",
+   "Brand lint set on titles, cards, description and post text."
+  ],
+  "sources": [
+   "https://help.skool.com/article/210-how-to-go-live-on-skool",
+   "https://help.skool.com/article/146-how-to-create-an-event-in-your-group",
+   "https://www.youtube.com/watch?v=aiPxj5np1mQ",
+   "https://wistia.com/blog/video-marketing-statistics",
+   "https://www.getcontrast.io/learn/webinar-benchmarks",
+   "https://univid.io/webinar-statistics/",
+   "https://github.com/htekdev/vidpipe",
+   "https://github.com/wyattblue/auto-editor/blob/5883594ea9dbf0922506d02786196e056f7d2df5/docs/src/docs/cookbook.md",
+   "https://github.com/fujiwarachoki/supoclip/issues/175",
+   "https://github.com/pyannote/pyannote-audio",
+   "https://support.google.com/youtube/answer/9884579"
+  ]
+ },
+ {
+  "id": "testimonial_clip",
+  "name": "Testimonial clip (short cut for ads and proof blocks)",
+  "goal": "Proof in the client's own words: where they were, what they did, what changed. Cut for the proof block of a VSL, a paid ad, a Skool Wins post or the post-booking email.",
+  "funnel_stage": "Cross-funnel: proof in mid and bottom formats; pre-call nurture",
+  "kind": "short",
+  "platforms": [
+   "ig_reels",
+   "square",
+   "youtube"
+  ],
+  "placements": [
+   "Meta and TikTok ads (testimonial format)",
+   "VSL proof section",
+   "Skool Wins category",
+   "Post-booking email"
+  ],
+  "length_s": {
+   "min": 20,
+   "ideal": 45,
+   "max": 90
+  },
+  "captions": "clean",
+  "safe": "ads",
+  "cta": "none",
+  "hook_deadline_s": 3,
+  "change_every_s": 5,
+  "payoff_window_pct": [
+   33,
+   100
+  ],
+  "structure": [
+   {
+    "beat": "Result or situation line",
+    "when": "0:00 to 0:03",
+    "purpose": "The subject's own first line, problem-first so the viewer recognises themself (Green Frog, vendor data)."
+   },
+   {
+    "beat": "Before",
+    "when": "0:03 to 0:15",
+    "purpose": "Where they were, said plainly (worried, stuck, behind)."
+   },
+   {
+    "beat": "What they did",
+    "when": "0:15 to 0:35",
+    "purpose": "The steps, so the outcome has a visible how (Google: ads promising money must show the legitimate steps; TikTok: say how the outcome is delivered)."
+   },
+   {
+    "beat": "Result with a specific",
+    "when": "0:35 to 0:45",
+    "purpose": "One number or one change; a results-vary disclaimer card sits over any specific result (Google's unreliable claims policy requires a visible disclaimer on testimonials that cite specific results)."
+   },
+   {
+    "beat": "Host ask",
+    "when": "Last 5 s, standalone use only",
+    "purpose": "Inherits the host format's CTA."
+   }
+  ],
+  "cover": "Subject's face with 1 to 4 words of the result line.",
+  "music": "faint",
+  "fillers": "cut",
+  "checks": [
+   "Length: house choice; no source gives a testimonial length. Ad use is capped at 60 s by TikTok policy.",
+   "Specific-result detector (currency, percent, in N days) triggers a required disclaimer card on screen for the whole claim; bottom 40% clear while the card is up (Meta).",
+   "No income figure framed as typical or likely (Google, TikTok).",
+   "Steps stated in the transcript before the result.",
+   "Consent record on file for the subject (house rule).",
+   "Name and role lower-third present by 0:05, inside the safe zone.",
+   "Brand lint set; the disclaimer says results vary without using the BTC banned words.",
+   "Reference only: Motion's 2026 hit rates, Testimonial 6.57% and Founder 8.57%, are DTC-heavy; compare in-account."
+  ],
+  "sources": [
+   "https://support.google.com/adspolicy/answer/10249050",
+   "https://support.google.com/adspolicy/answer/15936857",
+   "https://ads.tiktok.com/resources/help/article/tiktok-ads-policy-deceptive-practices",
+   "https://ads.tiktok.com/resources/help/article/tiktok-ads-policy-ad-format-and-functionality",
+   "https://runneth.com/thumbstop-pulse/creative-benchmarks-2026",
+   "https://www.facebook.com/business/help/980593475366490",
+   "https://greenfroglabs.com/blog/what-is-vsl"
+  ]
+ },
+ {
+  "id": "testimonial_case_clip",
+  "name": "Case-study clip (page cut, up to 4 min)",
+  "goal": "A matched case study for the confirmation page and the pre-call sequence, so the booked prospect sees someone in their own situation before the call (Calendly: redirect to a relevant case study right after scheduling; RevenueHero: pre-call content).",
+  "funnel_stage": "Bottom: booked, not yet shown; also the VSL proof block",
+  "kind": "long",
+  "platforms": [
+   "youtube"
+  ],
+  "placements": [
+   "Confirmation page, under the WHY video",
+   "Pre-call email sequence",
+   "VSL proof section (16:9)",
+   "Skool Wins category"
+  ],
+  "length_s": {
+   "min": 60,
+   "ideal": 150,
+   "max": 240
+  },
+  "captions": "clean",
+  "safe": "organic",
+  "cta": "none",
+  "hook_deadline_s": 10,
+  "change_every_s": 10,
+  "payoff_window_pct": [
+   25,
+   90
+  ],
+  "structure": [
+   {
+    "beat": "Situation match",
+    "when": "0:00 to 0:10",
+    "purpose": "The subject names their situation in the prospect's words (role, market, starting point) so the match is obvious (Calendly: relevant case study)."
+   },
+   {
+    "beat": "Before",
+    "when": "0:10 to 0:40",
+    "purpose": "Where they were and how it felt, said plainly."
+   },
+   {
+    "beat": "The steps",
+    "when": "0:40 to 2:00",
+    "purpose": "What they did, in order, with the client's own work as B-roll where it exists (Google: show the legitimate steps)."
+   },
+   {
+    "beat": "What changed",
+    "when": "2:00 to 3:20",
+    "purpose": "One result with a results-vary disclaimer card over any specific figure (Google unreliable claims policy)."
+   },
+   {
+    "beat": "To someone in the same spot",
+    "when": "Last 30 s",
+    "purpose": "One sentence of advice to the viewer; no host ask, the page carries it."
+   }
+  ],
+  "cover": "Subject's face, 1 to 4 words naming the situation (not the result).",
+  "music": "none",
+  "fillers": "cut",
+  "checks": [
+   "Length 60 to 240 s: house choice; no source gives a case-study length.",
+   "Match tag on the asset (role, market or starting point) so the page or the sequence picks the nearest case for the prospect's application answers (house rule).",
+   "Specific-result detector triggers the disclaimer card for the whole claim.",
+   "No income figure framed as typical or likely (Google).",
+   "Steps stated before the result; name and role lower-third by 0:10.",
+   "Consent record on file; positioned as the next step on the page, not as homework in an email (KS Advantage).",
+   "Brand lint set."
+  ],
+  "sources": [
+   "https://calendly.com/blog/reduce-no-show-rates-sales",
+   "https://www.revenuehero.io/blog/ways-to-reduce-no-show-rates-in-sales-calls",
+   "https://support.google.com/adspolicy/answer/15936857",
+   "https://support.google.com/adspolicy/answer/10249050",
+   "https://ksadvantage.com/",
+   "https://fluxi.co/en/blog/what-is-a-vsl/"
+  ]
+ }
+]

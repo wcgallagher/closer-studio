@@ -15,7 +15,8 @@ DEFAULT = {
               "caption_2_file": "Montserrat-ExtraBold.ttf", "display": "Fraunces Display", "display_file": "FrauncesDisplay-Bold.ttf", "mono": "JetBrains Mono"},
     "cta": {"line": "", "sub": ""},
     "style": {"captions": "impact", "lut": "clean", "music": "", "grain": 0.0},
-    "words": {"never": [], "result_disclaimer": ""},
+    "words": {"never": [], "never_client": [], "result_disclaimer": ""},
+    "audience": "prospect",
 }
 
 
@@ -37,7 +38,13 @@ def load(brand_id: str) -> dict:
     return out
 
 
-def check_copy(brand: dict, text: str) -> list[str]:
-    """Words the brand never prints. Returns the offenders found in `text`."""
+def check_copy(brand: dict, text: str, audience: str | None = None) -> list[str]:
+    """Words the brand never prints. Returns the offenders found in `text`.
+    `audience` is who watches: the brand's usual viewer (the brand file's `audience`, e.g. an agent for Set More Annuities)
+    or "client" (the agent's own customer), which adds the brand's `never_client` words."""
+    aud = audience or brand.get("audience", "prospect")
+    words = list(brand["words"].get("never", []))
+    if aud == "client":
+        words += brand["words"].get("never_client", [])
     low = f" {text.lower()} "
-    return [w for w in brand["words"].get("never", []) if f" {w.lower()} " in low or f" {w.lower()}." in low or f" {w.lower()}," in low]
+    return [w for w in words if f" {w.lower()} " in low or f" {w.lower()}." in low or f" {w.lower()}," in low]

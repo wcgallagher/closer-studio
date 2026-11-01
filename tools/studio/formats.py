@@ -8,6 +8,10 @@ from .common import KIT
 
 FORMATS_FILE = KIT / "formats.json"
 
+# ids an older brief may use -> the registry id
+ALIASES = {"ad_reel": "paid_ad_reel", "show_confirmation": "confirmation_how", "show_reminder": "reminder_clip", "vsl_short": "vsl_book_call",
+           "youtube_long": "yt_authority", "testimonial": "testimonial_clip", "bvsl": "vsl_book_call", "book_call_vsl": "vsl_book_call"}
+
 # conservative built-ins (house choices); FORMATS.md and formats.json carry the sourced numbers
 DEFAULTS = [
     {"id": "organic_reel", "name": "Organic reel", "goal": "reach and saves", "funnel_stage": "cold", "kind": "short",
@@ -63,25 +67,33 @@ def load_all() -> list[dict]:
             data = json.loads(FORMATS_FILE.read_text())
             if isinstance(data, list) and data:
                 ids = {d["id"] for d in data}
-                return data + [d for d in DEFAULTS if d["id"] not in ids]
+                return data + [d for d in DEFAULTS if d["id"] not in ids and ALIASES.get(d["id"]) not in ids]
         except ValueError:
             pass
     return DEFAULTS
 
 
 def get(fid: str) -> dict:
-    for f in load_all():
+    fid = (fid or "").strip().lower()
+    allf = load_all()
+    for f in allf:
         if f["id"] == fid:
             return f
-    raise SystemExit(f"unknown format '{fid}'. Formats: {', '.join(f['id'] for f in load_all())}")
+    alias = ALIASES.get(fid)
+    for f in allf:
+        if f["id"] == alias:
+            return f
+    raise SystemExit(f"unknown format '{fid}'. Formats: {', '.join(f['id'] for f in allf)}")
 
 
 def table() -> str:
-    rows = ["id                 kind   length (ideal)   captions  safe     cta               platforms"]
+    rows = [f"{'id':<22} {'kind':<6} {'length (ideal)':<20} {'captions':<9} {'safe':<8} {'cta':<17} platforms"]
     for f in load_all():
         L = f["length_s"]
-        rows.append(f"{f['id']:<18} {f['kind']:<6} {L['min']}-{L['max']} s ({L['ideal']})".ljust(43) +
-                    f"{f['captions']:<9} {f['safe']:<8} {f['cta']:<17} {','.join(f['platforms'])}")
+        band = f"{L['min']}-{L['max']} s ({L['ideal']})"
+        rows.append(f"{f['id']:<22} {f['kind']:<6} {band:<20} {f['captions']:<9} {f['safe']:<8} {f['cta']:<17} {','.join(f['platforms'])}")
+    rows.append("")
+    rows.append("older ids still resolve: " + ", ".join(f"{a} -> {b}" for a, b in ALIASES.items()))
     return "\n".join(rows)
 
 

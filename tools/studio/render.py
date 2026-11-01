@@ -7,7 +7,7 @@ import sys
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
-from . import brands, captions, cards, cut as cutmod, grade, platforms, track as trk, voice
+from . import brands, captions, cards, cut as cutmod, formats as fm, grade, platforms, track as trk, voice
 from .common import FPS, probe, sh
 
 KY = 0.33          # one crop anchor for every punch-in: the eye line never moves at a cut
@@ -200,7 +200,7 @@ def reel(video: Path, out: Path, an: dict, brand: dict, plat: dict, style: str =
          cta: str | None = None, music: str | None = None, grade_preset: str | None = None, mode: str = "track",
          face=(0.5, 0.38), preview: bool = False, fillers: str = "keep", keep_silence: bool = False, sfx: bool = True,
          riser: bool = False, voice_chain: str = "v3", denoise: str = "chain", caps_max: int | None = None,
-         hook_serif: bool = False, end_card: bool = True, log=print) -> dict:
+         hook_serif: bool = False, end_card: bool = True, fmt: dict | None = None, audience: str | None = None, log=print) -> dict:
     W, H = plat["w"], plat["h"]
     out.mkdir(parents=True, exist_ok=True)
     (out / "segs").mkdir(exist_ok=True)
@@ -211,7 +211,7 @@ def reel(video: Path, out: Path, an: dict, brand: dict, plat: dict, style: str =
     total = round(speech_end + (HOLD_S if end_card else 0.3), 4)
     start = an["start"]
     cta = cta or brand["cta"]["line"]
-    offenders = brands.check_copy(brand, f"{hook} {cta}")
+    offenders = brands.check_copy(brand, f"{hook} {cta}", audience)
     if offenders:
         sys.exit(f"the hook or CTA uses words this brand never prints: {offenders}")
 
@@ -273,7 +273,9 @@ def reel(video: Path, out: Path, an: dict, brand: dict, plat: dict, style: str =
     summary = {"file": str(final), "duration_s": total, "speech_s": round(speech_end, 2), "pieces": len(segs), "brand": brand["id"],
                "platform": plat["id"], "style": style, "hook": hook, "cta": cta, "lufs": fin["i"], "true_peak": fin["tp"],
                "camera": "tracked" if cam else "static", "zoom": cam["zoom"] if cam else None, "placement": pl, "fillers": fillers, "music": bool(music),
-               "captions_srt": str(out / "captions.srt"), "cover": str(out / "cover.jpg"), "source": f"{video.name} {start:.1f}-{an['end']:.1f} s"}
+               "captions_srt": str(out / "captions.srt"), "cover": str(out / "cover.jpg"), "source": f"{video.name} {start:.1f}-{an['end']:.1f} s",
+               "format": fmt["id"] if fmt else None, "length_warning": fm.check_length(fmt, total) if fmt else None,
+               "audience": audience or brand.get("audience", "prospect")}
     json.dump({"summary": summary, "segs": segs}, open(out / "job.json", "w"), indent=1)
     (out / "beats.txt").write_text(cutmod.beat_map(segs, words) + "\n")
     log(f"done: {final} ({total:.1f} s, {fin['i']:.1f} LUFS, {fin['tp']:.1f} dBTP)")

@@ -8,6 +8,7 @@
             "display": "Fraunces Display", "display_file": "FrauncesDisplay-Bold.ttf", "mono": "JetBrains Mono"},
   "cta": {"line": "Create your free account", "sub": "setmoreannuities.com"},
   "style": {"captions": "impact", "lut": "sma_pro", "music": "", "grain": 0.0},
-  "words": {"never": ["annuity", "annuities"], "result_disclaimer": ""},
+  "audience": "agent",
+  "words": {"never": [], "never_client": ["annuity", "annuities"], "result_disclaimer": ""},
   "source": "brand/setmoreannuities.md (Firecrawl branding scrape of setmoreannuities.com, 2026-10-30) and vsl/mg/BRAND.md"
 }

@@ -8,6 +8,7 @@
             "display": "Fraunces Display", "display_file": "FrauncesDisplay-Bold.ttf", "mono": "JetBrains Mono"},
   "cta": {"line": "Take the closer quiz", "sub": "becomethecloser.com"},
   "style": {"captions": "impact", "lut": "btc_ember", "music": "", "grain": 0.0},
-  "words": {"never": ["free", "no cost", "guarantee", "guaranteed"], "result_disclaimer": "Individual experiences. Results vary."},
+  "audience": "prospect",
+  "words": {"never": ["free", "no cost", "guarantee", "guaranteed"], "never_client": [], "result_disclaimer": "Individual experiences. Results vary."},
   "source": "brand/becomethecloser.md (Firecrawl branding scrape of becomethecloser.com, 2026-10-30)"
 }

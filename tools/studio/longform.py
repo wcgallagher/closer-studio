@@ -130,7 +130,7 @@ def png_clip(png: Path, dst: Path, dur: float, preset, crf):
 def longform(video: Path, out: Path, an: dict, brand: dict, plat: dict, fmt: dict, chapters: str | None = None,
              quotes: list[str] | None = None, pops: str = "auto", broll: Path | None = None, music: str | None = None,
              fillers: str | None = None, caps: str | None = None, cta: str | None = None, title: str | None = None,
-             grade_preset: str | None = None, preview: bool = False, denoise: str = "chain", change_every: float | None = None, log=print) -> dict:
+             grade_preset: str | None = None, preview: bool = False, denoise: str = "chain", change_every: float | None = None, audience: str | None = None, log=print) -> dict:
     W, H = plat["w"], plat["h"]
     out.mkdir(parents=True, exist_ok=True)
     (out / "segs").mkdir(exist_ok=True)
@@ -146,7 +146,7 @@ def longform(video: Path, out: Path, an: dict, brand: dict, plat: dict, fmt: dic
     total = round(speech_end + (HOLD_S + 0.5 if end_card else 0.0), 4)      # no card: the cut ends on the last word
     start = an["start"]
     cta = cta or brand["cta"]["line"]
-    off = brands.check_copy(brand, f"{cta} {title or ''}")
+    off = brands.check_copy(brand, f"{cta} {title or ''}", audience)
     if off:
         raise SystemExit(f"the title or CTA uses words this brand never prints: {off}")
 
@@ -191,8 +191,8 @@ def longform(video: Path, out: Path, an: dict, brand: dict, plat: dict, fmt: dic
         d = min(max((b or a + 2.5) - a + 0.4, 2.0), QUOTE_MAX_S)
         png = cards.quote_card(q, brand, W, H, out / "cutaways" / f"q{qi:02d}.png")
         cutaways.append((a, d, png_clip(png, out / "cutaways" / f"q{qi:02d}.mp4", d, preset, crf), "quote"))
-    every = float(change_every or fmt.get("change_every_s", 40))
-    if broll:
+    every = float(change_every if change_every is not None else fmt.get("change_every_s", 40))   # 0 = no scheduled layout change
+    if broll and every > 0:
         clips = sorted([p for p in Path(broll).iterdir() if p.suffix.lower() in (".mp4", ".mov", ".mkv", ".m4v")])
         ends = sentence_ends_out(an, segs)
         last = 0.0; k = 0; used = {}
@@ -290,7 +290,7 @@ def longform(video: Path, out: Path, an: dict, brand: dict, plat: dict, fmt: dic
     layout_times = sorted([c[0] for c in cutaways])
     gaps, last = [], 0.0
     for t in layout_times + [speech_end]:
-        if t - last > every:
+        if every > 0 and t - last > every:
             gaps.append((round(last, 1), round(t, 1)))
         last = t
     summary = {"file": str(final), "kind": "long", "format": fmt["id"], "platform": plat["id"], "brand": brand["id"], "duration_s": total,
@@ -298,6 +298,7 @@ def longform(video: Path, out: Path, an: dict, brand: dict, plat: dict, fmt: dic
                "chapters": chs, "auto_chapter_titles": any(c.get("auto") for c in chs), "missing_quotes": missing_quotes,
                "pops": len(pop_list), "captions": caps, "lufs": fin["i"], "true_peak": fin["tp"], "camera": "tracked" if cam else "static",
                "layout_gaps_over_limit": gaps, "change_every_s": every, "hook_deadline_s": fmt.get("hook_deadline_s", 10),
+               "audience": audience or brand.get("audience", "prospect"),
                "length_warning": None, "cover": cov, "source": f"{video.name} {start:.1f}-{an['end']:.1f} s"}
     from . import formats as fm
     summary["length_warning"] = fm.check_length(fmt, total)

@@ -61,8 +61,7 @@ def cmd_reel(a):
             s = render.reel(video, job, dd, brand, plat, style=style, hook=a.hook if not a.auto else "", cta=a.cta,
                             music=a.music or (brand["style"].get("music") or None), grade_preset=a.grade, mode=a.camera, face=(a.face_x, a.face_y),
                             preview=a.preview, fillers=fillers, keep_silence=a.keep_silence, sfx=not a.no_sfx, riser=a.riser, voice_chain=a.voice,
-                            denoise=a.denoise, caps_max=a.caps_max, hook_serif=a.hook_serif, end_card=end_card)
-            s["format"] = a.format
+                            denoise=a.denoise, caps_max=a.caps_max, hook_serif=a.hook_serif, end_card=end_card, fmt=fmt, audience=a.audience)
             results.append(s)
             if not a.no_review:
                 review.run(job)
@@ -78,7 +77,7 @@ def cmd_longform(a):
     quotes = [q.strip() for q in a.quotes.split("|")] if a.quotes else None
     s = long_mod.longform(video, out, d, brand, plat, fmt, chapters=a.chapters, quotes=quotes, pops=a.pops, broll=Path(a.broll) if a.broll else None,
                           music=a.music, fillers=a.fillers, caps=a.captions, cta=a.cta, title=a.title, grade_preset=a.grade, preview=a.preview, denoise=a.denoise,
-                          change_every=a.change_every)
+                          change_every=a.change_every, audience=a.audience)
     if not a.no_review:
         review.run(out)
     print(json.dumps(s, indent=1, default=str))
@@ -91,6 +90,9 @@ def cmd_cover(a):
     if src.is_dir():
         an = json.loads((src / "analysis.json").read_text())
         video = Path(an["video"]); start, end = an["start"], an["end"]
+    off = brands.check_copy(brand, a.title, a.audience)
+    if off:
+        sys.exit(f"the title uses words this brand never prints: {off}")
     r = cover_mod.build(video, Path(a.out).resolve(), brand, a.title, an, at=a.at, start=start, end=end)
     print(json.dumps(r))
 
@@ -152,11 +154,13 @@ def main(argv=None):
     p.add_argument("--voice", default="v3", choices=["v3", "light", "none"]); p.add_argument("--denoise", default="chain", choices=["chain", "deep"])
     p.add_argument("--caps-max", type=int, default=None); p.add_argument("--preview", action="store_true"); p.add_argument("--no-review", action="store_true")
     p.add_argument("--safe", default=None, choices=["organic", "ads"], help="UI safe zones: a normal post (organic) or an ad placement")
-    p.add_argument("--format", default=None, help="organic_reel, ad_reel, show_reminder, testimonial ... (see `formats`)")
+    p.add_argument("--format", default=None, help="organic_reel, paid_ad_reel, reminder_clip, testimonial_clip ... (see `formats`; older ids such as ad_reel still resolve)")
+    p.add_argument("--audience", default=None, choices=["default", "client"], help="who watches: the brand's usual viewer, or the agent's own client (adds the brand's client-facing never-words)")
     p.add_argument("--auto", type=int, default=0, help="cut the N best windows the analysis found (no hook text; you add it after)")
     p.set_defaults(f=cmd_reel)
     p = sub.add_parser("longform", help="16:9 (or any) long-form master: YouTube, VSL, Skool lesson, replay, confirmation video"); common(p)
-    p.add_argument("--brand", default="btc"); p.add_argument("--format", default="youtube_long"); p.add_argument("--platform", default=None)
+    p.add_argument("--brand", default="btc"); p.add_argument("--format", default="yt_authority"); p.add_argument("--platform", default=None)
+    p.add_argument("--audience", default=None, choices=["default", "client"], help="who watches: the brand's usual viewer, or the agent's own client")
     p.add_argument("--chapters", default=None, help="'0:Title,95:Next title' in seconds from --start, or auto")
     p.add_argument("--quotes", default=None, help="spoken lines to show as quote cards, separated by |")
     p.add_argument("--pops", default="auto", help="auto, off, or the words to pop separated by |: \"four types|objection\"")
@@ -169,7 +173,8 @@ def main(argv=None):
     p.set_defaults(f=cmd_longform)
     p = sub.add_parser("cover", help="thumbnail (1280x720) and cover (1080x1920) from the best face frame with a title")
     p.add_argument("source", help="a video file or a job folder"); p.add_argument("--title", required=True); p.add_argument("--brand", default="btc")
-    p.add_argument("--out", required=True); p.add_argument("--at", type=float, default=None); p.set_defaults(f=cmd_cover)
+    p.add_argument("--out", required=True); p.add_argument("--at", type=float, default=None); p.add_argument("--audience", default=None, choices=["default", "client"])
+    p.set_defaults(f=cmd_cover)
     p = sub.add_parser("formats", help="the format table (what a video is for decides how it is cut)"); p.set_defaults(f=cmd_formats)
     p = sub.add_parser("reframe", help="auto-reframe any clip to a platform with face tracking")
     p.add_argument("video"); p.add_argument("--out", required=True); p.add_argument("--platform", default="ig_reels")
