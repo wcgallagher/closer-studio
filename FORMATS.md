@@ -116,7 +116,7 @@ Captions clean. Change every 3 to 5 s (house). Cover: frame 0, 1080p (Google). M
 ### confirmation_how (short, 16:9, 60 / 90 / 120 s)
 Viewer state: just booked, a little suspicious, wants to know what happens next and whether a real person is on the other end.
 Length: SalesKick specifies a 90-second HOW video; Fluxi about 90 s; min and max house. Beats: "tentatively scheduled" in the first 10 s (SalesKick); logistics and an arrow to the Add to Calendar button 0:10 to 0:40 (SalesKick traced about 15% show-rate drops to Google's May 2023 invite change); "a team member will text you, reply so we have the right number" 0:40 to 1:05; point to the WHY video and give the one ask 1:05 to 1:30.
-Captions clean. Single take, one lower-third and one arrow (house). CTA spoken plus card. Cover: the person they will meet, no sound-on autoplay (Vidyard, Fluxi). Music none, fillers cut. Checks: "calendar" before 0:45 and "text" or "reply" before 1:10; one CTA in the last 20 s; speaker is the closer or host; page has the tentative headline, the button and written steps (SalesKick); brand lint.
+Captions clean. Single take, one lower-third and one arrow, no layout cadence (house). CTA spoken plus card. Cover: the person they will meet, no sound-on autoplay (Vidyard, Fluxi). Music none, fillers cut. Checks: "calendar" before 0:45 and "text" or "reply" before 1:10; one CTA in the last 20 s; speaker is the closer or host; page has the tentative headline, the button and written steps (SalesKick); brand lint.
 
 ### confirmation_why (long, 16:9, 180 / 300 / 420 s)
 Viewer state: booked and already drifting; needs a reason the call is worth an hour of a working day.

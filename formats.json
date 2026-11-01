@@ -363,7 +363,7 @@
   "safe": "organic",
   "cta": "spoken_plus_card",
   "hook_deadline_s": 10,
-  "change_every_s": 30,
+  "change_every_s": 0,
   "payoff_window_pct": [
    11,
    72
