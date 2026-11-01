@@ -11,7 +11,7 @@ import subprocess
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
-from . import brands, captions, cards, cover as cover_mod, cut as cutmod, grade, platforms, track as trk, voice
+from . import brands, captions, cards, cover as cover_mod, cut as cutmod, grade, layers as lay, platforms, track as trk, voice
 from .common import FPS, FUNC, norm, probe
 from .render import HOLD_S, KY, _run, concat, mix, piece_jobs, prepare_voice, static_crop, voice_jobs
 
@@ -130,7 +130,7 @@ def png_clip(png: Path, dst: Path, dur: float, preset, crf):
 def longform(video: Path, out: Path, an: dict, brand: dict, plat: dict, fmt: dict, chapters: str | None = None,
              quotes: list[str] | None = None, pops: str = "auto", broll: Path | None = None, music: str | None = None,
              fillers: str | None = None, caps: str | None = None, cta: str | None = None, title: str | None = None,
-             grade_preset: str | None = None, preview: bool = False, denoise: str = "chain", change_every: float | None = None, audience: str | None = None, hold: str | None = None, log=print) -> dict:
+             grade_preset: str | None = None, preview: bool = False, denoise: str = "chain", change_every: float | None = None, audience: str | None = None, hold: str | None = None, layers: Path | None = None, log=print) -> dict:
     W, H = plat["w"], plat["h"]
     out.mkdir(parents=True, exist_ok=True)
     (out / "segs").mkdir(exist_ok=True)
@@ -140,10 +140,28 @@ def longform(video: Path, out: Path, an: dict, brand: dict, plat: dict, fmt: dic
     caps = caps or fmt.get("captions", "pops")
     cta_policy = fmt.get("cta", "end_card")
     end_card = cta_policy != "none"
-    segs, speech_end = cutmod.build(words, sil, keep_silence=False, fillers=fillers, punch_every=4.5, zooms=(1.0, 1.15))
+    segs, speech_end = cutmod.build(words, sil, keep_silence=False, fillers=fillers, punch_every=float(fmt.get("punch_every_s", 4.5)),
+                                    zooms=tuple(fmt.get("zooms", (1.0, 1.15))), hard=an.get("hard_cuts"))
     if not segs:
         raise SystemExit("no speech in that window")
-    total = round(speech_end + (HOLD_S + 0.5 if end_card else 0.0), 4)      # no card: the cut ends on the last word
+    L = lay.load(layers)
+    if L.get("take_change_kick") and an.get("hard_cuts"):
+        for k in range(1, len(segs)):
+            prev_end = segs[k - 1]["in"] + segs[k - 1]["frames"] / FPS
+            if any(prev_end - 0.02 <= h <= segs[k]["in"] + 0.05 for h in an["hard_cuts"]):
+                segs[k]["kick_in"] = True
+    for zo in L.get("zoom", []):             # hold a framing over a stretch (hand labels, a held moment)
+        a_src, b_src = lay._src(words, zo["from"]), lay._src(words, zo["to"])
+        for g in segs:
+            if a_src - 0.3 <= g["in"] <= b_src:
+                g["zoom"] = float(zo["zoom"])
+    for spec in L.get("kicks", []):          # a zoom kick and a whoosh on the piece that starts at these words
+        t_src = lay._src(words, spec)
+        near = min(segs, key=lambda g: abs(g["in"] - t_src))
+        if abs(near["in"] - t_src) < 0.5:
+            near["kick_in"] = True
+    end_hold = float(L.get("end_hold", HOLD_S + 0.5))
+    total = round(speech_end + (end_hold if end_card else 0.0), 4)      # no card: the cut ends on the last word
     start = an["start"]
     cta = cta or brand["cta"]["line"]
     off = brands.check_copy(brand, f"{cta} {title or ''}", audience)
@@ -168,9 +186,14 @@ def longform(video: Path, out: Path, an: dict, brand: dict, plat: dict, fmt: dic
     with ThreadPoolExecutor(max_workers=4) as ex:
         list(ex.map(_run, jobs))
     if end_card:
-        cards.end_card(brand, W, H, HOLD_S + 0.5, out / "segs" / "zzz_end.mp4", cta, preset, crf)
-        _run(["ffmpeg", "-v", "error", "-y", "-f", "lavfi", "-i", "anullsrc=r=48000:cl=stereo", "-t", f"{HOLD_S + 0.5:.3f}", "-c:a", "pcm_s16le", out / "segs" / "r999_end.wav"])
+        cards.end_card(brand, W, H, end_hold, out / "segs" / "zzz_end.mp4", cta, preset, crf)
+        _run(["ffmpeg", "-v", "error", "-y", "-f", "lavfi", "-i", "anullsrc=r=48000:cl=stereo", "-t", f"{end_hold:.3f}", "-c:a", "pcm_s16le", out / "segs" / "r999_end.wav"])
     concat(out)
+
+    # animated scenes from the layers file, anchored to words on this cut
+    scenes = lay.resolve_scenes(L, words, segs, speech_end, total) if L else []
+    mg = lay.render_scenes(scenes, out, L, log) if scenes else out
+    in_scene = lambda t, pad=0.0: any(g["start"] - pad <= t <= g["end"] + pad for g in scenes)
 
     # cutaways: chapter cards, quote cards, B-roll on the cadence
     cutaways = []          # (out_t, dur, clip_path, kind)
@@ -215,6 +238,8 @@ def longform(video: Path, out: Path, an: dict, brand: dict, plat: dict, fmt: dic
                 last = t; continue
             if hold_out and hold_out[0] - BROLL_S < t < hold_out[1]:
                 continue
+            if in_scene(t, BROLL_S) or in_scene(t + BROLL_S, 0.3):
+                continue
             src = clips[k % len(clips)] if clips else None
             if not src:
                 break
@@ -228,9 +253,15 @@ def longform(video: Path, out: Path, an: dict, brand: dict, plat: dict, fmt: dic
 
     # captions: pops or burned
     band_top, band_bottom = platforms.caption_band(plat)
+    cl = L.get("captions") or {}
+    A = lambda x: lay.anchor(words, segs, x, speech_end, total)
+    cap_kw = {"words_range": cl.get("words") or fmt.get("caption_words"),
+              "plain": [(g["start"], g["end"]) for g in scenes if not g["alpha"]] if cl.get("plain_over_scenes") else None,
+              "off": [(A(a), A(b)) for a, b in cl.get("off", [])]}
+    cap_from = A(cl["from"]) if cl.get("from") is not None else 0.0
     ev, srt = captions.events(segs, words, brand, "clean", speech_end, 0.0, None)
     if caps in ("impact", "clean", "serif", "boxed"):
-        ev, srt = captions.events(segs, words, brand, caps, speech_end, 0.0, None)
+        ev, srt = captions.events(segs, words, brand, caps, speech_end, cap_from, None, **cap_kw)
         head = captions.header(W, H, brand, caps, band_bottom)
     else:
         head = captions.header(W, H, brand, "clean", band_bottom)
@@ -266,25 +297,49 @@ def longform(video: Path, out: Path, an: dict, brand: dict, plat: dict, fmt: dic
             continue
         if hold_out and hold_out[0] <= t <= hold_out[1]:
             continue
+        if in_scene(t, 0.3):
+            continue
         ev.append(cards.pop_event(txt, t, d, W, H, side))
+    moments, chip_t = [], []
+    if L:
+        lev, moments, chip_t = lay.text_events(L, words, segs, speech_end, total, W, H, brand, scenes)
+        lev += lay.hand_events(L, an, segs, cam, W, H, 0.025, KY, words, speech_end, total)
+        head = head.replace("\n[Events]", "\n" + "\n".join(lay.styles(W, H, brand)) + "\n\n[Events]", 1)
+        ev += lev
     (out / "captions.ass").write_text(head + "\n".join(ev) + "\n")
     captions.write_srt(out / "captions.srt", srt)
 
     # sound and mix
     sfx = voice.sfx_pack(out / "sfx")
     hits = [(sfx["whoosh"], c[0] - 0.08, 0.18) for c in cutaways if c[3] != "quote"]
-    hits += [(sfx["hit"], sg["out_t"], 0.22) for sg in segs if sg["kick"] and not sg["cont"]][:12]
+    hits += [(sfx["hit"], sg["out_t"], 0.22) for sg in segs if sg["kick"] and not sg["cont"] and not in_scene(sg["out_t"], 0.3)][:12]
+    hits += [(sfx["whoosh"], g["start"] - 0.12, 0.16) for g in scenes if g["from_aroll"]]
+    hits += [(sfx["tick"], g["start"] - lay.LEAD + v, 0.10) for g in scenes for v in g["cues"].values()]
+    hits += [(sfx["tick"], t, 0.12) for t in chip_t]
+    hits += [(sfx["whoosh"], sg["out_t"] - 0.12, 0.14) for sg in segs if sg.get("kick_in")]
+    for fx in L.get("sfx", []):
+        hits.append((sfx[fx.get("name", "whoosh")], lay.anchor(words, segs, fx["at"], speech_end, total), float(fx.get("gain", 0.2))))
     music_mode = fmt.get("music", "none")
+    lm = L.get("music") or {}
+    if lm.get("file") and not music:
+        music = str(lm["file"] if Path(lm["file"]).is_absolute() else Path(L["_base"]) / lm["file"])
     bed = music if music else (brand["style"].get("music") or None if music_mode != "none" else None)
-    mix(out, total, speech_end, hits, bed)
+    mutes = [(lay.anchor(words, segs, a, speech_end, total), lay.anchor(words, segs, b, speech_end, total)) for a, b in lm.get("mute", [])]
+    mix(out, total, speech_end, hits, bed, float(lm.get("start", 0.0)) if music and lm.get("file") else 0.0, mutes)
     m = voice.measure(out / "mix.wav", plat["lufs"], plat["tp"])
 
     # composite the cutaways over the base, burn pops/captions, loudness, encode
     inputs = ["-i", out / "base.mkv", "-i", out / "mix.wav"]
     chain, prev = [], "[0:v]"
+    mchain, prev = lay.moment_graph(moments, prev)
+    chain += mchain
+    s_in, s_chain, prev = lay.scene_graph(scenes, mg, W, H, 2, prev)
+    inputs += s_in
+    chain += s_chain
+    first = 2 + len(scenes)
     for i, (t, d, clip, kind) in enumerate(cutaways):
         inputs += ["-i", clip]
-        chain.append(f"[{2 + i}:v]format=yuva420p,fade=t=in:st=0:d=0.10:alpha=1,fade=t=out:st={d - 0.10:.3f}:d=0.10:alpha=1,setpts=PTS-STARTPTS+{t:.3f}/TB[c{i}]")
+        chain.append(f"[{first + i}:v]format=yuva420p,fade=t=in:st=0:d=0.10:alpha=1,fade=t=out:st={d - 0.10:.3f}:d=0.10:alpha=1,setpts=PTS-STARTPTS+{t:.3f}/TB[c{i}]")
         chain.append(f"{prev}[c{i}]overlay=eof_action=pass:enable='between(t,{t:.3f},{t + d:.3f})'[v{i}]")
         prev = f"[v{i}]"
     chain.append(f"{prev}{captions.ass_filter(out / 'captions.ass')},format=yuv420p[vout]")
@@ -303,7 +358,10 @@ def longform(video: Path, out: Path, an: dict, brand: dict, plat: dict, fmt: dic
         lines.append(f"{_fmt_ts(c['out'] if i else 0)} {c['title']}")
     (out / "chapters.txt").write_text("\n".join(lines) + ("\n" if lines else ""))
     cov = cover_mod.build(video, out, brand, title or (chs[0]["title"] if chs else cta), an, start=start, end=an["end"], log=log)
-    layout_times = sorted(set([c[0] for c in cutaways] + (list(hold_out) if hold_out else [])))
+    layout_times = sorted(set([c[0] for c in cutaways] + (list(hold_out) if hold_out else []) + [g["start"] for g in scenes] + [g["end"] for g in scenes] +
+                              [g["start"] - lay.LEAD + v for g in scenes for v in g["cues"].values()] + chip_t + [m["a"] for m in moments] + [m["b"] for m in moments] +
+                              [sg["out_t"] for sg in segs if sg.get("kick_in")] +
+                              [lay.anchor(words, segs, at, speech_end, total) for _, at in (L.get("hands") or {}).get("labels", {}).values()]))
     gaps, last = [], 0.0
     for t in layout_times + [speech_end]:
         is_hold = bool(hold_out) and last == hold_out[0] and t == hold_out[1]
@@ -316,6 +374,8 @@ def longform(video: Path, out: Path, an: dict, brand: dict, plat: dict, fmt: dic
                "pops": len(pop_list), "captions": caps, "lufs": fin["i"], "true_peak": fin["tp"], "camera": "tracked" if cam else "static",
                "layout_gaps_over_limit": gaps, "change_every_s": every, "hook_deadline_s": fmt.get("hook_deadline_s", 10),
                "audience": audience or brand.get("audience", "prospect"), "hold": hold_out,
+               "scenes": [{k: g[k] for k in ("id", "scene", "start", "end")} for g in scenes], "scene_share": round(sum(g["end"] - g["start"] for g in scenes) / max(total, 1), 3),
+               "end_hold": end_hold,
                "length_warning": None, "cover": cov, "source": f"{video.name} {start:.1f}-{an['end']:.1f} s"}
     from . import formats as fm
     summary["length_warning"] = fm.check_length(fmt, total)

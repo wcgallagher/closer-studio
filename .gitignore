@@ -12,3 +12,4 @@ inbox/*
 output/
 tools/studio/__pycache__/
 tools/studio/luts/*.cube
+tools/vsl/mg/node_modules/

@@ -99,7 +99,8 @@ def run_long(job: Path, j: dict, log=print) -> dict:
     first_t = max(0.0, segs[0]["out_t"] + (words[segs[0]["w0"]]["s"] - segs[0]["in"])) if an else 0.0
     add(f"opens by {s['hook_deadline_s']} s", first_t <= s["hook_deadline_s"], f"first word at {first_t:.2f} s")
     tail = info["dur"] - s["speech_s"]
-    add("ends on the payoff", tail <= 3.0, f"{tail:.1f} s after the last word")
+    lim = max(3.0, float(s.get("end_hold") or 0) + 0.3)
+    add("ends on the payoff", tail <= lim, f"{tail:.1f} s after the last word (end card {s.get('end_hold') or 2.5:.1f} s)")
     if s["change_every_s"] > 0:
         add(f"a layout change at least every {s['change_every_s']:.0f} s", not s["layout_gaps_over_limit"],
             f"gaps: {s['layout_gaps_over_limit']}" if s["layout_gaps_over_limit"] else f"{len(s['cutaways'])} cutaways on the cadence")
@@ -116,7 +117,10 @@ def run_long(job: Path, j: dict, log=print) -> dict:
     off = brands.check_copy(brand, txt, s.get("audience"))
     add("no banned words in the speech", not off, f"found in the transcript: {off} (a cut or a bleep, or the brand allows it)" if off else "clean")
     low = [w["w"] for w in words if w.get("p", 1) < 0.5]
-    add("caption words to proofread", len(low) <= 5, f"low-confidence words: {low[:12]}" if low else "none")
+    if an and an.get("imported"):
+        add("caption words to proofread", True, f"words from a locked word map (proofed in the source project); low-confidence: {low[:12]}")
+    else:
+        add("caption words to proofread", len(low) <= 5, f"low-confidence words: {low[:12]}" if low else "none")
     sheet = contact_sheet(final, job / "sheet.jpg", every=max(2.0, info["dur"] / 48))
     report = {"file": str(final), "duration_s": round(info["dur"], 2), "checks": checks, "sheet": str(sheet), "passed": all(c["ok"] for c in checks)}
     json.dump(report, open(job / "report.json", "w"), indent=1)

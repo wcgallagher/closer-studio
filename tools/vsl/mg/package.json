@@ -1,0 +1,6 @@
+{
+ "name": "closer-studio-scenes",
+ "private": true,
+ "description": "Renders the animated VSL scenes in scenes.html to frame-exact clips (render.js).",
+ "dependencies": {"playwright": "1.63.0"}
+}

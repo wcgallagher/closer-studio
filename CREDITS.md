@@ -23,4 +23,6 @@
 | PySceneDetect | BSD-3 | installed by `install.sh` (the inline cut detector follows its ContentDetector method) |
 | DeepFilterNet standalone binary (Rikorose/DeepFilterNet v0.5.6) | MIT / Apache-2.0 | optional, `install.sh --deep-filter` |
 | Fraunces Display (Undercase Type) | SIL OFL 1.1 | `fonts/` (instanced at optical size 144, family renamed) |
+| Inter (Rasmus Andersson) | SIL OFL 1.1 | `fonts/Inter-Bold.ttf`, `fonts/Inter-Medium.ttf` (instanced at weights 700 and 500 from the variable font, for the VSL lockup labels) |
+| JetBrains Mono (JetBrains) | SIL OFL 1.1 | `fonts/JetBrainsMono-SemiBold.ttf` (eyebrows and tags) |
 | Technique sources (repos, measurements, masterclass transcripts) | see `RESEARCH.md` | |

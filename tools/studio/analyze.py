@@ -142,9 +142,20 @@ def analyze(video: Path, out: Path, start: float = 0.0, end: float | None = None
     info = probe(video)
     end = end if end is not None else info["dur"]
     key = {"video": str(video), "mtime": os.path.getmtime(video), "start": start, "end": end, "model": model, "faces": faces, "stride": stride}
-    if cache.exists():
-        d = json.loads(cache.read_text())
-        if d.get("key") == key:
+    side = Path(video).parent / "analysis.json"          # an assembled selects file carries its analysis beside it
+    for cand in [cache] + ([side] if side.exists() and side.resolve() != cache.resolve() else []):
+        if not cand.exists():
+            continue
+        d = json.loads(cand.read_text())
+        if d.get("key") == key and cand == cache:
+            return d
+        if d.get("imported") and d.get("video") == str(video) and abs(d["key"].get("mtime", 0) - key["mtime"]) < 1e-3:
+            # written by `assemble` from locked word maps: never re-transcribe it
+            if start > 0.01 or (end is not None and abs(end - d["dur"]) > 0.05):
+                raise SystemExit("this selects file was assembled from a script; cut it whole (no --start or --end), or change the spec")
+            if cand != cache:
+                save_json(cache, d)
+                (out / "transcript.txt").write_text("\n".join(f"[{s['s']:7.2f}] {s['text']}" for s in d["sentences"]) + "\n")
             return d
     t0 = time.time()
     dur = end - start

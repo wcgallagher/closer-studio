@@ -646,6 +646,67 @@
   ]
  },
  {
+  "id": "vsl_hero",
+  "name": "Homepage hero VSL (16:9, about 100 s)",
+  "goal": "a visitor on the homepage opens the account or books the call",
+  "funnel_stage": "page",
+  "kind": "short",
+  "platforms": [
+   "web_vsl"
+  ],
+  "placements": [
+   "Homepage hero above the fold (setmoreannuities.com)",
+   "Landing page hero",
+   "Unlisted YouTube copy for email"
+  ],
+  "length_s": {
+   "min": 60,
+   "ideal": 100,
+   "max": 150
+  },
+  "captions": "impact",
+  "safe": "organic",
+  "cta": "end_card",
+  "hook_deadline_s": 3,
+  "change_every_s": 8,
+  "punch_every_s": 2.6,
+  "zooms": [
+   1.0,
+   1.12,
+   1.0,
+   1.22
+  ],
+  "payoff_window_pct": [
+   55,
+   90
+  ],
+  "music": "faint",
+  "fillers": "cut",
+  "structure": [
+   "0:00 to 0:06 hook: who it is for and the money they are leaving, on the first frame, headline and proof card on screen (house; Vidalytics: who it is for, the one result, a reason to stay)",
+   "0:06 to 0:35 problem and stakes in the viewer's own words, one animated card where the words name things (house)",
+   "0:35 to 0:50 why now, then the pivot line that names the two paths (house)",
+   "0:50 to 1:15 mechanism and offer: how it works in two or three steps, the split, the training (house)",
+   "1:15 to 1:30 urgency with the sourced market figure, then the ask said once with the button on screen (Vidalytics: button tied to time in the video)",
+   "last 3 s: end card with the one ask and the domain (house)"
+  ],
+  "cover": "poster frame from the first second: the speaker, the headline and the proof card, matching the page headline (house; Vidalytics headline match)",
+  "checks": [
+   "Length 60 to 150 s (owner approved 95.8 s in v5 and 99.5 s in v7; house band around them).",
+   "Hook spoken from frame one; headline and proof card up by 0.5 s.",
+   "Full-screen cards at most about half the runtime and the speaker back on camera at least every 15 s (house; the show-rate and trust rules want the face).",
+   "Every number on a card sourced in the project audit; spoken-only numbers never on a card.",
+   "One ask, on the end card and in the last spoken lines; the button reveal time handed to the page builder.",
+   "Captions burned (the hero autoplays muted); loudness -15 to -14 LUFS for the web player.",
+   "Music under the voice at least 13 dB down, credited on the page when the licence asks.",
+   "Brand lint: agent-facing, so the product may be named; client-facing copies run with --audience client."
+  ],
+  "sources": [
+   "USER: owner approved v5 (95.8 s) and v7 (99.5 s) as the homepage VSL, 2026-10-30 and 2026-10-31 (sellmoreannuities AGENT_LOG.md)",
+   "https://www.vidalytics.com/video-sales-letter"
+  ]
+ },
+ {
   "id": "vsl_book_call",
   "name": "Book-a-call VSL (4 to 12 min)",
   "goal": "Move an opted-in or warm visitor to book the call (BTC) or open the account and register for the training (SMA). The only CTA is a booking or an application. Likely what BVSL means; confirm with the owner.",

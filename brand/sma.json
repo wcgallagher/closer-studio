@@ -3,7 +3,7 @@
   "name": "Set More Annuities",
   "site": "setmoreannuities.com",
   "handle": "",
-  "colors": {"bg": "#0e1114", "accent": "#B5311F", "accent_soft": "#D24A36", "text": "#FAF6EE", "muted": "#A89F90", "panel": "#491d19", "gold": "#C9A24A", "gold_hot": "#E0BE66"},
+  "colors": {"bg": "#0e1114", "accent": "#B5311F", "accent_soft": "#D24A36", "text": "#FAF6EE", "muted": "#A89F90", "panel": "#491d19", "gold": "#C9A24A", "gold_hot": "#E0BE66", "caption_accent": "#E0BE66"},
   "fonts": {"caption": "Montserrat Black", "caption_file": "Montserrat-Black.ttf", "caption_2": "Montserrat ExtraBold", "caption_2_file": "Montserrat-ExtraBold.ttf",
             "display": "Fraunces Display", "display_file": "FrauncesDisplay-Bold.ttf", "mono": "JetBrains Mono"},
   "cta": {"line": "Create your free account", "sub": "setmoreannuities.com"},

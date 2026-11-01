@@ -96,7 +96,7 @@ def header(W, H, brand, style_id, band_bottom, hook_size=None, placement="bottom
     fam = {"caption": fonts["caption"], "caption_2": fonts.get("caption_2", fonts["caption"]), "display": fonts["display"]}
     cap_font = fam[st["font"]]
     txt, acc = hex_ass(brand["colors"]["text"]), hex_ass(brand["colors"]["accent"])
-    size = int(H * st["size"])
+    size = int(H * st["size"] * (1.85 if W > H else 1.0))     # a 16:9 frame needs about the same pixel height as a 9:16 one (v7: 96 px at 1080)
     mv = (H - band_bottom) if placement == "bottom" else top_margin
     align = 2 if placement == "bottom" else 8
     border = 3 if st["box"] else 1
@@ -118,23 +118,42 @@ def header(W, H, brand, style_id, band_bottom, hook_size=None, placement="bottom
     return "\n".join(lines) + "\n"
 
 
-def events(segs, words, brand, style_id, speech_end, hook_end=0.0, max_words=None):
+def events(segs, words, brand, style_id, speech_end, hook_end=0.0, max_words=None, words_range=None, plain=None, off=None):
+    """plain: output windows where the line shows without the spoken-word highlight (over a card); off: windows with no
+    burned caption at all (the SRT keeps every line)."""
     st = STYLES[style_id]
-    lo, hi = st["words"]
+    lo, hi = tuple(words_range) if words_range else st["words"]
+    inside = lambda t, wins: any(a - 0.05 <= t < b for a, b in (wins or []))
     if max_words:
         hi = max(lo, min(hi, max_words))
-    acc, txt = hex_ass(brand["colors"]["accent"]), hex_ass(brand["colors"]["text"])
+    acc, txt = hex_ass(brand["colors"].get("caption_accent") or brand["colors"]["accent"]), hex_ass(brand["colors"]["text"])
     ev, srt = [], []
+    # chunk over a whole breath (a piece and the punch-ins that continue it), not per punch-in, so a chunk never starts
+    # on the tail of a phrase just because the framing changed there
+    runs = []
     for sg in segs:
-        seg_end = sg["out_t"] + sg["frames"] / FPS
-        ws = words[sg["w0"]:sg["w1"] + 1]
+        if runs and sg.get("cont"):
+            runs[-1].append(sg)
+        else:
+            runs.append([sg])
+    for run in runs:
+        seg_of = {i: sg for sg in run for i in range(sg["w0"], sg["w1"] + 1)}
+        i0 = run[0]["w0"]
+        ws = words[i0:run[-1]["w1"] + 1]
+        pos = {id(w): i0 + k for k, w in enumerate(ws)}
+        O = lambda w: seg_of[pos[id(w)]]["out_t"] + (w["s"] - seg_of[pos[id(w)]]["in"])
+        Oe = lambda w: seg_of[pos[id(w)]]["out_t"] + (w["e"] - seg_of[pos[id(w)]]["in"])
+        seg_end = run[-1]["out_t"] + run[-1]["frames"] / FPS
+        sg = run[0]
         chunks = chunk(ws, lo, hi)
         for ci, c in enumerate(chunks):
             labels = [_label(w, st["case"]) for w in c]
-            a0 = max(0.0, sg["out_t"] + (c[0]["s"] - sg["in"]))
-            b0 = max(a0 + 0.2, sg["out_t"] + (c[-1]["e"] - sg["in"]) + 0.2)
+            a0 = max(0.0, O(c[0]))
+            b0 = max(a0 + 0.2, Oe(c[-1]) + 0.2)
             srt.append((a0, min(b0, seg_end), " ".join(w["w"] for w in c)))
-            if st["mechanism"] == "none":
+            if inside(a0, off):
+                continue
+            if st["mechanism"] == "none" or inside(a0, plain):
                 a, b = a0, min(b0, seg_end, speech_end + 0.15)
                 if a < hook_end or b - a < 0.05:
                     continue
@@ -142,13 +161,13 @@ def events(segs, words, brand, style_id, speech_end, hook_end=0.0, max_words=Non
                 continue
             emph_idx = [k for k, w in enumerate(c) if w.get("emph")]
             for k, w in enumerate(c):
-                a = sg["out_t"] + (w["s"] - sg["in"])
+                a = O(w)
                 if k + 1 < len(c):
-                    b = sg["out_t"] + (c[k + 1]["s"] - sg["in"])
+                    b = O(c[k + 1])
                 elif ci + 1 < len(chunks):
-                    b = sg["out_t"] + (chunks[ci + 1][0]["s"] - sg["in"])
+                    b = O(chunks[ci + 1][0])
                 else:
-                    b = min(sg["out_t"] + (w["e"] - sg["in"]) + 0.25, seg_end)
+                    b = min(Oe(w) + 0.25, seg_end)
                 b = min(b, seg_end, speech_end + 0.15)
                 if b - a < 0.02 or a < hook_end:
                     continue

@@ -89,6 +89,15 @@ def hit(path: Path, sr: int = 48000):
     write_wav(path, y, sr, 0.7)
 
 
+def tick(path: Path, sr: int = 48000):
+    """A soft UI tick for a card element landing: 6 ms of band-passed noise over a 1.8 kHz blip, fast decay."""
+    n = int(0.06 * sr); t = np.arange(n) / sr
+    y = np.sin(2 * np.pi * 1800 * t) * np.exp(-t * 90)
+    nz = np.random.default_rng(4).standard_normal(int(0.006 * sr)) * np.linspace(1, 0, int(0.006 * sr))
+    y[:len(nz)] += 0.35 * nz
+    write_wav(path, y, sr, 0.45)
+
+
 def riser(path: Path, sr: int = 48000, dur: float = 1.4):
     """Noise sweep up into the CTA: band rises 300 Hz to 5 kHz, volume ramps, cut dead at the end."""
     n = int(dur * sr); t = np.arange(n) / sr
@@ -100,7 +109,8 @@ def riser(path: Path, sr: int = 48000, dur: float = 1.4):
 
 def sfx_pack(folder: Path) -> dict:
     folder.mkdir(parents=True, exist_ok=True)
-    files = {"whoosh": folder / "whoosh.wav", "hit": folder / "hit.wav", "riser": folder / "riser.wav"}
+    files = {"whoosh": folder / "whoosh.wav", "hit": folder / "hit.wav", "riser": folder / "riser.wav", "tick": folder / "tick.wav"}
+    if not files["tick"].exists(): tick(files["tick"])
     if not files["whoosh"].exists(): whoosh(files["whoosh"])
     if not files["hit"].exists(): hit(files["hit"])
     if not files["riser"].exists(): riser(files["riser"])

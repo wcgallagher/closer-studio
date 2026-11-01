@@ -97,7 +97,7 @@ def static_crop(sw: int, shh: int, W: int, H: int, fx: float, fy: float) -> str:
 def piece_jobs(video, out, segs, cam, base_crop, W, H, lut, grain, preset, crf, start, push=0.03):
     """ffmpeg commands for the footage pieces that are not rendered yet. Cached pieces are dropped when the cut changed."""
     import hashlib, os
-    sig = hashlib.sha1(json.dumps([(sg["in"], sg["frames"], sg["zoom"]) for sg in segs] + [W, H, str(lut), grain, preset]).encode()).hexdigest()
+    sig = hashlib.sha1(json.dumps([(sg["in"], sg["frames"], sg["zoom"], bool(sg.get("kick_in"))) for sg in segs] + [W, H, str(lut), grain, preset]).encode()).hexdigest()
     sig_file = out / "segs" / ".sig"
     if not sig_file.exists() or sig_file.read_text() != sig:
         for f in (out / "segs").glob("*"):
@@ -112,7 +112,7 @@ def piece_jobs(video, out, segs, cam, base_crop, W, H, lut, grain, preset, crf, 
         z, D = sg["zoom"], sg["frames"] / FPS
         t0, t1 = sg["in"], sg["in"] + D
         first = trk.vf_track(cam, t0, t1 + 0.05) if cam else base_crop
-        kexpr = f"(1.02+{push:.3f}*t/{D:.3f})"
+        kexpr = f"(1.02+{push:.3f}*t/{D:.3f}" + (f"+0.08*pow(max(0\\,1-t/0.27)\\,2)" if sg.get("kick_in") else "") + ")"   # zoom kick at a take change
         vf = (f"setpts=PTS-STARTPTS,{first},crop=iw/{z}:ih/{z}:(iw-iw/{z})/2:(ih-ih/{z})*{KY},"
               f"scale=w='trunc({W}*{kexpr}/2)*2':h=-2:eval=frame:flags=bicubic,crop={W}:{H}:x='(iw-{W})/2':y='(ih-{H})*0.4'")
         if lut:
@@ -174,15 +174,17 @@ def concat(out):
           "-map", "0:v", "-map", "1:a", "-c", "copy", out / "base.mkv"])
 
 
-def mix(out, total, speech_end, hits, music):
+def mix(out, total, speech_end, hits, music, music_start: float = 0.0, mutes=None):
     """Voice plus sound design plus an optional ducked bed -> mix.wav. hits: [(file, at_s, gain)]."""
     inputs = ["-i", out / "base.mkv"]
     chains, labels, idx = [], [], 1
     if music:
-        _run(["ffmpeg", "-v", "error", "-y", "-stream_loop", "-1", "-i", music, "-t", f"{total + 0.5:.3f}", "-af", voice.BED, "-ac", "2", "-c:a", "pcm_s16le", out / "bed.wav"])
+        _run(["ffmpeg", "-v", "error", "-y", "-stream_loop", "-1", "-ss", f"{music_start:.3f}", "-i", music, "-t", f"{total + 0.5:.3f}", "-af", voice.BED, "-ac", "2", "-c:a", "pcm_s16le", out / "bed.wav"])
         inputs += ["-i", out / "bed.wav"]
         env = (f"if(lt(t\\,0.6)\\,t/0.6\\,1)*if(gt(t\\,{speech_end:.3f})\\,max(0.4\\,1-(t-{speech_end:.3f})/0.5)\\,1)"
                f"*if(gt(t\\,{total - 1.2:.3f})\\,max(0\\,({total:.3f}-t)/1.2)\\,1)")
+        for a, b in (mutes or []):          # the bed drops out (0.2 s ramps) where the words carry the moment
+            env += f"*min(1\\,max(0\\,({a:.3f}-t)/0.2)+max(0\\,(t-{b:.3f})/0.2))"
         chains.append(f"[1:a]volume='{env}':eval=frame[bedv];[bedv][key]{voice.DUCK}[bed]")
         labels.append("[bed]"); idx = 2
     for j, (f, at, g) in enumerate(hits):
@@ -205,7 +207,7 @@ def reel(video: Path, out: Path, an: dict, brand: dict, plat: dict, style: str =
     out.mkdir(parents=True, exist_ok=True)
     (out / "segs").mkdir(exist_ok=True)
     words, sil = an["words"], [tuple(s) for s in an["silences"]]
-    segs, speech_end = cutmod.build(words, sil, keep_silence=keep_silence, fillers=fillers)
+    segs, speech_end = cutmod.build(words, sil, keep_silence=keep_silence, fillers=fillers, hard=an.get("hard_cuts"))
     if not segs:
         sys.exit("no speech in that window")
     total = round(speech_end + (HOLD_S if end_card else 0.3), 4)

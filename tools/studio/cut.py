@@ -10,9 +10,11 @@ PUNCH_EVERY = 2.6     # seconds between framing changes inside one breath
 ZOOMS = (1.0, 1.10, 1.0, 1.20)
 
 
-def build(words, sil, keep_silence=False, fillers="keep", punch=True, zooms=ZOOMS, punch_every=PUNCH_EVERY):
-    """Returns (segments, speech_end). Each segment: w0, w1 (word indexes), in (source s), frames, zoom, cont, out_t, kick."""
+def build(words, sil, keep_silence=False, fillers="keep", punch=True, zooms=ZOOMS, punch_every=PUNCH_EVERY, hard=None):
+    """Returns (segments, speech_end). Each segment: w0, w1 (word indexes), in (source s), frames, zoom, cont, out_t, kick.
+    hard: source times where a piece must end (a take change in an assembled selects file)."""
     drop = {i for i, w in enumerate(words) if fillers == "cut" and w.get("filler")}
+    brk = {i for i in range(1, len(words)) for h in (hard or []) if words[i - 1]["e"] <= h + 1e-3 and h <= words[i]["s"] + 1e-3}
     runs, run = [], []
     for i in range(len(words)):
         if i in drop:
@@ -20,7 +22,7 @@ def build(words, sil, keep_silence=False, fillers="keep", punch=True, zooms=ZOOM
                 runs.append([run[0], run[-1]])
                 run = []
             continue
-        if run and not keep_silence and words[i]["s"] - words[run[-1]]["e"] > GAP_MAX:
+        if run and (i in brk or (not keep_silence and words[i]["s"] - words[run[-1]]["e"] > GAP_MAX)):
             runs.append([run[0], run[-1]])
             run = []
         run.append(i)
@@ -31,7 +33,7 @@ def build(words, sil, keep_silence=False, fillers="keep", punch=True, zooms=ZOOM
     merged = []
     for r in runs:
         dur = words[r[1]]["e"] - words[r[0]]["s"]
-        if merged and not any(i in drop for i in range(merged[-1][1] + 1, r[0])) and \
+        if merged and r[0] not in brk and not any(i in drop for i in range(merged[-1][1] + 1, r[0])) and \
                 (dur < MIN_PIECE or words[merged[-1][1]]["e"] - words[merged[-1][0]]["s"] < MIN_PIECE):
             merged[-1][1] = r[1]
         else:

@@ -4,11 +4,12 @@
 #  - the caption and display fonts
 #  - every skill copied where Claude Code loads it from (~/.claude/skills)
 #  - optional: --deep-filter downloads the DeepFilterNet noise-removal binary (28 MB)
+#  - optional: --scenes installs Node.js and Playwright's Chromium for the animated VSL scenes (about 150 MB)
 set -euo pipefail
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 say() { printf '\n\033[1m%s\033[0m\n' "$1"; }
 ok() { printf '  ok  %s\n' "$1"; }
-WANT_DF=0; for a in "$@"; do [ "$a" = "--deep-filter" ] && WANT_DF=1; done
+WANT_DF=0; WANT_SC=0; for a in "$@"; do [ "$a" = "--deep-filter" ] && WANT_DF=1; [ "$a" = "--scenes" ] && WANT_SC=1; done
 
 say "Closer Studio: setting up"
 
@@ -83,6 +84,17 @@ if [ "$WANT_DF" = 1 ]; then
   else
     echo "  no DeepFilterNet build for this machine; skipped"
   fi
+fi
+
+# 6. optional: Node.js + Playwright Chromium, to render the animated scenes in tools/vsl/mg (VSL cards)
+if [ "$WANT_SC" = 1 ]; then
+  if ! command -v node >/dev/null 2>&1; then
+    if [[ "$(uname)" == "Darwin" ]]; then say "Installing Node.js"; brew install node; else echo "  node is missing: install Node.js 18 or newer and run this again"; exit 1; fi
+  fi
+  ok "node $(node --version)"
+  say "Installing Playwright and its Chromium (about 150 MB, first time only)"
+  (cd "$HERE/tools/vsl/mg" && npm install --silent --no-audit --no-fund && npx --yes playwright@1.63.0 install chromium)
+  ok "animated scenes ready"
 fi
 
 say "Done. Open this folder in Claude Code and say what you want."

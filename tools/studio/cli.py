@@ -6,7 +6,7 @@ import json
 import sys
 from pathlib import Path
 
-from . import analyze as an_mod, brands, cover as cover_mod, formats, grade, longform as long_mod, platforms, render, review
+from . import analyze as an_mod, assemble as asm, brands, cover as cover_mod, formats, grade, longform as long_mod, platforms, render, review
 
 
 def _an(video: Path, out: Path, a):
@@ -77,10 +77,17 @@ def cmd_longform(a):
     quotes = [q.strip() for q in a.quotes.split("|")] if a.quotes else None
     s = long_mod.longform(video, out, d, brand, plat, fmt, chapters=a.chapters, quotes=quotes, pops=a.pops, broll=Path(a.broll) if a.broll else None,
                           music=a.music, fillers=a.fillers, caps=a.captions, cta=a.cta, title=a.title, grade_preset=a.grade, preview=a.preview, denoise=a.denoise,
-                          change_every=a.change_every, audience=a.audience, hold=a.hold)
+                          change_every=a.change_every, audience=a.audience, hold=a.hold, layers=Path(a.layers).resolve() if a.layers else None)
     if not a.no_review:
         review.run(out)
     print(json.dumps(s, indent=1, default=str))
+
+
+def cmd_assemble(a):
+    d = asm.assemble(Path(a.spec), Path(a.out).resolve(), emphasis=a.emphasis, faces=not a.no_faces, stride=a.stride, model=a.model)
+    for r in d["beats"]:
+        print(f"  {r['sel_in']:7.2f}-{r['sel_out']:7.2f}  {r['beat']:<12} {r['take']} {r['src_in']:.2f}-{r['src_out']:.2f}")
+    print(f"\nnext: longform {Path(d['video'])} --out <job> (the analysis is reused; nothing is re-transcribed)")
 
 
 def cmd_cover(a):
@@ -169,9 +176,16 @@ def main(argv=None):
     p.add_argument("--music", default=None); p.add_argument("--fillers", default=None, choices=["keep", "cut"]); p.add_argument("--cta", default=None)
     p.add_argument("--title", default=None, help="thumbnail title, 1 to 4 words"); p.add_argument("--grade", default=None)
     p.add_argument("--change-every", type=float, default=None, help="seconds between layout changes (default from the format)")
+    p.add_argument("--layers", default=None, help="a layers JSON: animated scenes, chips, headline, proof card, moments, music, all anchored to words")
     p.add_argument("--hold", default=None, help="the verdict hold, 'a:b' seconds from the window start: no B-roll or pops inside it, and the cadence check skips it")
     p.add_argument("--denoise", default="chain", choices=["chain", "deep"]); p.add_argument("--preview", action="store_true"); p.add_argument("--no-review", action="store_true")
     p.set_defaults(f=cmd_longform)
+    p = sub.add_parser("assemble", help="one selects file in script order from several takes (a spec of beats); reuses locked word maps")
+    p.add_argument("spec"); p.add_argument("--out", required=True)
+    p.add_argument("--emphasis", default="auto", choices=["auto", "audio", "text"], help="emphasised words from loudness or from the text (auto: text when every take has a word map)")
+    p.add_argument("--no-faces", action="store_true"); p.add_argument("--stride", type=int, default=2); p.add_argument("--model", default="small.en")
+    p.set_defaults(f=cmd_assemble)
+
     p = sub.add_parser("cover", help="thumbnail (1280x720) and cover (1080x1920) from the best face frame with a title")
     p.add_argument("source", help="a video file or a job folder"); p.add_argument("--title", required=True); p.add_argument("--brand", default="btc")
     p.add_argument("--out", required=True); p.add_argument("--at", type=float, default=None); p.add_argument("--audience", default=None, choices=["default", "client"])
