@@ -130,7 +130,7 @@ def png_clip(png: Path, dst: Path, dur: float, preset, crf):
 def longform(video: Path, out: Path, an: dict, brand: dict, plat: dict, fmt: dict, chapters: str | None = None,
              quotes: list[str] | None = None, pops: str = "auto", broll: Path | None = None, music: str | None = None,
              fillers: str | None = None, caps: str | None = None, cta: str | None = None, title: str | None = None,
-             grade_preset: str | None = None, preview: bool = False, denoise: str = "chain", change_every: float | None = None, audience: str | None = None, log=print) -> dict:
+             grade_preset: str | None = None, preview: bool = False, denoise: str = "chain", change_every: float | None = None, audience: str | None = None, hold: str | None = None, log=print) -> dict:
     W, H = plat["w"], plat["h"]
     out.mkdir(parents=True, exist_ok=True)
     (out / "segs").mkdir(exist_ok=True)
@@ -192,6 +192,18 @@ def longform(video: Path, out: Path, an: dict, brand: dict, plat: dict, fmt: dic
         png = cards.quote_card(q, brand, W, H, out / "cutaways" / f"q{qi:02d}.png")
         cutaways.append((a, d, png_clip(png, out / "cutaways" / f"q{qi:02d}.mp4", d, preset, crf), "quote"))
     every = float(change_every if change_every is not None else fmt.get("change_every_s", 40))   # 0 = no scheduled layout change
+    # the verdict hold: "a:b" seconds from the window start; no B-roll, no pops, and the cadence check skips it
+    hold_out = None
+    if hold:
+        a, _, b = str(hold).partition(":")
+        ha, hb = cutmod.src_to_out(segs, float(a)), cutmod.src_to_out(segs, float(b))
+        if ha is None or hb is None or hb <= ha:
+            log(f"hold {hold} does not land on kept speech; ignored")
+        else:
+            hold_out = (round(ha, 3), round(hb, 3))
+            inside = [c for c in cutaways if ha - 0.5 < c[0] < hb]
+            if inside:
+                log(f"note: {len(inside)} card(s) sit inside the hold {ha:.0f}-{hb:.0f} s; move the chapter or quote if the hold must stay clean")
     if broll and every > 0:
         clips = sorted([p for p in Path(broll).iterdir() if p.suffix.lower() in (".mp4", ".mov", ".mkv", ".m4v")])
         ends = sentence_ends_out(an, segs)
@@ -201,6 +213,8 @@ def longform(video: Path, out: Path, an: dict, brand: dict, plat: dict, fmt: dic
                 continue
             if any(abs(t - c[0]) < 6 for c in cutaways):
                 last = t; continue
+            if hold_out and hold_out[0] - BROLL_S < t < hold_out[1]:
+                continue
             src = clips[k % len(clips)] if clips else None
             if not src:
                 break
@@ -250,6 +264,8 @@ def longform(video: Path, out: Path, an: dict, brand: dict, plat: dict, fmt: dic
     for t, d, txt in pop_list:
         if any(c[0] <= t <= c[0] + c[1] for c in cutaways):
             continue
+        if hold_out and hold_out[0] <= t <= hold_out[1]:
+            continue
         ev.append(cards.pop_event(txt, t, d, W, H, side))
     (out / "captions.ass").write_text(head + "\n".join(ev) + "\n")
     captions.write_srt(out / "captions.srt", srt)
@@ -287,10 +303,11 @@ def longform(video: Path, out: Path, an: dict, brand: dict, plat: dict, fmt: dic
         lines.append(f"{_fmt_ts(c['out'] if i else 0)} {c['title']}")
     (out / "chapters.txt").write_text("\n".join(lines) + ("\n" if lines else ""))
     cov = cover_mod.build(video, out, brand, title or (chs[0]["title"] if chs else cta), an, start=start, end=an["end"], log=log)
-    layout_times = sorted([c[0] for c in cutaways])
+    layout_times = sorted(set([c[0] for c in cutaways] + (list(hold_out) if hold_out else [])))
     gaps, last = [], 0.0
     for t in layout_times + [speech_end]:
-        if every > 0 and t - last > every:
+        is_hold = bool(hold_out) and last == hold_out[0] and t == hold_out[1]
+        if every > 0 and t - last > every and not is_hold:
             gaps.append((round(last, 1), round(t, 1)))
         last = t
     summary = {"file": str(final), "kind": "long", "format": fmt["id"], "platform": plat["id"], "brand": brand["id"], "duration_s": total,
@@ -298,7 +315,7 @@ def longform(video: Path, out: Path, an: dict, brand: dict, plat: dict, fmt: dic
                "chapters": chs, "auto_chapter_titles": any(c.get("auto") for c in chs), "missing_quotes": missing_quotes,
                "pops": len(pop_list), "captions": caps, "lufs": fin["i"], "true_peak": fin["tp"], "camera": "tracked" if cam else "static",
                "layout_gaps_over_limit": gaps, "change_every_s": every, "hook_deadline_s": fmt.get("hook_deadline_s", 10),
-               "audience": audience or brand.get("audience", "prospect"),
+               "audience": audience or brand.get("audience", "prospect"), "hold": hold_out,
                "length_warning": None, "cover": cov, "source": f"{video.name} {start:.1f}-{an['end']:.1f} s"}
     from . import formats as fm
     summary["length_warning"] = fm.check_length(fmt, total)

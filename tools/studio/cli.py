@@ -77,7 +77,7 @@ def cmd_longform(a):
     quotes = [q.strip() for q in a.quotes.split("|")] if a.quotes else None
     s = long_mod.longform(video, out, d, brand, plat, fmt, chapters=a.chapters, quotes=quotes, pops=a.pops, broll=Path(a.broll) if a.broll else None,
                           music=a.music, fillers=a.fillers, caps=a.captions, cta=a.cta, title=a.title, grade_preset=a.grade, preview=a.preview, denoise=a.denoise,
-                          change_every=a.change_every, audience=a.audience)
+                          change_every=a.change_every, audience=a.audience, hold=a.hold)
     if not a.no_review:
         review.run(out)
     print(json.dumps(s, indent=1, default=str))
@@ -169,6 +169,7 @@ def main(argv=None):
     p.add_argument("--music", default=None); p.add_argument("--fillers", default=None, choices=["keep", "cut"]); p.add_argument("--cta", default=None)
     p.add_argument("--title", default=None, help="thumbnail title, 1 to 4 words"); p.add_argument("--grade", default=None)
     p.add_argument("--change-every", type=float, default=None, help="seconds between layout changes (default from the format)")
+    p.add_argument("--hold", default=None, help="the verdict hold, 'a:b' seconds from the window start: no B-roll or pops inside it, and the cadence check skips it")
     p.add_argument("--denoise", default="chain", choices=["chain", "deep"]); p.add_argument("--preview", action="store_true"); p.add_argument("--no-review", action="store_true")
     p.set_defaults(f=cmd_longform)
     p = sub.add_parser("cover", help="thumbnail (1280x720) and cover (1080x1920) from the best face frame with a title")
