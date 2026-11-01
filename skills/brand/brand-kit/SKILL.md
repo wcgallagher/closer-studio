@@ -23,7 +23,8 @@ grade and the banned-word check. `brand/btc.json` and `brand/sma.json` are the t
             "display": "Fraunces Display", "display_file": "FrauncesDisplay-Bold.ttf", "mono": "JetBrains Mono"},
   "cta": {"line": "Book a call", "sub": "acme.com"},
   "style": {"captions": "clean", "lut": "clean", "music": "", "grain": 0.0},
-  "words": {"never": [], "result_disclaimer": ""},
+  "audience": "prospect",
+  "words": {"never": [], "never_client": [], "result_disclaimer": ""},
   "source": "brand/acme.md (scrape of acme.com, <date>)"
 }
 ```
@@ -33,8 +34,12 @@ grade and the banned-word check. `brand/btc.json` and `brand/sma.json` are the t
    - Fonts must exist in `fonts/`. Drop a brand's own TTF there and name it; the caption face must be heavy (Black or
      ExtraBold) or captions will not read at phone size.
    - `style.lut`: `clean`, `btc_ember`, `sma_pro`, `cinematic` or `none`. `style.captions`: `impact`, `clean`, `serif`, `boxed`.
-   - `words.never`: words the engine refuses in a hook or CTA and flags in captions (compliance words, competitor
+   - `words.never`: words the engine refuses in a hook, CTA or title and flags in captions (compliance words, competitor
      names, "free" when it is not).
+   - `audience`: who normally watches this brand's videos (`prospect` for Become The Closer, `agent` for Set More
+     Annuities). `words.never_client` holds words that are banned only when the viewer is the agent's own customer;
+     the engine adds them on jobs run with `--audience client`. Set More Annuities keeps "annuity" there, because its
+     own marketing is agent-facing and names the product.
 3. Check: `python3 tools/closer.py brands` lists it. Render one 10 s preview reel with `--brand <id>` and look at the
    end card and a caption frame.
 
