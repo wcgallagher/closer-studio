@@ -1154,7 +1154,7 @@
    "Length 45 to 120 s: house choice (no source gives a cancellation video length).",
    "Transcript names the next call and one recent win (keyword check: call, win).",
    "Exactly one ask; no second offer.",
-   "Pressure-word list fails: last chance, final, lose everything, only today (house rule); the BTC words free, no cost, guarantee and guaranteed never appear.",
+   "Pressure-word list fails: last chance, final, lose everything, only today (house rule); the four never-words in brand/btc.json never appear.",
    "Native Skool upload.",
    "Brand lint set."
   ],

@@ -2,7 +2,7 @@
 
 Date: 2026-10-31. Brands: Become The Closer (becomethecloser.com) and Set More Annuities (setmoreannuities.com). The engine reads `formats.json`; this file is the readable version with the reasoning. Every number below traces to a URL in the sources list or is marked house choice. `formats.json` sits beside this file at the kit root.
 
-Two lint sets ride on every format. BTC: the words free, no cost, guarantee and guaranteed never appear. SMA: the product name never appears in client-facing copy (hooks, captions, cards, titles, descriptions, page lines); agent-facing marketing may name it. The engine applies that list only when a job runs with `--audience client`; Set More Annuities' own marketing is agent-facing and names the product.
+Two lint sets ride on every format. BTC: the four never-words in `brand/btc.json` never appear. SMA: the product name never appears in client-facing copy (hooks, captions, cards, titles, descriptions, page lines); agent-facing marketing may name it. The engine applies that list only when a job runs with `--audience client`; Set More Annuities' own marketing is agent-facing and names the product.
 
 BVSL is not a defined term in any source the research pack found. The nearest real usages are "book-a-call VSL" and "bridge VSL". The registry maps BVSL to `vsl_book_call` and tags the job "confirm BVSL meaning with the owner" until the owner says otherwise.
 
@@ -131,7 +131,7 @@ Checks: speaker is the rep or host; one CTA in the last 10 s; sends anchored to 
 
 ### noshow_recovery_clip (short, 9:16 phone take, 20 / 45 / 60 s)
 Viewer state: missed the slot, a bit embarrassed, ready to ghost unless the door stays open.
-Length: house choice. Beats: no-guilt open 0:00 to 0:05 ("we missed you", HL Growth Partner); one reason to rebook tied to what they wrote on the application 0:05 to 0:25 (SalesKick); slots open for the next 2 days only 0:25 to 0:35 (SalesKick window; Focus Digital: same-day no-shows near 7%, two weeks out 42 to 67%); one-click rebook link in the last 10 s.
+Length: house choice. Beats: no-guilt open 0:00 to 0:05 (HL Growth Partner's no-guilt rebooking text; the "we missed you" wording is house); one reason to rebook tied to what they wrote on the application 0:05 to 0:25 (SalesKick); slots open for the next 2 days only 0:25 to 0:35 (SalesKick window; Focus Digital: same-day no-shows near 7%, two weeks out 42 to 67%); one-click rebook link in the last 10 s.
 Captions clean, no cuts, fillers kept (house: speed over polish). CTA spoken plus link card. Music none. Why: HL Growth Partner reports 30 to 50% recovery when the message goes out within the hour; Vidyard's video follow-ups converted 63% of event no-shows to MQL.
 Checks: fires within 60 minutes of the missed slot; no-show status stamped first (without it there is no show rate, Ziel Lab); word list passes "we missed you" and fails "you missed", "no-show", "wasted" (house); one link, 2-day window; not sent after a cancellation; brand lint.
 
@@ -144,7 +144,7 @@ Checks: hook complete by 0:30; first ask between 2:00 and 3:30, final ask inside
 ### vsl_long (long, 16:9, 900 / 1500 / 2700 s)
 Viewer state: considering a real purchase, wants the mechanism and the proof before anyone asks for money.
 Length: Benson runs nothing under 15 min and his best run 30 to 40; Palmer's long-form band is 20 to 45; Vidalytics' six parts reach the CTA at 15:00. Ideal 25 min is a house pick. Beats (Vidalytics parts): hook 0:00 to 0:45 (Palmer: it lands in the first 5 to 15 s); problem and root cause 0:45 to 3:00; mechanism 3:00 to 7:00; proof 7:00 to 11:00 (testimonial clips here); offer and value stack 11:00 to 15:00 with the button at the offer (Benson 16:34, Vidalytics 16:45); objections out loud 15:00 to 18:00 (Digistore24, house placement); ask and terms 18:00 to end, one CTA repeated but singular. Text-on-screen variant: one sentence per slide, a three-word slide every 5 to 10 slides (Benson).
-Captions clean on the presenter cut; test it against the plain text-on-screen cut (Vidalytics split: 68% vs 49% held at 0:35). Cut every 6 to 12 s with one visual per claim (VSL by Baran). CTA in-band. Cover: presenter or first slide line, headline matches the first spoken line. Music none, fillers cut.
+Captions clean on the presenter cut; test it against the plain text-on-screen cut (Vidalytics split: 68% vs 49% held at 0:35). One visual per claim (VSL by Baran), cut every 6 to 12 s (house). CTA in-band. Cover: presenter or first slide line, headline matches the first spoken line. Music none, fillers cut.
 Checks: six section markers in order; offer reveal between 11:00 and 17:00 and button time equal to it; objection block after the offer; slide rules on the text cut; brand lint, terms stated plainly; post-launch judge the reveal by sales not clicks (Vidalytics), 40% still watching at the CTA as the reference, and only 20% stay to the end of videos over 20 min (Vidyard) so the ask cannot wait.
 
 ### yt_authority (long, 16:9, 480 / 720 / 1200 s)
