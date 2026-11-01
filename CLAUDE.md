@@ -26,6 +26,7 @@ fails, read the error, fix what you can (usually re-run it), then explain in pla
 | a reel, a short, a clip, "cut this up", TikTok, Shorts | `skills/video/reel-editor/SKILL.md` (one command; you pick the window and write the hook) |
 | a YouTube video, a lesson, a replay, anything over 3 minutes | `skills/video/longform-editor/SKILL.md` (chapters, pops, cards, B-roll, thumbnail) |
 | a VSL for the sales page, the opt-in page, an application | `skills/video/funnel-vsl/SKILL.md` with `skills/video/vsl-producer/SKILL.md` for animated cutaways |
+| a VSL or homepage video cut from several takes, "re-edit the VSL", "move this line", cards that land on words | `skills/video/vsl-builder/SKILL.md` (assemble, layers, longform, blind A/B) |
 | people not showing up, confirmation video, reminders | `skills/video/show-rate-videos/SKILL.md` |
 | welcome video, module, classroom, community post | `skills/video/skool-content/SKILL.md` |
 | hooks, titles, thumbnails, covers, "make it clickable" | `skills/video/hooks-titles-covers/SKILL.md` |
@@ -60,7 +61,7 @@ Annuities.
 
 ## Where things are
 
-- `tools/closer.py`: the command (`formats`, `analyze`, `reel`, `longform`, `cover`, `reframe`, `export`, `review`). `tools/studio/`: the engine.
+- `tools/closer.py`: the command (`formats`, `analyze`, `assemble`, `reel`, `longform`, `cover`, `reframe`, `export`, `review`). `tools/studio/`: the engine.
   `tools/vsl/`: the VSL motion-graphics pipeline, scenes, LUT. `formats.json`: the format defaults the engine reads.
 - `brand/<id>.json`: colours, fonts, CTA, banned words. `fonts/`: Montserrat and Fraunces Display.
 - `RESEARCH.md`: where every technique came from. Add a row when you add one.

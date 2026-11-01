@@ -40,7 +40,7 @@ No Terminal, no commands to remember. Windows users: install WSL first, then the
 | `tools/closer.py` | the one command: `formats`, `analyze`, `reel`, `longform`, `cover`, `reframe`, `export`, `review`, `brands`, `platforms` |
 | `tools/studio/` | the engine: formats, transcription and moments, face tracking and virtual camera, the cut, captions, cards, voice, grade, render, long-form, cover, review |
 | `skills/strategy/format-brain` | the marketer's brain: from the goal to the format, the brief and the command |
-| `skills/video/` | reel-editor, longform-editor, funnel-vsl, show-rate-videos, skool-content, hooks-titles-covers, auto-reframe, caption-styles, platform-formatter, edit-grammar, cold-review, vsl-producer, video-use |
+| `skills/video/` | reel-editor, longform-editor, funnel-vsl, vsl-builder, show-rate-videos, skool-content, hooks-titles-covers, auto-reframe, caption-styles, platform-formatter, edit-grammar, cold-review, vsl-producer, video-use |
 | `skills/brand/brand-kit` | add a brand in five minutes from its website |
 | `skills/sales/closer-mentality` | how we sell, loaded before any hook or caption |
 | `skills/copy/*`, `skills/media-buying/*` | copy, trust scoring, ads and growth skills |
@@ -59,6 +59,8 @@ python3 tools/closer.py formats                  # the 17 formats and their band
 python3 tools/closer.py reel inbox/clip.mp4 --out output/job --start 12 --end 41 --brand btc --format organic_reel --platform ig_reels,tiktok --hook "Your hook line"
 python3 tools/closer.py reel inbox/call.mp4 --out output/auto --auto 3 --brand btc            # the three best windows
 python3 tools/closer.py longform inbox/talk.mp4 --out output/yt --brand btc --format yt_authority --chapters "0:The setup,95:The mistake" --quotes "the line you want on a card" --pops "four types|objection" --broll inbox/broll --title "Four words max"
+python3 tools/closer.py assemble vsl/spec.json --out output/vsl/selects                       # a script cut from several takes
+python3 tools/closer.py longform output/vsl/selects/selects.mkv --out output/vsl/v1 --brand sma --format vsl_hero --layers vsl/layers.json
 python3 tools/closer.py cover output/yt --title "Four words max" --brand btc --out output/yt/cover
 python3 tools/closer.py reframe inbox/wide.mp4 --out output/wide_vertical.mp4 --platform ig_reels
 python3 tools/closer.py export output/job/clip_ig_reels.mp4 --out output/job/exports --platforms yt_shorts,fb_reels

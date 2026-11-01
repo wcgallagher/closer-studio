@@ -23,6 +23,7 @@ The table it prints comes from `formats.json` at the kit root. Older ids such as
 |---|---|---|---|
 | A call or an application | `vsl_book_call` | 4 to 12 min, 7 the target. Warm cut 5 to 6 min, cold cut 7 to 9. | BTC quiz result page, opt-in thank-you page, SMA website page, application page |
 | The program itself | `vsl_long` | 15 to 45 min, 25 the house target | sales page or application page |
+| The homepage hero | `vsl_hero` | 60 to 150 s, 100 the target | above the fold on the homepage; several takes go through `skills/video/vsl-builder/SKILL.md` |
 
 Warm means they already sat through your training or workshop. Cold means the ad landed them here. Two more cases from the same source: a VSL sent inside an email sequence runs 4 to 5 min, and a list that has already weighed up your category takes 9 to 12. Never under 4 min. Never over 12 unless it is a case-study video rather than a sales video.
 

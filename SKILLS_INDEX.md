@@ -8,6 +8,7 @@ Say what you want in plain words; Claude picks the skill. This list is for curio
 ## Video
 - **longform-editor**: YouTube videos, VSLs, lessons and replays with the longform command: chapters, keyword pops, quote cards, B-roll on a cadence, thumbnail.
 - **funnel-vsl**: sales-funnel VSLs, short and long, with structure and timing, proof, CTA placement and compliance.
+- **vsl-builder**: a VSL or homepage video cut from several takes: lock the beats, assemble without re-transcribing, graphics anchored to words in one layers file, blind A/B against the last cut.
 - **show-rate-videos**: the confirmation-page video, reminder clips and pre-call clips that get booked calls to show up.
 - **skool-content**: welcome video, classroom modules, replays, win clips and posts for a Skool community.
 - **hooks-titles-covers**: hooks, on-screen hook text, titles, thumbnails and cover frames; ad hook variants.

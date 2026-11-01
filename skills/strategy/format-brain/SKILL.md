@@ -28,6 +28,7 @@ The table prints the 17 registry ids with the length band (min to max, ideal in 
 | reach or follows, "just a reel" | send it or comment the keyword | `organic_reel`; from a long recording, `yt_authority` first, then its reels |
 | an ad, paid clicks to the quiz or the account page | click | `paid_ad_reel` (9:16; always a 15 s cutdown too) or `paid_ad_feed` (4:5 and 1:1 for Meta feed). YouTube in-stream is `ad_instream_169` |
 | a sales page video, "the VSL", "BVSL", the opt-in or quiz page | book or apply | `vsl_book_call` (warm cut 5 to 6 min, cold 7 to 9); a program purchase: `vsl_long` |
+| the homepage video (about 100 s, above the fold) | open the account | `vsl_hero`; cut from several takes with `skills/video/vsl-builder/SKILL.md` |
 | show-ups, "they book and ghost" | reply YES, add to calendar | `confirmation_how` (90 s); `confirmation_why` (3 to 7 min) under it; `reminder_clip` at 24 h and 1 h; `noshow_recovery_clip` inside the hour after a miss |
 | Skool: a welcome, one skill, the weekly call, someone leaving | finish lesson one, attend, post a win, stay | `skool_welcome`, `skool_lesson`, `replay`, `skool_cancel_video` |
 | proof | believe it | `testimonial_clip` (ads and proof blocks, under 90 s); `testimonial_case_clip` (the booked prospect, up to 4 min) |
