@@ -76,7 +76,7 @@ Not built yet, with the format each serves:
 - Thumbnail checks: OCR word count, face count and brightness against a black background (`yt_authority`).
 - FFMETADATA chapter embed; the closed-caption track is the captions.srt every job writes (`yt_authority`, `replay`).
 
-Alias ids a brief may use: ad_reel = `paid_ad_reel`; show_confirmation = `confirmation_how` + `confirmation_why`; show_reminder = `reminder_clip`; vsl_short = `vsl_book_call`; youtube_long = `yt_authority`; testimonial = `testimonial_clip`.
+Alias ids a brief may use: ad_reel = `paid_ad_reel`; show_confirmation = `confirmation_how` (the WHY video is `confirmation_why`, its own id); show_reminder = `reminder_clip`; vsl_short = `vsl_book_call`; youtube_long = `yt_authority`; testimonial = `testimonial_clip`.
 
 ## 4. What each registry entry stores
 

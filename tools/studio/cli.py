@@ -167,7 +167,7 @@ def main(argv=None):
     p.add_argument("--broll", default=None, help="folder of clips for cutaways")
     p.add_argument("--captions", default=None, help="pops (default per format), none, or a burned style: impact, clean, serif, boxed")
     p.add_argument("--music", default=None); p.add_argument("--fillers", default=None, choices=["keep", "cut"]); p.add_argument("--cta", default=None)
-    p.add_argument("--title", default=None, help="thumbnail title, 2 to 4 words"); p.add_argument("--grade", default=None)
+    p.add_argument("--title", default=None, help="thumbnail title, 1 to 4 words"); p.add_argument("--grade", default=None)
     p.add_argument("--change-every", type=float, default=None, help="seconds between layout changes (default from the format)")
     p.add_argument("--denoise", default="chain", choices=["chain", "deep"]); p.add_argument("--preview", action="store_true"); p.add_argument("--no-review", action="store_true")
     p.set_defaults(f=cmd_longform)

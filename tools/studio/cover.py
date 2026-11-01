@@ -1,4 +1,4 @@
-"""Cover frames and thumbnails: the best face frame, graded, with a 2 to 4 word title in the display face."""
+"""Cover frames and thumbnails: the best face frame, graded, with a 1 to 4 word title in the display face."""
 from __future__ import annotations
 
 import subprocess
