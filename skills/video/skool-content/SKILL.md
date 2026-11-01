@@ -45,7 +45,7 @@ One micro-objective per page. The title names the skill and the first 15 s say i
   --broll "$KIT/inbox/m2l3_slides"
 ```
 
-Write the chapter titles yourself, starting at 0. `--chapters auto` only copies the first words of a sentence into each title, and the review marks "chapters written by a person" as a FIX until you replace them. `--title` is the thumbnail title, 2 to 4 words.
+Write the chapter titles yourself, starting at 0. `--chapters auto` only copies the first words of a sentence into each title, and the review marks "chapters written by a person" as a FIX until you replace them. `--title` is the thumbnail title, 1 to 4 words.
 
 Hosting: native upload (Skool's help page says native hosting is included in the plan; 200 pages per course, unlimited courses). Paste chapters.txt into the text field under the video and the timestamps become chapters. Over 360 s they are required (house rule). YouTube's chapter rules apply, so an unlisted YouTube copy with Allow Embedding on also works: 00:00 first, at least 3 timestamps, in ascending order, each 10 s or more. A Loom embed needs comments and reactions off. Pin one discussion post under every lesson (12 pins per page, 3 on the feed) for the action-step result: courses with lesson-level discussion finished at 50.9% against 37.3%, with assignments at 59.1% against 42.4% (Ruzuku). Gate the Classroom: a short Quick Start open to all, later pages dripped by days since joining, deeper courses behind Level 2 (5 points) or Level 3 (20 points), one point per like.
 
