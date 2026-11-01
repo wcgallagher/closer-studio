@@ -111,7 +111,7 @@ def header(W, H, brand, style_id, band_bottom, hook_size=None, placement="bottom
         f"Style: CapB,{fam['caption']},{size},{txt},{txt},&H00000000,{back},0,0,0,0,100,100,0,0,{border},{outline},{sh},{align},70,70,{mv},1",
         f"Style: Hook,{fam['caption']},{hook_size or int(H * 0.044)},{acc},{acc},&H00000000,&H78000000,0,0,0,0,100,100,0,0,1,5,2,5,80,80,0,1",
         f"Style: HookSerif,{fam['display']},{hook_size or int(H * 0.052)},{txt},{txt},&H00000000,&H90000000,0,0,0,0,100,100,0,0,1,2,4,5,80,80,0,1",
-        f"Style: Pop,{fam['display']},{int(H * 0.056)},{acc},{acc},&H00000000,&H90000000,0,0,0,0,100,100,0,0,1,2,4,8,80,80,{int(H * 0.22)},1",
+        f"Style: Pop,{fam['display']},{int(H * 0.064)},{acc},{acc},&H00000000,&H90000000,0,0,0,0,100,100,0,0,1,2,4,8,80,80,{int(H * 0.22)},1",
         f"Style: Pill,{fonts.get('mono', 'JetBrains Mono')},{int(H * 0.022)},{txt},{txt},&H00000000,&HB0000000,1,0,0,0,100,100,2,0,3,14,0,2,70,70,{mv + size + 60},1",
         "", "[Events]", "Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text",
     ]
