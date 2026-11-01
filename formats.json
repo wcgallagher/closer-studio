@@ -394,7 +394,7 @@
   "music": "none",
   "fillers": "cut",
   "checks": [
-   "Length: SalesKick specifies a 90-second HOW video; Fluxi gives about 90 s; max 120 s and min 60 s are house choices.",
+   "Length: SalesKick specifies a 90-second HOW video; max 120 s and min 60 s are house choices.",
    "Transcript contains calendar before 0:45 and text or reply before 1:10 (keyword by time).",
    "Exactly one CTA sentence inside the final 20 s, with a card carrying the same words.",
    "Speaker metadata = the closer or the host of the call (Vidyard: the rep the prospect will meet).",
@@ -492,7 +492,7 @@
   "funnel_stage": "Bottom: booked, not yet shown",
   "kind": "short",
   "platforms": [
-   "ig_story",
+   "ig_reels",
    "square"
   ],
   "placements": [
@@ -546,7 +546,7 @@
   "music": "none",
   "fillers": "cut",
   "checks": [
-   "Length: WebinarKit specifies a 60 to 90 s personal video for the 24-hour email; Vidyard's scripts run 30 to 45 s.",
+   "Length: WebinarKit specifies a 60 to 90 s personal video for the 24-hour email; Vidyard gives no duration; the 30 s floor is a house choice.",
    "Speaker metadata = the rep or host on the call.",
    "Exactly one CTA, spoken inside the last 10 s.",
    "Send times anchored to appointment start, never to booking time: 24 h and 1 h, plus the 15-minute link (SalesKick; RevenueHero 24 h / 1 h / 30 min; HL Growth Partner on wait-step anchoring).",
