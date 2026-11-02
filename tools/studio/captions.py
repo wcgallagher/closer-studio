@@ -40,7 +40,7 @@ BIND_NEXT = {"a", "an", "the", "to", "of", "in", "on", "at", "for", "with", "fro
              "didnt", "cant", "wont", "isnt", "arent", "wasnt", "ive", "weve", "youve", "theyve", "ill", "youll", "id",
              "youd", "just", "very", "these", "those", "this", "every", "some", "any", "how", "what", "where", "when",
              # adverbs before their verb and adjectives before their noun ("I always | recommend", "live | sales")
-             "always", "never", "also", "actually", "really", "even", "still", "extremely", "live", "good", "existing",
+             "always", "never", "quite", "also", "actually", "really", "even", "still", "extremely", "live", "good", "existing",
              "old", "new", "real", "big", "whole", "next", "last", "first", "simple"}
 # pairs read as one unit: never split between them
 COLLOC = {("life", "insurance"), ("mortgage", "protection"), ("right", "now"), ("worry", "about"), ("ask", "of"),
@@ -55,18 +55,20 @@ KEYWORDS = {"free", "money", "bag", "split", "50-50", "wednesday", "regret", "se
 DISPLAY = {"401k": "401(k)", "401ks": "401(k)s", "403b": "403(b)", "457b": "457(b)", "50-50": "50/50"}
 
 
-def chunk(ws, lo=2, hi=4, max_chars=None):
+def chunk(ws, lo=2, hi=4, max_chars=None, brk=None):
     """Split a run of words into caption chunks of lo..hi words, at clause ends and pauses, off function words.
     Clauses longer than hi words are split by a dynamic program over the cut positions (linear in the clause length):
     groups near hi words, a group of one word costs extra, a line that ends on a word binding to the next (BIND_NEXT)
     or splits a fixed pair (COLLOC) costs 5, a line starting on a function word 0.5, a cut at a pause of more than
-    150 ms earns 2. A beat change in a multi-take selects (the words' "beat") is a sentence end even without a period."""
+    150 ms earns 2. A beat change in a multi-take selects (the words' "beat") is a sentence end even without a period.
+    brk: ids of words a line must start on (the layers file's captions.breaks: an editor's call the costs cannot make)."""
     clauses, ends, cur = [], [], []
     for k, w in enumerate(ws):
         cur.append(w)
         nb = ws[k + 1].get("beat") if k + 1 < len(ws) else None
         beat_end = nb is not None and w.get("beat") is not None and nb != w["beat"]
-        if w["w"][-1:] in ".,?!;:" or beat_end:
+        forced = bool(brk) and k + 1 < len(ws) and id(ws[k + 1]) in brk
+        if w["w"][-1:] in ".,?!;:" or beat_end or forced:
             clauses.append(cur); ends.append(w["w"][-1:] in ".?!" or beat_end); cur = []
     if cur:
         clauses.append(cur); ends.append(True)
@@ -218,9 +220,9 @@ def _snap(a, b, cuts):
 
 
 def events(segs, words, brand, style_id, speech_end, hook_end=0.0, max_words=None, words_range=None, plain=None, off=None,
-           cuts=None):
+           cuts=None, breaks=None):
     """plain: output windows where the line shows without the spoken-word highlight (over a card); off: windows with no
-    burned caption at all (the SRT keeps every line)."""
+    burned caption at all (the SRT keeps every line); breaks: output times of words a line must start on."""
     st = STYLES[style_id]
     lo, hi = tuple(words_range) if words_range else st["words"]
     inside = lambda t, wins: any(a - 0.05 <= t < b for a, b in (wins or []))
@@ -246,7 +248,8 @@ def events(segs, words, brand, style_id, speech_end, hook_end=0.0, max_words=Non
         Oe = lambda w: seg_of[pos[id(w)]]["out_t"] + (w["e"] - seg_of[pos[id(w)]]["in"])
         seg_end = run[-1]["out_t"] + run[-1]["frames"] / FPS
         sg = run[0]
-        chunks = chunk(ws, lo, hi, st.get("max_chars"))
+        brk = {id(w) for w in ws if any(abs(O(w) - t) < 0.04 for t in breaks)} if breaks else None
+        chunks = chunk(ws, lo, hi, st.get("max_chars"), brk)
         if st["mechanism"] == "keyword":
             for ci, c in enumerate(chunks):
                 labels = [_label(w, st["case"]) for w in c]
@@ -267,7 +270,8 @@ def events(segs, words, brand, style_id, speech_end, hook_end=0.0, max_words=Non
                     continue
                 k = None if inside(a0, plain) else kw.get(pos[id(c[0])])
                 parts = [(f"{{\\1c{acc}}}{lab}{{\\1c{txt}}}" if (k is not None and m == k) else lab) for m, lab in enumerate(labels)]
-                ev.append(f"Dialogue: 2,{ts(a)},{ts(b)},Cap,,0,0,0,,{{\\fad(80,60)\\blur1.5}}{' '.join(parts)}")
+                fin = 0 if a <= 0.0 else 80      # the frame-0 line is on at full opacity (a muted autoplay's first frame)
+                ev.append(f"Dialogue: 2,{ts(a)},{ts(b)},Cap,,0,0,0,,{{\\fad({fin},60)\\blur1.5}}{' '.join(parts)}")
             continue
         for ci, c in enumerate(chunks):
             labels = [_label(w, st["case"]) for w in c]

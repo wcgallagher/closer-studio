@@ -78,3 +78,18 @@ the speech, lines over 42 characters, and a deal read at 270 words a minute with
 Structure beat engines in round 1, legibility beat taste in round 2, and the fixes that won round 3 were all
 measurable: words per minute, pause lengths, caption size and contrast, words on screen matching words spoken,
 loudness under the end card. Each is now a rule or a review gate (rulebook BP-01 to BP-10).
+
+## Round 4: full-frame slams (P4) against the overlay version (Q4)
+
+Between rounds a two-review target-viewer check (the muted agent on a 390 px phone) chose the shipped cut over the
+round-3 winner in both orders, for its full-frame deal and book cards. P4 made the deal and the book full-frame slams
+over the dimmed speaker. Votes P4 7, Q4 5; mean 6.43 against 6.27. Three lenses flipped with position and each picked
+the cut in the second slot both times; of the three that held, direct response and cinematic chose P4 and sound chose
+Q4 (the two mixes differ only in the slam effects). Ten of 12 reviews asked to split P4's 7.4 s deal slam: it hid the
+founder through the payout line, and the speaker was hidden or dimmed for 34% of the runtime against 20%.
+The devil's advocate called it a lean, not a win (BP-13), struck six fixes that broke the rulebook, and listed what
+only the owner can settle: the word on screen for agents, the music licence, the $2.6M statement.
+
+Claims that did not survive checking: "the bed comes back about 40 dB at 64.15 s, mid line" is the sound grammar's
+reverse swell into the bed's return; the music stem stays under -66 dB until 65.6 s. "Caption ghosts at 30% opacity"
+are contact-sheet frames caught inside an 80 ms fade. Confirmed: the click at 51.5 s (BP-12).

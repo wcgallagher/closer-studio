@@ -273,7 +273,8 @@ def longform(video: Path, out: Path, an: dict, brand: dict, plat: dict, fmt: dic
     cap_kw = {"cuts": sorted({g["start"] for g in scenes if not g["alpha"]} | {g["end"] for g in scenes if not g["alpha"]} | {speech_end}),
               "words_range": cl.get("words") or fmt.get("caption_words"),
               "plain": [(g["start"], g["end"]) for g in scenes if not g["alpha"]] if cl.get("plain_over_scenes") else None,
-              "off": [(A(a), A(b)) for a, b in cl.get("off", [])]}
+              "off": [(A(a), A(b)) for a, b in cl.get("off", [])],
+              "breaks": [A(x) for x in cl.get("breaks", [])] or None}
     cap_from = A(cl["from"]) if cl.get("from") is not None else 0.0
     ev, srt = captions.events(segs, words, brand, "clean", speech_end, 0.0, None)
     if caps in captions.STYLES:
@@ -386,7 +387,8 @@ def longform(video: Path, out: Path, an: dict, brand: dict, plat: dict, fmt: dic
         if sd.get("dialect"):
             rules["sfx"] = dict(rules.get("sfx") or {}, dialect=sd["dialect"])
         snd.direct(out, out / "voice_raw.wav", ow, total, speech_end, Path(bed) if bed else None, evs, mutes, land,
-                   rules, log=log, sections=secs, sfx_dir=Path(sfx_dir) if sfx_dir else None)
+                   rules, log=log, sections=secs, sfx_dir=Path(sfx_dir) if sfx_dir else None,
+                   joins=[sg["out_t"] for k, sg in enumerate(segs) if k and not sg.get("cont")])
     else:
         mix(out, total, speech_end, hits, bed, float(lm.get("start", 0.0)) if music and lm.get("file") else 0.0, mutes)
     m = voice.measure(out / "mix.wav", plat["lufs"], plat["tp"])

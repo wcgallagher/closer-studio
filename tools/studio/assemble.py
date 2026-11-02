@@ -31,6 +31,8 @@ import numpy as np
 from .common import FILLERS, FUNC, norm, probe, save_json
 
 PAD_IN = 0.14      # room before a beat's first word (more than the cut's own in-pad, so a piece never reaches across)
+JOIN_FADE_S = 0.015   # every beat's audio fades in and out (equal power) so a take change never splices mid-wave: a
+                      # 2026-11-02 cut clicked at a take change the 10 ms voice crossfade straddled (VO-09: 10-30 ms)
 PAD_OUT = 0.22     # room after its last word
 FPS = 30
 
@@ -159,12 +161,14 @@ def assemble(spec_path: Path, out: Path, emphasis: str = "auto", faces: bool = T
         k, r = k_r
         dst = parts / f"p{k:03d}.mkv"
         stamp = parts / f"p{k:03d}.json"
-        sig = json.dumps({"video": str(takes[r["take"]]["video"]), "in": r["src_in"], "out": r["src_out"]})
+        sig = json.dumps({"video": str(takes[r["take"]]["video"]), "in": r["src_in"], "out": r["src_out"], "fade": JOIN_FADE_S})
         if dst.exists() and stamp.exists() and stamp.read_text() == sig:
             return dst                                   # same take, same range: reuse the encoded part
         subprocess.run(["ffmpeg", "-v", "error", "-y", "-ss", f"{r['src_in']:.4f}", "-i", str(takes[r["take"]]["video"]),
                         "-t", f"{r['src_out'] - r['src_in']:.4f}", "-map", "0:v:0", "-map", "0:a:0", "-r", str(FPS),
                         "-c:v", "libx264", "-preset", "veryfast", "-crf", "12", "-pix_fmt", "yuv420p",
+                        "-af", f"afade=t=in:st=0:d={JOIN_FADE_S}:curve=qsin,"
+                               f"afade=t=out:st={max(0.0, r['src_out'] - r['src_in'] - JOIN_FADE_S):.4f}:d={JOIN_FADE_S}:curve=qsin",
                         "-c:a", "pcm_s16le", "-ar", "48000", "-ac", "2", str(dst)], check=True)
         stamp.write_text(sig)
         return dst

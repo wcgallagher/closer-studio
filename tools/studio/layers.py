@@ -479,7 +479,8 @@ def hand_events(L: dict, an: dict, segs: list[dict], cam: dict | None, W: int, H
     padx, pady, rad = int(22 * s), int(14 * s), int(10 * s)
     ev = []
     for i, sp in enumerate(specs):
-        side, text = sp["side"], sp["text"].upper()
+        side = sp["side"]                          # hands.case "as_written" keeps the label's own case (rulebook TY-07:
+        text = sp["text"] if hd.get("case") == "as_written" else sp["text"].upper()   # caps are for reels)
         nxt = specs[i + 1]["a"] - 2 / FPS if i + 1 < len(specs) else 1e9
         pts = [(t, r) for t, r in track[side] if sp["a"] - 0.35 <= t <= (sp["b"] or sp["a"] + 1.2) + 0.1]
         if not pts:

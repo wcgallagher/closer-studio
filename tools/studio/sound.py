@@ -1125,7 +1125,7 @@ def sfx_stem(n: int, kept: list[dict], words: list[dict], voice_lufs: float, lib
 
 def direct(out: Path, voice_raw: Path, words: list[dict], total: float, speech_end: float, music: Path | None,
            events: list[dict], drops=(), land: float | None = None, fmt_rules: dict | None = None, log=print,
-           sections: list[dict] | None = None, sfx_dir: Path | None = None) -> dict:
+           sections: list[dict] | None = None, sfx_dir: Path | None = None, joins: list[float] | None = None) -> dict:
     """Build the voice, music and effects stems on the output clock and the mix. sections: [{name, a, b, vm, p10}] in
     output seconds (default: one section at the music's vm_target). Writes voice.wav, music.wav, sfx.wav, mix.wav and
     sound.json (every decision with its reason)."""
@@ -1196,7 +1196,7 @@ def direct(out: Path, voice_raw: Path, words: list[dict], total: float, speech_e
     mix = sum(stems)
     mix = limiter(mix, -1.5)
     write_audio(out / "mix.wav", mix)
-    rep["qc"] = qc(vm, ms, mix, words, speech_end)
+    rep["qc"] = qc(vm, ms, mix, words, speech_end, joins)
     json.dump(rep, open(out / "sound.json", "w"), indent=1, default=float)
     secs_txt = "; ".join(f"{r['name']} {r['vm_median']}/{r['target_vm']} LU" for r in rep.get("music", {}).get("sections", []))
     log(f"sound: voice {vrep['stem_lufs']} LUFS, breaths {vrep['breaths_lowered']}, wind frames {vrep.get('wind_burst_frames')}; "
@@ -1205,7 +1205,27 @@ def direct(out: Path, voice_raw: Path, words: list[dict], total: float, speech_e
     return rep
 
 
-def qc(voice: np.ndarray, music: np.ndarray | None, mix: np.ndarray, words: list[dict], speech_end: float) -> dict:
+def join_clicks(voice: np.ndarray, joins: list[float], sr: int = SR) -> list[float]:
+    """Joins where the voice steps: the largest sample step within 2 ms of the join is over 4 times the 99th percentile
+    of the steps 5-30 ms either side, and over 0.02 full scale. The whole-file test below misses a click inside loud
+    speech (a 0.33 step at a take change in a 2026-11-02 cut passed it); this one looks where splices are."""
+    v = voice.mean(1) if voice.ndim > 1 else voice
+    bad = []
+    for t in joins:
+        i = int(round(t * sr))
+        if i < 1500 or i > len(v) - 1500:
+            continue
+        d = np.abs(np.diff(v[i - 1440:i + 1440]))
+        c = len(d) // 2
+        w = float(d[c - 96:c + 96].max())
+        ref = float(np.percentile(np.r_[d[:c - 240], d[c + 240:]], 99)) + 1e-6
+        if w > 4 * ref and w > 0.02:
+            bad.append(round(t, 3))
+    return bad
+
+
+def qc(voice: np.ndarray, music: np.ndarray | None, mix: np.ndarray, words: list[dict], speech_end: float,
+       joins: list[float] | None = None) -> dict:
     """Numbers a mix engineer checks: the voice's lead over the music while words play, loudness, peaks, clicks."""
     R = SOUND_RULES["master"]
     out = {"mix_lufs": round(lufs(mix), 1), "mix_true_peak_db": round(true_peak_db(mix), 1)}
@@ -1223,6 +1243,10 @@ def qc(voice: np.ndarray, music: np.ndarray | None, mix: np.ndarray, words: list
     d2 = np.abs(np.diff(voice, 2))
     loc = np.sqrt(np.convolve(d2 ** 2, np.ones(240) / 240, "same")) + 1e-6
     out["click_suspects"] = int(((d2 > 12 * loc) & (d2 > 0.05)).sum())
+    if joins:
+        jc = join_clicks(voice, joins)
+        out["click_joins"] = jc
+        out["click_suspects"] += len(jc)
     out["clipped_samples"] = int((np.abs(mix) >= 0.999).sum())
     return out
 

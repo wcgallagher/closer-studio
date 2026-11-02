@@ -1033,6 +1033,23 @@ the pauses a person leaves can exist at take changes; then hold them (layers `br
 the offer run at about 270 words a minute with 0.03-0.25 s between sentences.
 - source: PANEL_V9 round 3 (devil's advocate measurements on the word map).
 
+**BP-11** (FIX, vsl). A full-screen slam over the speaker carries one beat, about 2 s: the speech's own words in at
+most two rows, then the face and the captions come back for the rest of the line. A 7.4 s deal slam (four rows and a
+pill) hid the founder through the payout line, and 10 of 12 reviews asked to split it. Keep the speaker hidden or
+dimmed behind cards to about a third of the runtime or less (that cut: 34%).
+- source: PANEL_V9 round 4 (v13 against v12).
+
+**BP-12** (FIX, sound). Every beat's audio fades in and out at a take change (assemble.py `JOIN_FADE_S`, 15 ms
+equal power), and the review checks each join (sound.py `join_clicks`). A cut clicked at 51.5 s: the selects spliced
+two takes mid-wave, the 10 ms voice crossfade straddled that splice, and the whole-file click test passed it.
+- source: PANEL_V9 round 4 (sound lens, both orders; reproduced as a 0.33 full-scale one-sample step in voice.wav).
+
+**BP-13** (FIX, process). The devil's advocate reads the merged fix list against this rulebook before anything is
+built. In round 4 it struck fixes that would have broken BP-04, BP-09, CP-04 or AU-07 (a disclaimer under the payout
+line, captions hidden under overlays, paraphrased card copy, hits at the voice's level). A 2 to 1 split of the lenses
+that survive the A/B swap is a lean, not a win: the owner's blind pick settles it.
+- source: PANEL_V9 round 4.
+
 ## 14. Sources
 
 Each key used above, with where it points and the date read. Kit files are this repository's own.
