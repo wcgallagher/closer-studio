@@ -26,3 +26,13 @@
 | Inter (Rasmus Andersson) | SIL OFL 1.1 | `fonts/Inter-Bold.ttf`, `fonts/Inter-Medium.ttf` (instanced at weights 700 and 500 from the variable font, for the VSL lockup labels) |
 | JetBrains Mono (JetBrains) | SIL OFL 1.1 | `fonts/JetBrainsMono-SemiBold.ttf` (eyebrows and tags) |
 | Technique sources (repos, measurements, masterclass transcripts) | see `RESEARCH.md` | |
+
+## Engine components (added 2026-11-02)
+
+| Component | Licence | Where |
+|---|---|---|
+| Palm detector `palm_detection_mediapipe_2023feb.onnx` and hand-pose model `handpose_estimation_mediapipe_2023feb.onnx` (opencv/opencv_zoo, converted from Google MediaPipe) | Apache-2.0 | `tools/studio/models/`, used by `tools/studio/hands.py` through OpenCV's DNN module |
+| librosa (beat tracking, track profiles) | ISC | installed by `install.sh` |
+| soundfile | BSD-3 | installed by `install.sh` |
+| DNSMOS (speech quality scores) through the `speechmos` package | the package declares no licence; the models are Microsoft's DNS Challenge release | optional, only for `compare` and audio QC; not installed by default |
+| Music and sound effects | none ship with the kit | bring licensed files; `sound.py` synthesizes a fallback set, and a recorded library is a folder of `<role>__name.ext` files whose licence must cover your use (paid ads need a licence that names them) |

@@ -9,7 +9,7 @@ from __future__ import annotations
 import itertools
 import math
 
-from .common import FONTS, FPS, FUNC, hex_ass, norm, srt_ts, ts
+from .common import FONTS, FPS, FUNC, hex_ass, norm, srt_ts, ts, fpath
 
 STYLES = {
     # Hormozi-style: caps, spoken word in the brand accent, pop on the first word of each chunk
@@ -104,7 +104,7 @@ def header(W, H, brand, style_id, band_bottom, hook_size=None, placement="bottom
     outline = st["outline"] if not st["box"] else 18          # box padding
     sh = st["shadow"]
     lines = [
-        "[Script Info]", "ScriptType: v4.00+", f"PlayResX: {W}", f"PlayResY: {H}", "WrapStyle: 2", "ScaledBorderAndShadow: yes", "",
+        "[Script Info]", "ScriptType: v4.00+", f"PlayResX: {W}", f"PlayResY: {H}", "WrapStyle: 2", "ScaledBorderAndShadow: yes", "YCbCr Matrix: TV.709", "",
         "[V4+ Styles]",
         "Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding",
         f"Style: Cap,{cap_font},{size},{txt},{txt},&H00000000,{back},0,0,0,0,100,100,0,0,{border},{outline},{sh},{align},70,70,{mv},1",
@@ -191,4 +191,4 @@ def write_srt(path, srt):
 
 
 def ass_filter(ass_path) -> str:
-    return f"ass={ass_path}:fontsdir={FONTS}"
+    return f"ass={fpath(ass_path)}:fontsdir={fpath(FONTS)}"

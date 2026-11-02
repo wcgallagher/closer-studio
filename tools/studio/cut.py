@@ -10,7 +10,8 @@ PUNCH_EVERY = 2.6     # seconds between framing changes inside one breath
 ZOOMS = (1.0, 1.10, 1.0, 1.20)
 
 
-def build(words, sil, keep_silence=False, fillers="keep", punch=True, zooms=ZOOMS, punch_every=PUNCH_EVERY, hard=None):
+def build(words, sil, keep_silence=False, fillers="keep", punch=True, zooms=ZOOMS, punch_every=PUNCH_EVERY, hard=None,
+          sentence_pause=None, holds=None):
     """Returns (segments, speech_end). Each segment: w0, w1 (word indexes), in (source s), frames, zoom, cont, out_t, kick.
     hard: source times where a piece must end (a take change in an assembled selects file)."""
     drop = {i for i, w in enumerate(words) if fillers == "cut" and w.get("filler")}
@@ -55,14 +56,33 @@ def build(words, sil, keep_silence=False, fillers="keep", punch=True, zooms=ZOOM
         for k, (a, b) in enumerate(zip(starts, ends)):
             pieces.append({"i0": a, "i1": b, "cont_next": k < len(cuts)})
 
+    holds = holds or {}
+    ends_sentence = lambda i: i >= 0 and words[i]["w"].rstrip()[-1:] in ".?!"
+
+    def pause_for(i):
+        """The pause a person would leave after word i: a held beat when asked for, a breath at a sentence end."""
+        if i in holds:
+            return holds[i]
+        return sentence_pause if (sentence_pause and ends_sentence(i)) else None
+
+    hard_t = sorted(hard or [])
+
     def in_point(i, floor):
         s = words[i]["s"]
+        floor = max([floor] + [h for h in hard_t if h <= s + 1e-3])     # never reach back across a take change
+        p = pause_for(i - 1) if i > 0 else None
+        if p:                                   # 40 % of the pause sits before the next line, in its own room tone
+            return max(min(s - 0.4 * p, s - 0.02), floor)
         before = [b for a, b in sil if b <= s + 0.06]
         start = max(before[-1] - 0.03, s - 0.15) if before else s - PAD_IN
         return max(min(start, s - 0.02), floor)
 
     def out_point(i, limit):
         e = words[i]["e"]
+        limit = min([limit] + [h for h in hard_t if h >= e - 1e-3])     # never run on into the next take
+        p = pause_for(i)
+        if p:                                   # 60 % after the line ends: the thought lands before the next one starts
+            return min(max(e + 0.6 * p, e + 0.03), limit)
         after = [a for a, b in sil if a >= e - 0.06]
         end = min(after[0] + 0.04, e + PAD_OUT) if after else e + 0.08
         return min(max(end, e + 0.03), limit)

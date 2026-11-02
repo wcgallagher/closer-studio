@@ -6,7 +6,7 @@ so a skill file, a review and a person can read the same numbers.
 
   voice   noise reduced against the speaker's own room tone (12 dB at most, so no watery artifacts), tonal balance
           matched to a speech target curve (corrections capped at 4 dB), sibilance tamed only on the frames that hiss,
-          breaths kept but 10 dB lower, phrase loudness evened by 70 % (clip gain before compression), then a slow
+          breaths kept but 6 dB lower, phrase loudness evened by 70 % (clip gain before compression), then a slow
           leveller and a fast peak catcher.
   music   picked by measured traits (tempo, mode, how much it sits in the voice band, whether it builds), fitted to
           the cut on bar lines with the track's own ending spliced in, ridden by hand-style automation: down before
@@ -75,7 +75,7 @@ SOUND_RULES = {
         "density": {"gadzhi": {"first_20s_max": 8, "per_min_body_max": 4, "ticks_per_10s": 1, "risers_max": 1, "reverse_max": 3},
                     "nelk": {"first_20s_max": 14, "per_min_body_max": 12, "ticks_per_10s": 3, "risers_max": 3, "reverse_max": 4}},
         # where the sound must hit relative to t0: whoosh, riser and reverse peak on it; impacts, subs, shines and ticks start on it
-        "align": {"whoosh": "peak", "riser": "end", "reverse": "peak", "swish": "peak", "impact": "onset", "sub": "onset", "shine": "onset", "tick": "onset"},
+        "align": {"whoosh": "peak", "riser": "end", "reverse": "peak", "swish": "peak", "impact": "onset", "sub": "onset", "shine": "onset", "tick": "onset", "click": "onset"},
     },
     "master": {"lufs": -14.0, "true_peak_db": -1.0, "short_term_over_integrated_max_lu": 5.0},
 }
@@ -163,9 +163,8 @@ def loudness_curve(y: np.ndarray, sr: int = SR, win_s: float = 0.4, hop_s: float
 
 def true_peak_db(y: np.ndarray) -> float:
     """4x oversampled peak, the BS.1770 true-peak approximation."""
-    x = y if y.ndim == 1 else y.max(1)
-    up = signal.resample_poly(x, 4, 1)
-    return float(db(np.abs(up).max()))
+    chans = [y] if y.ndim == 1 else [y[:, c] for c in range(y.shape[1])]
+    return float(max(db(np.abs(signal.resample_poly(c, 4, 1)).max()) for c in chans))
 
 
 # ---------------------------------------------------------------- speech map
@@ -186,7 +185,7 @@ def out_words(an: dict, segs: list[dict]) -> list[dict]:
         for i in range(sg["w0"], sg["w1"] + 1):
             w = words[i]
             out.append({"w": w["w"], "t": sg["out_t"] + w["s"] - sg["in"], "e": sg["out_t"] + w["e"] - sg["in"],
-                        "emph": bool(w.get("emph"))})
+                        "emph": bool(w.get("emph")), "take": w.get("take")})
     return sorted(out, key=lambda w: w["t"])
 
 
@@ -307,6 +306,32 @@ def voice_master(y: np.ndarray, words: list[dict], rules: dict | None = None, lo
     corr = np.clip(corr, -R["eq_max_cut_db"], cap)                                           # boosts stay small, highs smaller
     rep["eq_db"] = {int(k): round(float(v), 1) for k, v in zip(fcs, corr)}
     eq_bins = undb(np.interp(np.log2(np.maximum(f, 20)), np.log2(fcs), corr))
+    # take match: several takes in one cut each get pulled toward the take with the most speech, so a take change
+    # never sounds like a different room (1/3-octave long-term spectra, capped, 70 % applied)
+    takes = [w.get("take") for w in words]
+    take_gain = None
+    if len({t for t in takes if t}) > 1:
+        wt = np.array([(w["t"] + w["e"]) / 2 for w in words])
+        idx = np.clip(np.searchsorted(wt, t), 0, len(words) - 1)
+        fr_take = np.array([takes[i] for i in idx], dtype=object)
+        spg = (mag * g)
+        def band_ltas(sel):
+            l = (spg[:, sel] ** 2).mean(1)
+            return np.array([10 * np.log10(l[(f >= _band_edges(fc)[0]) & (f < _band_edges(fc)[1])].mean() + 1e-20) for fc in fcs])
+        counts = {tk: int((fr_act & (fr_take == tk)).sum()) for tk in set(fr_take)}
+        ref_tk = max(counts, key=counts.get)
+        ref = band_ltas(fr_act & (fr_take == ref_tk))
+        take_gain = np.ones_like(mag)
+        rep["take_match_db"] = {}
+        for tk, cnt in counts.items():
+            if tk == ref_tk or cnt < 50:
+                continue
+            d = ref - band_ltas(fr_act & (fr_take == tk))
+            d = d - np.mean(d[(fcs >= 200) & (fcs <= 4000)])          # tone only; loudness is the clip gain's job
+            d = np.clip(np.convolve(np.pad(d, 1, mode="edge"), np.ones(3) / 3, "valid"), -R.get("take_match_max_db", 4.0), R.get("take_match_max_db", 4.0)) * 0.7
+            rep["take_match_db"][str(tk)] = {int(k): round(float(v), 1) for k, v in zip(fcs, d)}
+            take_gain[:, fr_take == tk] = undb(np.interp(np.log2(np.maximum(f, 20)), np.log2(fcs), d))[:, None]
+        rep["take_match_ref"] = str(ref_tk)
     # de-ess: frames whose sibilance band runs hot against the speech body
     sib = (f >= R["deess_band_hz"][0]) & (f <= R["deess_band_hz"][1])
     body = (f >= 1000) & (f <= 4000)
@@ -318,11 +343,13 @@ def voice_master(y: np.ndarray, words: list[dict], rules: dict | None = None, lo
     cut = np.convolve(cut, np.ones(3) / 3, "same")
     rep["deess_frames"] = int((cut > 0.5).sum())
     G = g * eq_bins[:, None]
+    if take_gain is not None:
+        G = G * take_gain
     G[sib] *= undb(-cut)[None, :]
     _, yv = signal.istft(X * G, SR, nperseg=nfft, noverlap=nfft - hop, boundary=True)
     y = yv[:n] if len(yv) >= n else np.pad(yv, (0, n - len(yv)))
 
-    # 4. breaths: kept, 10 dB lower
+    # 4. breaths: kept, breath_cut_db lower
     env = np.sqrt(np.convolve(y ** 2, np.ones(960) / 960, "same"))
     gm2 = np.repeat(~act, 480)[:n] & (env > 1e-6)
     nf = float(np.percentile(env[gm2], 50)) if gm2.any() else 1e-4
@@ -520,7 +547,23 @@ def score_track(p: dict, need_s: float, rules: dict | None = None) -> tuple[floa
     return round(s, 2), why
 
 
-def fit_music(path: Path, prof: dict, length: float, land: float | None = None, rules: dict | None = None) -> tuple[np.ndarray, dict]:
+def strong_bar(prof: dict) -> float:
+    """The bar where the track hits hardest: the section change (or bar) in its first 60 % with the biggest jump in
+    loudness over the 4 bars before it. Music that enters on a cue starts here, so its first beat is an event."""
+    bars, bd = np.array(prof["bars"]), np.array(prof["bar_db"])
+    if len(bd) < 10:
+        return float(bars[0]) if len(bars) else 0.0
+    best, gain = float(bars[0]), -99.0
+    for i in range(4, int(len(bd) * 0.6)):
+        g = float(np.mean(bd[i:i + 4]) - np.mean(bd[i - 4:i]))
+        bonus = 1.5 if any(abs(bars[i] - sc) < 0.6 for sc in prof.get("sections", [])) else 0.0
+        if g + bonus > gain:
+            best, gain = float(bars[i]), g + bonus
+    return best
+
+
+def fit_music(path: Path, prof: dict, length: float, land: float | None = None, rules: dict | None = None,
+              start_at: float | None = None) -> tuple[np.ndarray, dict]:
     """Cut a track to length the way an editor does, on bar lines, so it ends on its own ending at the video's end.
 
     Long track: the body starts on a bar in the first 40 % (chosen so a section change lands near `land`, a lift on the
@@ -542,11 +585,37 @@ def fit_music(path: Path, prof: dict, length: float, land: float | None = None, 
         return np.concatenate([a_seg[:-x], a_seg[-x:] * np.sqrt(1 - w) + b_seg[:x] * np.sqrt(w), b_seg[x:]])
 
     S = lambda t: int(round(t * SR))
+    if start_at is not None:
+        sb = float(bars[np.argmin(abs(bars - start_at))])
+        if dur - sb < need:   # not enough track after the strong bar: extend inside it by repeating matched bars
+            rel = bars[bars >= sb] - sb
+            rdb = bar_db[-len(rel) + 1:] if len(rel) > 1 else bar_db
+            y, how = full[S(sb):], f"from its strongest bar at {sb:.2f} s"
+            bl = float(np.median(np.diff(rel))) if len(rel) > 2 else 2.0
+            guard = 0
+            while len(y) / SR < need and guard < 8 and len(rdb) > 8:
+                short = need - len(y) / SR
+                k = max(2, int(math.ceil(short / bl / 2) * 2))
+                k = min(k, max(2, len(rdb) // 2))
+                lo, hi = len(rdb) // 5, len(rdb) - k - 4
+                if hi <= lo:
+                    break
+                i = min(range(lo, hi), key=lambda j: abs(rdb[j] - rdb[j + k]))
+                y = splice(y[:S(rel[i + k])], y[S(rel[i]):])
+                how += f"; repeated bars {i}-{i + k} ({rel[i + k] - rel[i]:.1f} s)"
+                guard += 1
+            n = S(need)
+            y = y[:n] if len(y) >= n else np.pad(y, ((0, n - len(y)), (0, 0)))
+            return y.astype(np.float32), {"start": round(sb, 3), "how": how, "tempo": prof["tempo"],
+                                          "bars_after_start": [round(float(b), 3) for b in rel]}
+        start_at = sb
     if dur >= need + 2:
         tail_start = bars[-4] if len(bars) >= 6 else dur - 8
         tail_len = dur - tail_start
         body_len = need - tail_len
         cands = [bb for bb in bars if bb <= 0.4 * dur and bb + body_len <= tail_start + 0.01] or [0.0]
+        if start_at is not None:
+            cands = [start_at]
         best, best_cost = cands[0], 1e9
         for bb in cands:
             cost = bb * 0.02
@@ -793,7 +862,16 @@ def sfx_shine(seed=8):
     return _norm_peak(np.stack([y, y * 0.97], 1)), 0.0
 
 
-SYNTH = {"whoosh": sfx_whoosh, "impact": sfx_impact, "riser": sfx_riser, "tick": sfx_tick, "swish": sfx_swish,
+def sfx_click(seed=9):
+    """A mouse click: two short bright transients 28 ms apart (press and release), 90 ms."""
+    n = int(0.09 * SR); y = np.zeros(n)
+    for at, a in ((0.0, 1.0), (0.028, 0.55)):
+        k0 = int(at * SR); k = int(0.006 * SR)
+        y[k0:k0 + k] += a * signal.sosfilt(signal.butter(2, 2500, "highpass", fs=SR, output="sos"), _noise(k, seed + k0)) * np.exp(-np.arange(k) / (0.0012 * SR))
+    return _norm_peak(np.stack([y, y], 1)), 0.0
+
+
+SYNTH = {"click": sfx_click, "whoosh": sfx_whoosh, "impact": sfx_impact, "riser": sfx_riser, "tick": sfx_tick, "swish": sfx_swish,
          "sub": sfx_subdrop, "reverse": sfx_swell, "shine": sfx_shine}
 SFX = SYNTH
 
@@ -818,7 +896,7 @@ class Library:
         for f in sorted(Path(folder).iterdir()):
             if f.suffix.lower() not in (".wav", ".mp3", ".ogg", ".flac", ".m4a", ".aif", ".aiff") or "__" not in f.stem:
                 continue
-            role = f.stem.split("__")[0]
+            role = f.stem.split("__")[0].lower()
             if f.name not in idx:
                 y = read_audio(f, mono=False)
                 env = np.convolve(np.abs(y).max(1), np.ones(480) / 480, "same")
@@ -837,6 +915,8 @@ class Library:
         """(audio, meta, source) for a role, rotating through the files so one sound never plays three times running."""
         files = self.items.get(role)
         if not files:
+            if role not in SYNTH:
+                raise SystemExit(f"sound: no '{role}' sound in the library and no synthesized fallback; add a file named {role}__<name>.wav")
             y, hit = SYNTH[role]()
             _, m = loudness_curve(y)
             al = SOUND_RULES["sfx"]["align"].get(role, "onset")
@@ -861,20 +941,22 @@ def plan_sfx(events: list[dict], words: list[dict], rules: dict | None = None, t
     R = dict(SOUND_RULES["sfx"], **(rules or {}))
     G = R["grammar"][R["dialect"]]
     D = R["density"][R["dialect"]]
-    ev = sorted(events, key=lambda e: (-PRIORITY.get(e["kind"], 0), e["at"]))
+    hook_s = float(R.get("hook_s", SOUND_RULES["music"]["hook_s"]))
+    events = [dict(e, kind="punch_in_hook") if e["kind"] == "punch_in" and e["at"] < hook_s else e for e in events]
+    ev = sorted(events, key=lambda e: (-PRIORITY.get(e["kind"], R.get("priority", {}).get(e["kind"], 0)), e["at"]))
     kept, dropped = [], []
     for e in ev:
-        kind = "punch_in_hook" if e["kind"] == "punch_in" and e["at"] < SOUND_RULES["music"]["hook_s"] else e["kind"]
+        kind = e["kind"]
         roles = G.get(kind, [])
         if not roles:
             dropped.append(dict(e, reason=f"left dry ({R['dialect']} grammar)")); continue
-        if any(abs(k["at"] - e["at"]) < R["min_gap_s"] for k in kept):
+        if any(abs(k["at"] - e["at"]) < float(D.get("min_gap_s", R["min_gap_s"])) for k in kept):
             dropped.append(dict(e, reason="crowded")); continue
         n20 = sum(1 for k in kept if k["at"] < 20)
         if e["at"] < 20 and n20 >= D["first_20s_max"]:
             dropped.append(dict(e, reason="first 20 s budget")); continue
         win = [k for k in kept if abs(k["at"] - e["at"]) < 30 and k["at"] >= 20]
-        if e["at"] >= 20 and len(win) >= D["per_min_body_max"] and PRIORITY.get(kind, 0) < 5:
+        if e["at"] >= 20 and len(win) >= D["per_min_body_max"] and PRIORITY.get(kind, R.get("priority", {}).get(kind, 0)) < 5:
             dropped.append(dict(e, reason="per-minute budget")); continue
         rl = [r for r, _ in roles]
         if "tick" in rl and sum(1 for k in kept if "tick" in k["roles"] and abs(k["at"] - e["at"]) < 5) >= D["ticks_per_10s"]:
@@ -926,14 +1008,39 @@ def direct(out: Path, voice_raw: Path, words: list[dict], total: float, speech_e
     v = np.pad(v, (0, max(0, n - len(v))))[:n]
     vm, vrep = voice_master(v, [w for w in words if w["t"] < speech_end + 0.1], fr.get("voice"), log)
     vl = lufs(vm)
-    rep = {"voice": vrep}
+    rep = {"voice": vrep, "inputs": {"events": events, "drops": [list(d) for d in drops], "land": land, "fmt_rules": fr,
+                                     "sections": sections, "sfx_dir": str(sfx_dir) if sfx_dir else None, "total": total, "speech_end": speech_end}}
     stems = [np.stack([vm, vm], 1)]
     mrules = dict(SOUND_RULES["music"], **(fr.get("music") or {}))
     secs = sections or [{"name": "all", "a": 0.0, "b": total, "vm": mrules["vm_target_lu"], "p10": mrules["vm_p10_min_lu"]}]
     ms = None
     if music:
         prof = track_profile(Path(music))
-        bed, fit = fit_music(Path(music), prof, total, land, fr.get("music"))
+        enter = float((fr.get("music") or {}).get("enter_s") or 0.0)
+        if enter > 0:      # music enters on a cue word, on the track's strongest bar; before it the cold open is dry
+            sb = strong_bar(prof)
+            bed, fit = fit_music(Path(music), prof, total - enter, None, fr.get("music"), start_at=sb)
+            pre = int(enter * SR)
+            mode = (fr.get("music") or {}).get("pre_roll", "dry")
+            if mode == "filtered":   # the lead-in to the drop, low-passed near 700 Hz, then a short hole right before it
+                full = read_audio(Path(music), mono=False)
+                a0 = max(0, int(sb * SR) - pre)
+                lead = full[a0:int(sb * SR)]
+                lead = np.pad(lead, ((pre - len(lead), 0), (0, 0)))
+                lead = signal.sosfiltfilt(signal.butter(4, 700, "lowpass", fs=SR, output="sos"), lead, axis=0) * undb(-6)
+                hole = int(float((fr.get("music") or {}).get("hole_s", 0.18)) * SR)
+                env = np.ones(pre); env[:int(0.3 * SR)] = np.linspace(0, 1, int(0.3 * SR)) if pre > int(0.3 * SR) else 1
+                env[max(0, pre - hole):] = 0
+                env[max(0, pre - hole - int(0.03 * SR)):max(0, pre - hole)] = np.linspace(1, 0, len(env[max(0, pre - hole - int(0.03 * SR)):max(0, pre - hole)]))
+                pre_bed = (lead * env[:, None]).astype(np.float32)
+                fit["how"] = "filtered lead-in, " + fit["how"]
+            else:
+                pre_bed = np.zeros((pre, 2), np.float32)
+            bed = np.concatenate([pre_bed, bed])
+            fit["how"] = f"enters at {enter:.2f} s on its strongest bar ({sb:.2f} s in the track); " + fit["how"]
+            fit["bars_after_start"] = [b + enter for b in fit["bars_after_start"]]
+        else:
+            bed, fit = fit_music(Path(music), prof, total, land, fr.get("music"))
         bed = bed[:n] if len(bed) >= n else np.pad(bed, ((0, n - len(bed)), (0, 0)))
         bars_out = np.array(fit["bars_after_start"])
         g, used = music_automation(n, words, total, speech_end, drops, fr.get("music"), bars_out, secs)
@@ -1032,4 +1139,27 @@ def assemble_voice(src: Path, segs: list[dict], total: float, dst: Path, fps: in
         if hi > lo:
             out[lo:hi] += x[lo - o:hi - o]
     write_audio(dst, out)
+    return dst
+
+
+def remix(job: Path, music: Path | None, dst: Path, lufs_target: float = -14.0, tp: float = -1.0, log=print) -> Path:
+    """Swap the music on a finished long-form job without touching the picture: re-run the director with the saved
+    inputs (voice, events, drops, sections) and a different track, then mux the new mix under the existing video."""
+    job = Path(job)
+    rep = json.loads((job / "sound.json").read_text())
+    inp = rep["inputs"]
+    J = json.loads((job / "job.json").read_text())
+    an = json.loads((job / "analysis.json").read_text())
+    words = out_words(an, J["segs"])
+    tmp = dst.parent / (dst.stem + "_sound")
+    tmp.mkdir(parents=True, exist_ok=True)
+    direct(tmp, job / "voice_raw.wav", words, inp["total"], inp["speech_end"], Path(music) if music else None, inp["events"],
+           [tuple(d) for d in inp["drops"]], inp["land"], inp["fmt_rules"], log, inp["sections"], Path(inp["sfx_dir"]) if inp["sfx_dir"] else None)
+    from . import voice
+    m = voice.measure(tmp / "mix.wav", lufs_target, tp)
+    video = Path(J["summary"]["file"])
+    subprocess.run(["ffmpeg", "-v", "error", "-y", "-i", str(video), "-i", str(tmp / "mix.wav"), "-map", "0:v", "-map", "1:a", "-c:v", "copy",
+                    "-af", voice.final_filter(m["i"], lufs_target, tp), "-c:a", "aac", "-b:a", "192k", "-movflags", "+faststart",
+                    "-shortest", str(dst)], check=True)
+    log(f"remix: {dst} ({Path(music).name if music else 'no music'})")
     return dst

@@ -89,7 +89,8 @@ def audio(path: Path) -> dict:
         y16 = sound.read_audio(path, sr=16000)
         y16 = y16 / (np.abs(y16).max() + 1e-9) * 0.9
         w = int(9.01 * 16000)
-        rs = [dnsmos.run(y16[i:i + w], sr=16000) for i in range(0, len(y16) - w, w)]
+        starts = list(range(0, max(1, len(y16) - w + 1), w)) or [0]
+        rs = [dnsmos.run(y16[i:i + w] if len(y16) >= w else np.resize(y16, w), sr=16000) for i in starts]
         out["dnsmos"] = {k: round(float(np.mean([r[k] for r in rs])), 2) for k in ("sig_mos", "bak_mos", "ovrl_mos", "p808_mos")}
         out["dnsmos"]["note"] = "DNSMOS on the full mix (voice plus music and effects); music lowers BAK by design"
     except Exception as e:  # optional
@@ -140,7 +141,9 @@ def run(a: Path, b: Path, out: Path, labels=("A", "B"), log=print) -> Path:
     ta = thumbs(a, ma["probe"]["duration"], COMPARE_RULES["thumb_every_s"], COMPARE_RULES["thumb_w"])
     tb = thumbs(b, mb["probe"]["duration"], COMPARE_RULES["thumb_every_s"], COMPARE_RULES["thumb_w"])
     tpl = (HERE / "compare_template.html").read_text()
-    page = tpl.replace("/*DATA*/null", json.dumps(data)).replace("/*THUMBS*/null", json.dumps({"a": ta, "b": tb})) \
+    safe = lambda o: json.dumps(o, allow_nan=False, default=str).replace("<", "\\u003c")
+    data["thumb_every_s"] = COMPARE_RULES["thumb_every_s"]
+    page = tpl.replace("/*DATA*/null", safe(data)).replace("/*THUMBS*/null", safe({"a": ta, "b": tb})) \
               .replace("{{LA}}", html.escape(labels[0])).replace("{{LB}}", html.escape(labels[1])) \
               .replace("{{SRC_A}}", wa.name).replace("{{SRC_B}}", wb.name)
     (out / "compare.html").write_text(page)

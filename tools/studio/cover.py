@@ -7,7 +7,7 @@ from pathlib import Path
 import numpy as np
 
 from . import grade, track as trk
-from .common import FONTS, probe
+from .common import FONTS, probe, fpath
 
 
 def best_time(an: dict | None, start: float, end: float) -> float:
@@ -25,7 +25,7 @@ def grab(video: Path, t: float, out_png: Path, lut_preset: str | None = None):
     vf = "format=rgb24"
     lp = grade.lut_path(lut_preset) if lut_preset else None
     if lp:
-        vf = f"lut3d=file={lp}," + vf
+        vf = f"lut3d=file={fpath(lp)}," + vf
     subprocess.run(["ffmpeg", "-v", "error", "-y", "-ss", f"{t:.3f}", "-i", str(video), "-frames:v", "1", "-vf", vf, str(out_png)], check=True)
     return out_png
 

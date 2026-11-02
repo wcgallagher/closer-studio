@@ -22,7 +22,7 @@ IGNORE_NUM = re.compile(r"^(?:\d{1,3}|20\d\d)$")
 
 def find_root(start: Path) -> Path | None:
     for p in [start, *start.parents]:
-        if (p / ".git").exists():
+        if (p / ".git").exists() or ((p / "tools").is_dir() and (p / "skills").is_dir()):   # a clone, or a ZIP download of the kit
             return p
     return None
 
@@ -32,12 +32,19 @@ def main() -> int:
         print(__doc__)
         return 2
     skill = Path(sys.argv[1]).resolve()
+    if skill.is_dir():                      # a skill folder works too
+        skill = skill / "SKILL.md"
     folder = skill.parent
     root = Path(sys.argv[sys.argv.index("--repo-root") + 1]).resolve() if "--repo-root" in sys.argv \
         else find_root(folder)
     text = skill.read_text(encoding="utf-8")
     problems = []
 
+    if "\u2014" in text:
+        problems.append("em dash in SKILL.md (use a comma, a period or parentheses)")
+    for w in ("delve", "tapestry", "testament", "pivotal", "seamless", "showcase", "underscore"):
+        if re.search(rf"\b{w}\b", text, re.I):
+            problems.append(f"banned word: {w}")
     fm = re.match(r"^---\n(.*?)\n---\n", text, re.S)
     if not fm:
         problems.append("no YAML frontmatter")

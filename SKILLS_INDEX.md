@@ -8,6 +8,11 @@ Say what you want in plain words; Claude picks the skill. This list is for curio
 ## Video
 - **longform-editor**: YouTube videos, VSLs, lessons and replays with the longform command: chapters, keyword pops, quote cards, B-roll on a cadence, thumbnail.
 - **funnel-vsl**: sales-funnel VSLs, short and long, with structure and timing, proof, CTA placement and compliance.
+- **editor-brain**: the human editor's rules in one place (how it should feel, what the eye sees, when the edit changes, the breath rule, the look, the tells of AI-made edits) and the entry point `closer.py edit VIDEO "intent"`.
+- **sound-director**: voice clean-up, music picked and fitted by measured traits, voice-over-music targets per section, a recorded sound-effect grammar timed to the frame, music options by `closer.py remix`.
+- **placement**: where chips, labels, cards and pop-ups go per format, from the face, the hands, the captions and everything already on screen; hand labels timed to the gesture.
+- **filming-playbook**: a one-page shoot sheet (mic, wind, light, framing for 16:9 and 9:16 at once, delivery for the edit) and the checks to run after the shoot.
+- **compare-cuts**: two cuts side by side with numbers (`closer.py compare`) and the blind judge protocol.
 - **vsl-builder**: a VSL or homepage video cut from several takes: lock the beats, assemble without re-transcribing, graphics anchored to words in one layers file, blind A/B against the last cut.
 - **show-rate-videos**: the confirmation-page video, reminder clips and pre-call clips that get booked calls to show up.
 - **skool-content**: welcome video, classroom modules, replays, win clips and posts for a Skool community.

@@ -133,12 +133,13 @@ def assemble(spec_path: Path, out: Path, emphasis: str = "auto", faces: bool = T
     for b in spec["beats"]:
         tk = takes[b["take"]]
         s, e = _range(tk["words"], b)
-        a = max(0.0, s - PAD_IN)
-        z = min(tk["info"]["dur"], e + PAD_OUT)
-        nxt = [w["s"] for w in tk["words"] if w["s"] > e + 0.01]
+        exact = "in" in b                        # cut points chosen inside measured silences are used as given
+        a = max(0.0, s - (0.0 if exact else PAD_IN))
+        z = min(tk["info"]["dur"], e + (0.0 if exact else PAD_OUT))
+        nxt = [] if exact else [w["s"] for w in tk["words"] if w["s"] > e + 0.01]
         if nxt:
             z = min(z, nxt[0] - 0.02)            # never carry the start of the next word
-        prv = [w["e"] for w in tk["words"] if w["e"] < s - 0.01]
+        prv = [] if exact else [w["e"] for w in tk["words"] if w["e"] < s - 0.01]
         if prv:
             a = max(a, prv[-1] + 0.02)
         fa, fz = round(a * FPS), round(z * FPS)
@@ -190,9 +191,13 @@ def assemble(spec_path: Path, out: Path, emphasis: str = "auto", faces: bool = T
         tk = takes[r["take"]]
         off = r["sel_in"] - r["src_in"]
         for w in tk["words"]:
-            if w["s"] >= r["src_in"] - 1e-3 and w["e"] <= r["src_out"] + 1e-3:
+            # a word belongs to the range when most of it is inside (a word map can stretch a word over the pause
+            # before it, so a cut point inside that pause must not lose the word); its times are clipped to the range
+            ov = min(w["e"], r["src_out"]) - max(w["s"], r["src_in"])
+            if ov >= 0.5 * (w["e"] - w["s"]) - 1e-3 and ov > 0.02:
                 nw = {k: v for k, v in w.items() if k in ("w", "p")}
-                nw.update({"s": round(w["s"] + off, 3), "e": round(w["e"] + off, 3), "beat": r["beat"], "take": r["take"]})
+                nw.update({"s": round(max(w["s"], r["src_in"]) + off, 3), "e": round(min(w["e"], r["src_out"]) + off, 3),
+                           "beat": r["beat"], "take": r["take"]})
                 words.append(nw)
         for a, b in tk["sil"]:
             a2, b2 = max(a, r["src_in"]), min(b, r["src_out"])

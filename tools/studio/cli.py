@@ -134,6 +134,19 @@ def cmd_platforms(a):
     print(platforms.table())
 
 
+def cmd_edit(a):
+    from . import edit
+    edit.plan(Path(a.video).resolve(), a.intent, Path(a.out).resolve(), a.brand, Path(a.music_dir).resolve() if a.music_dir else None,
+              Path(a.sfx_dir).resolve() if a.sfx_dir else None, render=not a.no_render)
+
+
+def cmd_remix(a):
+    from . import sound
+    for m in a.music:
+        dst = Path(a.out) / f"{Path(a.job).name}__{Path(m).stem}.mp4"
+        sound.remix(Path(a.job), Path(m), dst)
+
+
 def cmd_compare(a):
     from . import compare
     labels = (a.labels.split(",") + ["A", "B"])[:2] if a.labels else ("A", "B")
@@ -217,6 +230,14 @@ def main(argv=None):
     p = sub.add_parser("brands", help="list brands"); p.set_defaults(f=cmd_brands)
     p = sub.add_parser("platforms", help="platform sizes and safe zones"); p.set_defaults(f=cmd_platforms)
     p = sub.add_parser("lut", help="write a grade preset as a .cube file"); p.add_argument("preset"); p.set_defaults(f=cmd_lut)
+    p = sub.add_parser("edit", help="drop a video in and say what you want: a plan with every decision and its reason, then a first cut")
+    p.add_argument("video"); p.add_argument("intent", help='plain words, e.g. "a 90 second homepage VSL, premium and cinematic"')
+    p.add_argument("--out", required=True); p.add_argument("--brand", default="btc")
+    p.add_argument("--music-dir", default=None, help="a folder of licensed tracks to choose from"); p.add_argument("--sfx-dir", default=None, help="a folder of recorded SFX named role__name.ext")
+    p.add_argument("--no-render", action="store_true"); p.set_defaults(f=cmd_edit)
+    p = sub.add_parser("remix", help="the same cut with other music tracks (picture untouched), for the owner to pick by ear")
+    p.add_argument("job"); p.add_argument("--music", nargs="+", required=True); p.add_argument("--out", required=True)
+    p.set_defaults(f=cmd_remix)
     p = sub.add_parser("compare", help="two edits side by side with numbers: synced players, wipe, loudness, cuts, picture, faces -> compare.html")
     p.add_argument("a"); p.add_argument("b"); p.add_argument("--out", required=True); p.add_argument("--labels", default=None, help="'v8,v9'")
     p.set_defaults(f=cmd_compare)

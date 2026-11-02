@@ -33,7 +33,10 @@ PLACEMENT_RULES = {
     },
     "grid_step": 0.02,
     "weights": {"face": 60.0, "headroom": 14.0, "torso": 2.0, "hands": 8.0, "captions": 40.0, "overlays": 40.0, "ui": 25.0,
-                "near": 6.0, "busy": 2.5, "bright": 6.0, "sticky": 4.0, "edge_hug": 1.0},
+                "near": 6.0, "busy": 2.5, "bright": 6.0, "sticky": 4.0, "edge_hug": 1.0, "home": 5.0},
+    # where a group lives when nothing pulls it elsewhere: the open side of the frame (the side with more room beside the
+    # face), halfway between the face and the safe edge, at eye height (chips) or a little lower (stats)
+    "home": {"chips": {"side": "open", "x": 0.5, "y_from_eyes": 0.05}, "stats": {"side": "open", "x": 0.45, "y_from_eyes": 0.12}},
     "face_fail_overlap": 0.02,          # share of the box over the face that fails review
     "bright_text_luma": 0.62,           # plain white text over a mean luma above this needs a plate
     "sample_hz": 5,
@@ -180,6 +183,17 @@ def place(sc: Scene, w: int, h: int, a: float, b: float, group: str = "", near=N
         fr = [sc.frames(t) for t in (a, (a + b) / 2)]
         fr = [f for f in fr if f is not None]
         lum = np.mean(fr, 0) if fr else None
+    home = None
+    hz = R.get("home", {}).get(group)
+    if hz and faces and near is None:
+        fx0 = float(np.median([f[0] for f in faces])); fx1 = float(np.median([f[2] for f in faces]))
+        eyes = float(np.median([f[1] + 0.4 * (f[3] - f[1]) for f in faces]))
+        left_room, right_room = fx0 - sx0 * W, sx1 * W - fx1
+        if left_room >= right_room:
+            hx = sx0 * W + (fx0 - sx0 * W) * hz["x"]
+        else:
+            hx = fx1 + (sx1 * W - fx1) * (1 - hz["x"])
+        home = (hx, eyes + hz["y_from_eyes"] * H)
     best, bc, bd = None, 1e18, {}
     area = w * h
     for y in ys:
@@ -209,6 +223,8 @@ def place(sc: Scene, w: int, h: int, a: float, b: float, group: str = "", near=N
                 d["bright"] = max(0.0, float(patch.mean()) - R["bright_text_luma"]) * Wt["bright"] * 4
             if prev:
                 d["sticky"] = min(np.hypot(r[0] - p[0], r[1] - p[1]) for p in prev) / W * Wt["sticky"]
+            if home is not None:
+                d["home"] = np.hypot((x + w / 2) - home[0], (y + h / 2) - home[1]) / W * Wt["home"]
             c = sum(d.values())
             if c < bc:
                 best, bc, bd = r, c, d

@@ -22,6 +22,11 @@ fails, read the error, fix what you can (usually re-run it), then explain in pla
 
 | They say | You do |
 |---|---|
+| a video dropped in with what they want in plain words ("make this a premium homepage VSL", "cut me a hype reel") | `skills/video/editor-brain/SKILL.md` first: `closer.py edit VIDEO "what they want"` writes the plan with every decision and its reason, renders a preview, then you refine |
+| the audio sounds amateur, the music, sound effects, "make it sound like Gadzhi or Nelk", music options | `skills/video/sound-director/SKILL.md` (`closer.py remix` renders the same cut with other tracks) |
+| text, chips or labels in the wrong place, on the face, off the hands | `skills/video/placement/SKILL.md` (`closer.py hands` tracks the hands for labels) |
+| how to film, before a shoot, wind, light, framing | `skills/video/filming-playbook/SKILL.md` |
+| is the new cut better than the old one, compare two versions | `skills/video/compare-cuts/SKILL.md` (`closer.py compare A B`) |
 | what should I make, which format, more calls, more show-ups, a funnel video, "for the Skool", an ad | `skills/strategy/format-brain/SKILL.md` first: it names the format id, the brief and the command |
 | a reel, a short, a clip, "cut this up", TikTok, Shorts | `skills/video/reel-editor/SKILL.md` (one command; you pick the window and write the hook) |
 | a YouTube video, a lesson, a replay, anything over 3 minutes | `skills/video/longform-editor/SKILL.md` (chapters, pops, cards, B-roll, thumbnail) |

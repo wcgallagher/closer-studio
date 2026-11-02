@@ -190,7 +190,7 @@ document.querySelectorAll("canvas").forEach((c) => c.addEventListener("click", (
 window.addEventListener("resize", draw);
 
 // filmstrips
-[["fa", TH.a], ["fb", TH.b]].forEach(([id, list]) => list.forEach((src, i) => { const im = new Image(); im.src = src; im.loading = "lazy"; im.title = fmt(i * 2); im.onclick = () => seek(i * 2); $(id).appendChild(im); }));
+[["fa", TH.a], ["fb", TH.b]].forEach(([id, list]) => list.forEach((src, i) => { const ev = D.thumb_every_s || 2; const im = new Image(); im.src = src; im.loading = "lazy"; im.title = fmt(i * ev); im.onclick = () => seek(i * ev); $(id).appendChild(im); }));
 
 // table
 (() => {
@@ -206,7 +206,8 @@ window.addEventListener("resize", draw);
     ["Clipped highlights", (avg(a.picture.clip) * 100).toFixed(2) + " %", (avg(b.picture.clip) * 100).toFixed(2) + " %", avg(a.picture.clip) <= avg(b.picture.clip) ? 0 : 1],
     ["Saturation", avg(a.picture.sat).toFixed(3), avg(b.picture.sat).toFixed(3), null],
   ];
-  if (a.audio.dnsmos && a.audio.dnsmos.ovrl_mos) rows.push(["DNSMOS overall (mix)", a.audio.dnsmos.ovrl_mos.toFixed(2), b.audio.dnsmos.ovrl_mos.toFixed(2), a.audio.dnsmos.ovrl_mos >= b.audio.dnsmos.ovrl_mos ? 0 : 1]);
+  const ma = a.audio.dnsmos && a.audio.dnsmos.ovrl_mos, mb = b.audio.dnsmos && b.audio.dnsmos.ovrl_mos;
+  if (Number.isFinite(ma) && Number.isFinite(mb)) rows.push(["DNSMOS overall (mix)", ma.toFixed(2), mb.toFixed(2), ma >= mb ? 0 : 1]);
   function avg(x) { return x.reduce((s, v) => s + v, 0) / Math.max(1, x.length); }
   $("tbl").innerHTML = `<tr><th>Measure</th><th>${L[0]}</th><th>${L[1]}</th></tr>` + rows.map(([k, x, y, wn]) =>
     `<tr><td>${k}</td><td class="n ${wn === 0 && x !== y ? "win" : ""}">${x}</td><td class="n ${wn === 1 && x !== y ? "win" : ""}">${y}</td></tr>`).join("");
@@ -215,8 +216,9 @@ window.addEventListener("resize", draw);
 // judge
 if (D.judge) {
   const j = D.judge, el = $("judge");
-  el.innerHTML = `<h3 style="font-size:16px">Blind judges</h3>` + (j.summary ? `<p>${j.summary}</p>` : "") +
-    (j.votes || []).map((v) => `<p><b>${v.judge}</b>: picked <b>${v.pick}</b> (${v.score_a} vs ${v.score_b}). ${v.why || ""}</p>`).join("");
+  const esc = (x) => String(x).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+  el.innerHTML = `<h3 style="font-size:16px">Blind judges</h3>` + (j.summary ? `<p>${esc(j.summary)}</p>` : "") +
+    (j.votes || []).map((v) => `<p><b>${esc(v.judge)}</b>: picked <b>${esc(v.pick)}</b> (${esc(v.score_a)} vs ${esc(v.score_b)}). ${esc(v.why || "")}</p>`).join("");
 }
 draw();
 </script>

@@ -10,10 +10,11 @@ from pathlib import Path
 
 import numpy as np
 
-from .common import HERE, LUTS
+from .common import HERE, LUTS, fpath
 
 LUT_DIR = HERE / "luts"
-POST = "unsharp=lx=13:ly=13:la=0.30,unsharp=5:5:0.45,vignette=a=0.35"
+# one light detail pass (a 13 px clarity unsharp on top of a 5 px one read as phone sharpening: crunchy skin) and a soft vignette
+POST = "unsharp=5:5:0.35,vignette=a=0.25"
 
 PRESETS = {
     # the SMA VSL grade, measured on the XTRA Muse takes
@@ -88,7 +89,7 @@ def vf(preset: str, grain: float = 0.0, post: bool = True) -> str:
     parts = []
     lp = lut_path(preset)
     if lp:
-        parts.append(f"lut3d=file={lp}")
+        parts.append(f"lut3d=file={fpath(lp)}")
     if post:
         parts.append(POST)
     if grain and grain > 0:

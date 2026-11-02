@@ -12,7 +12,7 @@ from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 from . import brands, captions, cards, cover as cover_mod, cut as cutmod, grade, layers as lay, platforms, track as trk, voice
-from .common import FPS, FUNC, norm, probe
+from .common import FPS, FUNC, norm, probe, fpath, graph_file_flag
 from .render import HOLD_S, KY, _run, concat, mix, piece_jobs, prepare_voice, static_crop, voice_jobs
 
 CARD_S = 1.8          # chapter card on screen
@@ -116,7 +116,7 @@ def render_overlay_clip(src: Path, dst: Path, W: int, H: int, dur: float, offset
     vf = (f"scale={W}:{H}:force_original_aspect_ratio=increase,crop={W}:{H},setpts=PTS-STARTPTS,"
           f"scale=w='trunc({W}*(1+{push}*t/{dur:.3f})/2)*2':h=-2:eval=frame,crop={W}:{H}:x='(iw-{W})/2':y='(ih-{H})/2'")
     if lut:
-        vf += f",lut3d=file={lut}"
+        vf += f",lut3d=file={fpath(lut)}"
     vf += f",fps={FPS},format=yuv420p"
     _run(["ffmpeg", "-v", "error", "-y", "-ss", f"{offset:.3f}", "-t", f"{dur:.3f}", "-i", src, "-an", "-vf", vf, "-c:v", "libx264", "-preset", preset, "-crf", crf, dst])
     return dst
@@ -140,11 +140,17 @@ def longform(video: Path, out: Path, an: dict, brand: dict, plat: dict, fmt: dic
     caps = caps or fmt.get("captions", "pops")
     cta_policy = fmt.get("cta", "end_card")
     end_card = cta_policy != "none"
+    L = lay.load(layers)
+    br = (L.get("breath") if L else None) or fmt.get("breath") or {}
+    holds = {}
+    for spec, sec in br.get("after", []):             # a held beat after a line: before a claim, a price, the ask
+        t = lay._src(words, spec)
+        holds[min(range(len(words)), key=lambda i: min(abs(words[i]["e"] - t), abs(words[i]["s"] - t)))] = float(sec)
     segs, speech_end = cutmod.build(words, sil, keep_silence=False, fillers=fillers, punch_every=float(fmt.get("punch_every_s", 4.5)),
-                                    zooms=tuple(fmt.get("zooms", (1.0, 1.15))), hard=an.get("hard_cuts"))
+                                    zooms=tuple(fmt.get("zooms", (1.0, 1.15))), hard=an.get("hard_cuts"),
+                                    sentence_pause=br.get("sentence"), holds=holds)
     if not segs:
         raise SystemExit("no speech in that window")
-    L = lay.load(layers)
     if L.get("take_change_kick") and an.get("hard_cuts"):
         for k in range(1, len(segs)):
             prev_end = segs[k - 1]["in"] + segs[k - 1]["frames"] / FPS
@@ -193,7 +199,8 @@ def longform(video: Path, out: Path, an: dict, brand: dict, plat: dict, fmt: dic
         from . import finish as fin, placement as plc
         sc0 = plc.Scene(W, H, plc.Mapper(an, segs, cam, W, H, 0.025, KY), *plc.face_track(an))
         faces = [sc0.face_rect(i / FPS) for i in range(int(round(total * FPS)) + 2)]
-        fin.run(out / "base.mkv", faces, log)
+        prof = L["finish"].get("profile", "vsl") if isinstance(L["finish"], dict) else ("vsl" if "vsl" in fmt["id"] else "brand")
+        fin.run(out / "base.mkv", faces, log, profile=prof)
 
     # animated scenes from the layers file, anchored to words on this cut
     scenes = lay.resolve_scenes(L, words, segs, speech_end, total) if L else []
@@ -339,7 +346,9 @@ def longform(video: Path, out: Path, an: dict, brand: dict, plat: dict, fmt: dic
     if lm.get("file") and not music:
         music = str(lm["file"] if Path(lm["file"]).is_absolute() else Path(L["_base"]) / lm["file"])
     bed = music if music else (brand["style"].get("music") or None if music_mode != "none" else None)
-    mutes = [(lay.anchor(words, segs, a, speech_end, total), lay.anchor(words, segs, b, speech_end, total)) for a, b in lm.get("mute", [])]
+    # a mute is [from, to] (the bed goes out 0.4 s before the line starts) or [from, to, lead] (out exactly lead seconds before)
+    mutes = [(lay.anchor(words, segs, m[0], speech_end, total) - (float(m[2]) - 0.4 if len(m) > 2 else 0.0),
+              lay.anchor(words, segs, m[1], speech_end, total)) for m in lm.get("mute", [])]
     sd = L.get("sound") if L else None
     if sd:
         from . import sound as snd
@@ -367,6 +376,9 @@ def longform(video: Path, out: Path, an: dict, brand: dict, plat: dict, fmt: dic
         if sfx_dir and not Path(sfx_dir).is_absolute():
             sfx_dir = str(Path(L["_base"]) / sfx_dir)
         rules = dict(sd.get("rules") or {})
+        if sd.get("music_enter"):                      # the score's first beat lands on this word
+            rules["music"] = dict(rules.get("music") or {}, enter_s=A_(sd["music_enter"]), pre_roll=sd.get("pre_roll", "dry"),
+                                  hole_s=float(sd.get("hole_s", 0.18)))
         if sd.get("dialect"):
             rules["sfx"] = dict(rules.get("sfx") or {}, dialect=sd["dialect"])
         snd.direct(out, out / "voice_raw.wav", ow, total, speech_end, Path(bed) if bed else None, evs, mutes, land,
@@ -393,9 +405,10 @@ def longform(video: Path, out: Path, an: dict, brand: dict, plat: dict, fmt: dic
     (out / "final.graph").write_text(";".join(chain))
     name = f"{video.stem}_{fmt['id']}_{plat['id']}.mp4"
     final = out / name
-    _run(["ffmpeg", "-v", "error", "-y", *inputs, "-filter_complex_script", out / "final.graph", "-map", "[vout]", "-map", "1:a",
+    _run(["ffmpeg", "-v", "error", "-y", *inputs, graph_file_flag(), out / "final.graph", "-map", "[vout]", "-map", "1:a",
           "-af", voice.final_filter(m["i"], plat["lufs"], plat["tp"]), "-c:v", "libx264", "-preset", preset, "-crf", crf,
-          "-maxrate", plat["maxrate"], "-bufsize", plat["maxrate"], "-pix_fmt", "yuv420p", "-c:a", "aac", "-b:a", "192k",
+          "-maxrate", plat["maxrate"], "-bufsize", plat["maxrate"], "-pix_fmt", "yuv420p", "-colorspace", "bt709", "-color_primaries", "bt709",
+          "-color_trc", "bt709", "-color_range", "tv", "-c:a", "aac", "-b:a", "192k",
           "-movflags", "+faststart", "-t", f"{total:.4f}", final])
     fin = voice.measure(final, plat["lufs"], plat["tp"])
 

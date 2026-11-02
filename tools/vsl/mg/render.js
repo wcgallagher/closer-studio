@@ -39,7 +39,8 @@ async function renderOne(browser, g) {
   }
   await page.close();
   if (!stills) {
-    const enc = g.alpha ? ["-c:v", "qtrle", "-pix_fmt", "argb"] : ["-c:v", "libx264", "-preset", "medium", "-crf", "12", "-pix_fmt", "yuv420p"];
+    const enc = g.alpha ? ["-c:v", "qtrle", "-pix_fmt", "argb"] : ["-vf", "scale=out_color_matrix=bt709:out_range=tv", "-c:v", "libx264", "-preset", "medium", "-crf", "12",
+      "-pix_fmt", "yuv420p", "-colorspace", "bt709", "-color_primaries", "bt709", "-color_trc", "bt709", "-color_range", "tv"];   // PNG frames are RGB: convert with the BT.709 matrix, not the 601 default
     execFileSync("ffmpeg", ["-v", "error", "-y", "-framerate", String(FPS), "-i", path.join(dir, "f%05d.png"),
       ...enc, "-r", String(FPS), path.join(outDir, `${g.id}.${ext}`)]);
     for (const f of fs.readdirSync(dir)) if (f.endsWith(".png")) fs.unlinkSync(path.join(dir, f));

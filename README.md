@@ -40,7 +40,7 @@ No Terminal, no commands to remember. Windows users: install WSL first, then the
 | `tools/closer.py` | the one command: `formats`, `analyze`, `reel`, `longform`, `cover`, `reframe`, `export`, `review`, `brands`, `platforms` |
 | `tools/studio/` | the engine: formats, transcription and moments, face tracking and virtual camera, the cut, captions, cards, voice, grade, render, long-form, cover, review |
 | `skills/strategy/format-brain` | the marketer's brain: from the goal to the format, the brief and the command |
-| `skills/video/` | reel-editor, longform-editor, funnel-vsl, vsl-builder, show-rate-videos, skool-content, hooks-titles-covers, auto-reframe, caption-styles, platform-formatter, edit-grammar, cold-review, vsl-producer, video-use |
+| `skills/video/` | editor-brain, sound-director, placement, filming-playbook, compare-cuts, reel-editor, longform-editor, funnel-vsl, vsl-builder, show-rate-videos, skool-content, hooks-titles-covers, auto-reframe, caption-styles, platform-formatter, edit-grammar, cold-review, vsl-producer, video-use |
 | `skills/brand/brand-kit` | add a brand in five minutes from its website |
 | `skills/sales/closer-mentality` | how we sell, loaded before any hook or caption |
 | `skills/copy/*`, `skills/media-buying/*` | copy, trust scoring, ads and growth skills |

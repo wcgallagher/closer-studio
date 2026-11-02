@@ -23,6 +23,12 @@ if ! command -v ffmpeg >/dev/null 2>&1; then
     fi
     say "Installing ffmpeg (video engine)"
     brew install ffmpeg
+    # captions need libass and the voice tools want rubberband; the plain formula may ship without them
+    if ! ffmpeg -hide_banner -filters 2>/dev/null | grep -q " ass "; then
+      say "This ffmpeg has no caption renderer (libass): switching to Homebrew's ffmpeg-full"
+      brew uninstall --ignore-dependencies ffmpeg 2>/dev/null || true
+      brew install ffmpeg-full && (brew link --overwrite ffmpeg-full 2>/dev/null || true)
+    fi
   else
     echo "ffmpeg is missing. Install it with your package manager (for example: sudo apt install ffmpeg) and run this again."
     exit 1
@@ -39,7 +45,7 @@ say "Installing the engine's Python packages (first time takes a few minutes)"
 VENV="$HOME/.closer-studio/venv"
 if [ ! -x "$VENV/bin/python" ]; then python3 -m venv "$VENV"; fi
 "$VENV/bin/pip" install -q --upgrade pip
-"$VENV/bin/pip" install -q numpy scipy pillow faster-whisper opencv-python-headless "scenedetect[opencv]"
+"$VENV/bin/pip" install -q numpy scipy pillow faster-whisper opencv-python-headless "scenedetect[opencv]" librosa soundfile
 ok "python packages"
 
 # 2. fonts

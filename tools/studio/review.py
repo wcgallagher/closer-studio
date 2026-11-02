@@ -187,11 +187,17 @@ def extra_checks(job: Path, add):
         r = json.loads(sj.read_text())
         q = r.get("qc", {})
         if "voice_over_music_median_db" in q:
-            add("voice clear of the music", q.get("music_ok", False),
-                f"voice over music: median {q['voice_over_music_median_db']} dB, worst 5 % {q['voice_over_music_p5_db']} dB (want >= 15 and >= 9)")
+            secs = r.get("music", {}).get("sections", [])
+            low = [x for x in secs if x.get("vm_median") is not None and (x["vm_median"] < x["target_vm"] - 1.5 or (x.get("vm_p10") or 99) < x["p10_min"] - 2)]
+            add("voice clear of the music", q.get("music_ok", False) and not low,
+                "; ".join(f"{x['name']}: median {x['vm_median']} LU (target {x['target_vm']}), p10 {x['vm_p10']} (floor {x['p10_min']})" for x in secs)
+                or f"median {q['voice_over_music_median_db']} dB, worst 5 % {q['voice_over_music_p5_db']} dB (gate 9 and 3)")
+        if "short_term_max_over_integrated_lu" in q:
+            add("no swell louder than the mix by more than 5 LU", q["short_term_max_over_integrated_lu"] <= 5.0, f"{q['short_term_max_over_integrated_lu']} LU over integrated")
         add("no clicks at the audio cuts", q.get("click_suspects", 0) == 0, f"{q.get('click_suspects', 0)} suspects")
         per_min = r.get("sfx", {}).get("per_min", 0)
-        add("sound effects stay rare", per_min <= 12, f"{per_min} per minute (budget 12; dropped {len(r.get('sfx', {}).get('dropped', []))})")
+        bud = {"gadzhi": 6, "nelk": 14}.get(r.get("sfx", {}).get("dialect"), 14)
+        add("sound effects stay rare", per_min <= bud, f"{per_min} per minute ({r.get('sfx', {}).get('dialect')} budget {bud}; left dry or dropped {len(r.get('sfx', {}).get('dropped', []))})")
     fj = job / "finish.json"
     if fj.exists():
         st = json.loads(fj.read_text()).get("stats", {})

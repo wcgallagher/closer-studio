@@ -31,6 +31,13 @@ FINISH_RULES = {
 }
 
 
+# profiles: a sales VSL sells trust in a person, so it gets the clean finish (no halation, lighter grain and vignette);
+# a brand film gets the full one. Web players re-encode at low bitrates and turn heavy grain into mush.
+FINISH_PROFILES = {"vsl": {"halation": False, "grain": 0.007, "vignette": 0.12},
+                   "reel": {"halation": False, "grain": 0.006, "vignette": 0.10},
+                   "brand": {}}
+
+
 def _smooth(x, a, b):
     t = np.clip((x - a) / (b - a), 0, 1)
     return t * t * (3 - 2 * t)
@@ -53,7 +60,7 @@ def _decode(video, W, H, start_frame, count, fps):
     return subprocess.Popen(cmd, stdout=subprocess.PIPE)
 
 
-def _encoder(dst, W, H, fps, crf=12):
+def _encoder(dst, W, H, fps, crf=14):
     cmd = ["ffmpeg", "-v", "error", "-y", "-f", "rawvideo", "-pix_fmt", "rgb24", "-s", f"{W}x{H}", "-r", f"{fps}", "-i", "-",
            "-vf", "scale=in_range=full:out_color_matrix=bt709:out_range=tv,format=yuv420p", "-c:v", "libx264", "-preset", "fast",
            "-crf", str(crf), "-colorspace", "bt709", "-color_primaries", "bt709", "-color_trc", "bt709", "-color_range", "tv", str(dst)]
@@ -100,7 +107,7 @@ def _sky_mask(x, L, S):
     return bright * np.clip(_smooth(blue, S["blue_lo"], S["blue_hi"]) + white, 0, 1)
 
 
-def plan(stats: dict) -> dict:
+def plan(stats: dict, profile: str = "brand") -> dict:
     """Turn measurements into move sizes: nothing is applied that the footage does not need."""
     R = FINISH_RULES
     sky_ev = 0.0
@@ -109,8 +116,11 @@ def plan(stats: dict) -> dict:
     face_ev = 0.0
     if stats.get("face_luma"):
         face_ev = float(np.clip(np.log2(R["face"]["target_luma"] / max(stats["face_luma"], 0.05)) * 0.8, 0.0, R["face"]["ev_max"]))
-    return {"sky_ev": round(sky_ev, 3), "face_ev": round(face_ev, 3), "sky_on": stats.get("sky_share", 0) > 0.03,
-            "halation": stats.get("sky_share", 0) > 0.03 or stats.get("clipped_share", 0) > 0.002}
+    pr = FINISH_PROFILES.get(profile, {})
+    hal = stats.get("sky_share", 0) > 0.03 or stats.get("clipped_share", 0) > 0.002
+    return {"profile": profile, "sky_ev": round(sky_ev, 3), "face_ev": round(face_ev, 3), "sky_on": stats.get("sky_share", 0) > 0.03,
+            "halation": hal and pr.get("halation", True), "grain": pr.get("grain", R["grain"]["amount"]),
+            "vignette": pr.get("vignette", R["vignette"]["strength"])}
 
 
 def _work(args):
@@ -121,7 +131,7 @@ def _work(args):
     enc = _encoder(dst, W, H, fps)
     yy, xx = np.mgrid[0:H // 4, 0:W // 4].astype(np.float32)
     r = np.hypot((xx - W / 8) / (W / 8), (yy - H / 8) / (H / 8))
-    vig = cv2.resize((1 - R["vignette"]["strength"] * _smooth(r, 0.55, 1.45)).astype(np.float32), (W, H))[..., None]
+    vig = cv2.resize((1 - pl["vignette"] * _smooth(r, 0.55, 1.45)).astype(np.float32), (W, H))[..., None]
     rng = np.random.default_rng(f0 + 7)
     tint = np.array(R["halation"]["tint"], np.float32)
     lw = np.array([0.2126, 0.7152, 0.0722], np.float32)
@@ -141,9 +151,9 @@ def _work(args):
             d = ((xx - cx) / max(rx, 1)) ** 2 + ((yy - cy) / max(ry, 1)) ** 2
             fm = (1 - _smooth(d, 0.45, 1.0)).astype(np.float32)
         if pl["sky_on"]:
-            m = _sky_mask(small, Ls, R["sky"])
-            m = cv2.GaussianBlur(m, (0, 0), 2.0)
-            M = cv2.resize(m, (W, H))[..., None]
+            # the qualifier runs on every pixel at full size and is only de-noised by 1 px: a mask blurred across the
+            # subject's edge leaves the sky next to the head undarkened, which reads as a bright halo
+            M = cv2.GaussianBlur(_sky_mask(x, x @ lw, R["sky"]).astype(np.float32), (0, 0), 1.0)[..., None]
             if pl["sky_ev"] < 0:
                 x = x * (1 + (2 ** pl["sky_ev"] - 1) * M)
             L = x @ lw
@@ -162,26 +172,26 @@ def _work(args):
             x = x + R["halation"]["mix"] * cv2.resize(glow, (W, H))[..., None] * tint
         L = np.clip(x @ lw, 0, 1)
         g = cv2.resize(rng.standard_normal((H // 2, W // 2)).astype(np.float32), (W, H), interpolation=cv2.INTER_LINEAR)
-        x = x * vig + (R["grain"]["amount"] * g * (4 * L * (1 - L)))[..., None]
+        x = x * vig + (pl["grain"] * g * (4 * L * (1 - L)))[..., None]
         enc.stdin.write((np.clip(x, 0, 1) * 255 + 0.5).astype(np.uint8).tobytes())
     enc.stdin.close(); enc.wait(); dec.wait()
     return dst
 
 
-def run(base: Path, faces: list, log=print, workers: int = 4) -> dict:
+def run(base: Path, faces: list, log=print, workers: int = 4, profile: str = "brand") -> dict:
     """Finish base (keeps its audio). faces: per output frame (x0, y0, x1, y1) or None. Writes base_raw.mkv once and
     replaces base.mkv with the finished picture; returns the measurements and the plan."""
     base = Path(base)
     raw = base.with_name("base_raw.mkv")
     stamp = base.with_name("finish.json")
-    key = f"{raw.stat().st_size if raw.exists() else base.stat().st_size}|{json.dumps(FINISH_RULES, sort_keys=True)}"
+    key = f"{raw.stat().st_size if raw.exists() else base.stat().st_size}|{profile}|{json.dumps(FINISH_RULES, sort_keys=True)}"
     if raw.exists() and stamp.exists() and json.loads(stamp.read_text()).get("key") == key and base.exists():
         return json.loads(stamp.read_text())
     if not raw.exists() or base.stat().st_mtime > raw.stat().st_mtime:
         base.replace(raw)
     W, H, fps, n = _probe(raw)
     stats = measure(raw, faces)
-    pl = plan(stats)
+    pl = plan(stats, profile)
     log(f"finish: measured {stats}; plan {pl}")
     parts, step = [], int(np.ceil(n / workers))
     jobs = []

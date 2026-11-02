@@ -22,6 +22,31 @@ FUNC = {"to", "of", "the", "a", "an", "is", "and", "or", "we", "i", "you", "that
 FILLERS = {"um", "uh", "umm", "uhh", "hmm", "mm", "mmm", "erm", "ah", "er", "uhm"}
 
 
+_FF_MAJOR = None
+
+
+def ffmpeg_major() -> int:
+    """The installed ffmpeg's major version (cached)."""
+    global _FF_MAJOR
+    if _FF_MAJOR is None:
+        out = subprocess.run(["ffmpeg", "-version"], capture_output=True, text=True).stdout
+        m = re.search(r"ffmpeg version n?(\d+)", out)
+        _FF_MAJOR = int(m.group(1)) if m else 6
+    return _FF_MAJOR
+
+
+def graph_file_flag() -> str:
+    """The option that reads a filter graph from a file: '-/filter_complex' from ffmpeg 7 on ('-filter_complex_script'
+    is deprecated in 7 and 8 and gone in 9, the version Homebrew and the Windows builds ship), the old one before 7."""
+    return "-/filter_complex" if ffmpeg_major() >= 7 else "-filter_complex_script"
+
+
+def fpath(path) -> str:
+    """A file path written inside an ffmpeg filter graph. Windows drive letters ("C:") and backslashes break the graph
+    parser, so slashes go forward and colons are escaped; on Mac and Linux the path is unchanged."""
+    return str(path).replace("\\", "/").replace(":", "\\:")
+
+
 def sh(cmd, **kw):
     r = subprocess.run([str(c) for c in cmd], capture_output=True, text=True, **kw)
     if r.returncode:

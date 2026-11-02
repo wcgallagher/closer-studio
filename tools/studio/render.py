@@ -8,7 +8,7 @@ from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 from . import brands, captions, cards, cut as cutmod, formats as fm, grade, platforms, track as trk, voice
-from .common import FPS, probe, sh
+from .common import FPS, probe, sh, fpath, graph_file_flag
 
 KY = 0.33          # one crop anchor for every punch-in: the eye line never moves at a cut
 HOLD_S = 2.0       # end card
@@ -116,13 +116,13 @@ def piece_jobs(video, out, segs, cam, base_crop, W, H, lut, grain, preset, crf, 
         vf = (f"setpts=PTS-STARTPTS,{first},crop=iw/{z}:ih/{z}:(iw-iw/{z})/2:(ih-ih/{z})*{KY},"
               f"scale=w='trunc({W}*{kexpr}/2)*2':h=-2:eval=frame:flags=bicubic,crop={W}:{H}:x='(iw-{W})/2':y='(ih-{H})*0.4'")
         if lut:
-            vf += f",lut3d=file={lut}"
+            vf += f",lut3d=file={fpath(lut)}"
         post = grade.POST + (f",noise=alls={int(grain * 100)}:allf=t" if grain > 0 else "")
-        graph = f"[0:v]{vf}[g];movie={out / 'fill.png'}[f];[g][f]overlay=format=auto:eof_action=repeat,{post},setsar=1,fps={FPS},format=yuv420p[v]"
+        graph = f"[0:v]{vf}[g];movie={fpath(out / 'fill.png')}[f];[g][f]overlay=format=auto:eof_action=repeat,{post},setsar=1,fps={FPS},format=yuv420p[v]"
         gfile = out / "segs" / f"{k:03d}.graph"
         gfile.write_text(graph)
         jobs.append(["ffmpeg", "-v", "error", "-y", "-ss", f"{start + t0:.3f}", "-i", video, "-an", "-frames:v", sg["frames"],
-                     "-filter_complex_script", gfile, "-map", "[v]", "-c:v", "libx264", "-preset", preset, "-crf", crf, "-threads", "2", dst])
+                     graph_file_flag(), gfile, "-map", "[v]", "-c:v", "libx264", "-preset", preset, "-crf", crf, "-threads", "2", dst])
     return jobs
 
 
