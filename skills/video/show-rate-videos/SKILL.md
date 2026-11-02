@@ -12,7 +12,7 @@ face they will meet on the call.
 
 ```bash
 KIT="$(cat ~/.closer-studio/kit_path 2>/dev/null || pwd)"
-PY="$HOME/.closer-studio/venv/bin/python"; [ -x "$PY" ] || PY=python3
+PY="$HOME/.closer-studio/venv/bin/python"; [ -x "$PY" ] || PY="$HOME/.closer-studio/venv/Scripts/python.exe"; [ -x "$PY" ] || PY=python3
 IN="$KIT/inbox"; J="$KIT/output/<job>"
 "$PY" "$KIT/tools/closer.py" formats
 ```

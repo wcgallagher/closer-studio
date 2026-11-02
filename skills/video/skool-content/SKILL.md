@@ -11,7 +11,7 @@ Five registry formats cover a community: `skool_welcome`, `skool_lesson`, `repla
 
 ```bash
 KIT="$(cat ~/.closer-studio/kit_path 2>/dev/null || pwd)"
-PY="$HOME/.closer-studio/venv/bin/python"; [ -x "$PY" ] || PY=python3
+PY="$HOME/.closer-studio/venv/bin/python"; [ -x "$PY" ] || PY="$HOME/.closer-studio/venv/Scripts/python.exe"; [ -x "$PY" ] || PY=python3
 "$PY" "$KIT/tools/closer.py" formats
 ls "$KIT/inbox"
 ```

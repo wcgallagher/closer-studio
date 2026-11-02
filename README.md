@@ -16,7 +16,8 @@ animated cutaways use the same kit.
    when it asks. If your Mac asks for your password, that is normal.
 4. When Claude says **Done**, you are set.
 
-No Terminal, no commands to remember. Windows users: install WSL first, then the same three steps inside it.
+No Terminal, no commands to remember. Windows: the same three steps; `set me up` runs `install.ps1` (winget installs
+ffmpeg, Python and Node; the installer is new and untested on Windows, so tell us what breaks). WSL also works.
 
 ## Every time you want to edit
 
@@ -31,13 +32,21 @@ No Terminal, no commands to remember. Windows users: install WSL first, then the
    - `make this vertical for TikTok`, `export it for Shorts and LinkedIn too`
    - `make a VSL from these three takes`, `make me a thumbnail that says ...`
    - `is this actually good?` (runs the cold review)
+   - `make this a 90 second homepage VSL, premium and cinematic` (the editor brain: `closer.py edit` writes a plan
+     with every decision and its reason, then a first cut you refine in plain words)
+   - `the music feels cheap, give me options` (`closer.py remix` renders the same cut with other tracks)
+   - `is the new cut better than the old one?` (`closer.py compare` builds a side-by-side page with the numbers)
 4. Finished files land in `closer-studio/output/<job>/`. Claude tells you the file name, the length, and what it did.
 
 ## What is inside
 
 | Folder | What it is |
 |---|---|
-| `tools/closer.py` | the one command: `formats`, `analyze`, `reel`, `longform`, `cover`, `reframe`, `export`, `review`, `brands`, `platforms` |
+| `tools/closer.py` | the one command: `edit`, `formats`, `analyze`, `assemble`, `reel`, `longform`, `remix`, `compare`, `hands`, `cover`, `reframe`, `export`, `review`, `brands`, `platforms` |
+| `tools/studio/sound.py` | the sound director: voice clean-up and take matching, music picked and cut on bar lines, a fader ride that leads the words, drops that return on a downbeat, recorded sound effects timed to the frame, measured voice-over-music targets |
+| `tools/studio/placement.py`, `hands.py` | where graphics go (face, hands, captions, what is already on screen, per format) and 21-point hand tracking for labels |
+| `tools/studio/finish.py` | the colourist's pass, measured per video: sky and highlight roll-off, a tracked face light, grain and vignette |
+| `docs/EDITOR_RULEBOOK.md`, `docs/AUDIO_SPEC.md` | the rules behind the edit and the mix, each with its number and source |
 | `tools/studio/` | the engine: formats, transcription and moments, face tracking and virtual camera, the cut, captions, cards, voice, grade, render, long-form, cover, review |
 | `skills/strategy/format-brain` | the marketer's brain: from the goal to the format, the brief and the command |
 | `skills/video/` | editor-brain, sound-director, placement, filming-playbook, compare-cuts, reel-editor, longform-editor, funnel-vsl, vsl-builder, show-rate-videos, skool-content, hooks-titles-covers, auto-reframe, caption-styles, platform-formatter, edit-grammar, cold-review, vsl-producer, video-use |

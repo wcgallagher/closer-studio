@@ -11,7 +11,7 @@ What a video is for decides how it is cut. `FORMATS.md` holds the sourced number
 
 ```bash
 KIT="$(cat ~/.closer-studio/kit_path 2>/dev/null || pwd)"
-PY="$HOME/.closer-studio/venv/bin/python"; [ -x "$PY" ] || PY=python3
+PY="$HOME/.closer-studio/venv/bin/python"; [ -x "$PY" ] || PY="$HOME/.closer-studio/venv/Scripts/python.exe"; [ -x "$PY" ] || PY=python3
 "$PY" "$KIT/tools/closer.py" formats
 ```
 

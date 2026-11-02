@@ -13,10 +13,13 @@ When someone says "set me up", "install", "get started", or a tool is missing, r
 bash install.sh
 ```
 
+On Windows run `powershell -ExecutionPolicy Bypass -File install.ps1` instead (add `-Scenes` for the animated VSL cards);
+the venv's Python is then `~/.closer-studio/venv/Scripts/python.exe`.
+
 Say one sentence first ("Installing the video engine and speech-to-text, about five minutes, click Allow when asked")
 and one after ("Done. Drop a video in inbox and tell me what you want."). A Mac password prompt is normal. If it
 fails, read the error, fix what you can (usually re-run it), then explain in plain words. Verify with
-`ls ~/.closer-studio/venv/bin/python` and `ffmpeg -version`.
+`ls ~/.closer-studio/venv/bin/python` (Windows: `venv/Scripts/python.exe`) and `ffmpeg -version`.
 
 ## The jobs
 

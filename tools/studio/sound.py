@@ -317,7 +317,12 @@ def voice_master(y: np.ndarray, words: list[dict], rules: dict | None = None, lo
         spg = (mag * g)
         def band_ltas(sel):
             l = (spg[:, sel] ** 2).mean(1)
-            return np.array([10 * np.log10(l[(f >= _band_edges(fc)[0]) & (f < _band_edges(fc)[1])].mean() + 1e-20) for fc in fcs])
+            out = []
+            for fc in fcs:                      # a band narrower than the FFT bin spacing reads its nearest bin
+                m = (f >= _band_edges(fc)[0]) & (f < _band_edges(fc)[1])
+                v = l[m].mean() if m.any() else l[int(np.argmin(abs(f - fc)))]
+                out.append(10 * np.log10(v + 1e-20))
+            return np.array(out)
         counts = {tk: int((fr_act & (fr_take == tk)).sum()) for tk in set(fr_take)}
         ref_tk = max(counts, key=counts.get)
         ref = band_ltas(fr_act & (fr_take == ref_tk))
@@ -327,7 +332,7 @@ def voice_master(y: np.ndarray, words: list[dict], rules: dict | None = None, lo
             if tk == ref_tk or cnt < 50:
                 continue
             d = ref - band_ltas(fr_act & (fr_take == tk))
-            d = d - np.mean(d[(fcs >= 200) & (fcs <= 4000)])          # tone only; loudness is the clip gain's job
+            d = np.nan_to_num(d - np.nanmean(d[(fcs >= 200) & (fcs <= 4000)]))          # tone only; loudness is the clip gain's job
             d = np.clip(np.convolve(np.pad(d, 1, mode="edge"), np.ones(3) / 3, "valid"), -R.get("take_match_max_db", 4.0), R.get("take_match_max_db", 4.0)) * 0.7
             rep["take_match_db"][str(tk)] = {int(k): round(float(v), 1) for k, v in zip(fcs, d)}
             take_gain[:, fr_take == tk] = undb(np.interp(np.log2(np.maximum(f, 20)), np.log2(fcs), d))[:, None]
@@ -547,7 +552,7 @@ def score_track(p: dict, need_s: float, rules: dict | None = None) -> tuple[floa
     return round(s, 2), why
 
 
-def strong_bar(prof: dict) -> float:
+def strong_bar(prof: dict, need_s: float | None = None) -> float:
     """The bar where the track hits hardest: the section change (or bar) in its first 60 % with the biggest jump in
     loudness over the 4 bars before it. Music that enters on a cue starts here, so its first beat is an event."""
     bars, bd = np.array(prof["bars"]), np.array(prof["bar_db"])
@@ -557,6 +562,9 @@ def strong_bar(prof: dict) -> float:
     for i in range(4, int(len(bd) * 0.6)):
         g = float(np.mean(bd[i:i + 4]) - np.mean(bd[i - 4:i]))
         bonus = 1.5 if any(abs(bars[i] - sc) < 0.6 for sc in prof.get("sections", [])) else 0.0
+        if need_s:                               # a start that leaves too little track means looping: cost it
+            short = max(0.0, need_s - (prof["dur"] - bars[i]))
+            bonus -= short / 6.0
         if g + bonus > gain:
             best, gain = float(bars[i]), g + bonus
     return best
@@ -1007,6 +1015,8 @@ def direct(out: Path, voice_raw: Path, words: list[dict], total: float, speech_e
     v = read_audio(voice_raw)
     v = np.pad(v, (0, max(0, n - len(v))))[:n]
     vm, vrep = voice_master(v, [w for w in words if w["t"] < speech_end + 0.1], fr.get("voice"), log)
+    if not np.isfinite(vm).all():
+        raise SystemExit("sound: the voice chain produced NaN samples (a filter with an empty band); refusing to mix")
     vl = lufs(vm)
     rep = {"voice": vrep, "inputs": {"events": events, "drops": [list(d) for d in drops], "land": land, "fmt_rules": fr,
                                      "sections": sections, "sfx_dir": str(sfx_dir) if sfx_dir else None, "total": total, "speech_end": speech_end}}
@@ -1018,7 +1028,7 @@ def direct(out: Path, voice_raw: Path, words: list[dict], total: float, speech_e
         prof = track_profile(Path(music))
         enter = float((fr.get("music") or {}).get("enter_s") or 0.0)
         if enter > 0:      # music enters on a cue word, on the track's strongest bar; before it the cold open is dry
-            sb = strong_bar(prof)
+            sb = strong_bar(prof, total - enter)
             bed, fit = fit_music(Path(music), prof, total - enter, None, fr.get("music"), start_at=sb)
             pre = int(enter * SR)
             mode = (fr.get("music") or {}).get("pre_roll", "dry")

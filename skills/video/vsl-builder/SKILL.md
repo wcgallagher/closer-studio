@@ -11,7 +11,7 @@ A single take goes through `skills/video/longform-editor/SKILL.md`. This skill i
 
 ```bash
 KIT="$(cat ~/.closer-studio/kit_path 2>/dev/null || pwd)"
-PY="$HOME/.closer-studio/venv/bin/python"; [ -x "$PY" ] || PY=python3
+PY="$HOME/.closer-studio/venv/bin/python"; [ -x "$PY" ] || PY="$HOME/.closer-studio/venv/Scripts/python.exe"; [ -x "$PY" ] || PY=python3
 "$PY" "$KIT/tools/closer.py" formats
 ```
 
@@ -59,9 +59,13 @@ The parts, all optional:
 - `lockup`: the opening glass card on the left, on screen from frame 0: eyebrow, headline (leaves at `head_until`), the proof number, its label and the name (leave at `until`).
 - `captions`: `from` (start after the headline), `words` (chunk size), `plain_over_scenes` (no spoken-word highlight over a card), `off` (windows with no burned caption, for a card that already shows the words). One caption line is on screen at a time.
 - `chips` (`at`, `text`, `hold` or `until`, `row`; `style` `quiet` for a calm one, `pointer` for the red pill that points at the page button).
-- `hands`: labels that ride a tracked hand (a rows file of hand positions on the take's clock).
-- `moments`: a tinted stretch (`saturation`) with an optional `card`: one line, or `{"big": ..., "label": ...}` to bring the opening proof back.
-- `music` (`file`, `start`, `mute` windows), `sfx` (a riser into the ask), `kicks` (zoom kick and whoosh at section changes), `zoom` (hold a framing, for hand labels), `end_hold`.
+- `hands`: labels that ride a tracked hand. Track the take first: `closer.py hands TAKE.mp4 --start 33.6 --end 36.6 --fps 30 --out hands.json` (take seconds). Each label is `{"text", "in", "out", "mode", "x", "gap"}`: `in` and `out` are take seconds read off that track (the hand rising and dropping, not the word), `mode` `static` holds still beside the top of the gesture, `follow` rides the fingertips. `min_s` (default 0.5) is the shortest time on screen; `smooth` (frames, default 5) and `max_step` (share of the height per frame, default 0.025) keep a follow label steady.
+- `moments`: a tinted stretch (`saturation`) with an optional `card`: one line, or `{"big": ..., "label": ...}` to bring the opening proof back. `"style": "dim"` with `blur`, `brightness` and `saturation` pushes the speaker back under a full-screen number.
+- `music` (`file`, `start`, `mute` windows, an optional third value is the lead in seconds), `sfx` (a file, or an `event` name the sound grammar turns into a sound and a level), `kicks` (zoom kick and whoosh at section changes), `zoom` (hold a framing, for hand labels), `end_hold`.
+- `sound`: the sound director (`skills/video/sound-director/SKILL.md`). `dialect` (`gadzhi`, `nelk`, or your own under `rules.sfx.grammar`), `sections` (each a `name`, a `from` anchor, `vm` the voice-over-music target in LU and `p10` its floor), `music_enter` (the word the track's strong bar lands on), `pre_roll` (`filtered` or `dry`), `hole_s` (the gap before the drop) and `sfx_dir` (recorded sounds named `role__name.wav`). Give a loud drop its own section: one hook section calibrated to its median let the drop sit on the voice in v9's first preview, because the quiet pre-roll pulled that median down.
+- `breath`: `sentence` (seconds kept between sentences) and `after` (`[anchor, seconds]` holds after a line, before a claim or the ask).
+- `finish`: `profile` `vsl` (no halation, light grain), `reel` or `brand`.
+- On a scene: `text` (its copy, swapped in without editing the HTML) and `frost` (`mask` for frosted glass over the speaker, `solid`). On a chip: `style` `glass` (placed by the engine clear of the face and captions).
 
 Every number on a card comes from the project's audit file or the owner. Spoken-only numbers never go on a card or a chip.
 
@@ -76,7 +80,7 @@ Every number on a card comes from the project's audit file or the owner. Spoken-
 
 ## 5. Judge it
 
-Read report.md: every line PASS. Look at sheet.jpg and at frames on every card at phone size (360 px wide). Then a blind A/B: two cold reviewers or more get the same pack for the new cut and the last shipped one (contact sheets, frames, transcript, card list), labelled A and B only, and pick one with reasons (`skills/video/cold-review/SKILL.md`). Ship the winner after its low-effort fixes; log what changed and why.
+Read report.md: every line PASS. Look at sheet.jpg and at frames on every card at phone size (360 px wide), and at 10 frames a second across every hand label: on with the gesture, readable, no jumps. A caption that repeats the card's own words gets an `off` window. Then `closer.py compare OLD.mp4 NEW.mp4 --out cmp --labels v8,v9` puts the numbers side by side (`skills/video/compare-cuts/SKILL.md`). Then a blind A/B: two cold reviewers or more get the same pack for the new cut and the last shipped one (contact sheets, frames, transcript, card list), labelled A and B only, and pick one with reasons (`skills/video/cold-review/SKILL.md`). Ship the winner after its low-effort fixes; log what changed and why.
 
 ## Rules
 

@@ -11,7 +11,7 @@ The title, the cover, the hook text and the first spoken line say one thing. The
 
 ```bash
 KIT="$(cat ~/.closer-studio/kit_path 2>/dev/null || pwd)"
-PY="$HOME/.closer-studio/venv/bin/python"; [ -x "$PY" ] || PY=python3
+PY="$HOME/.closer-studio/venv/bin/python"; [ -x "$PY" ] || PY="$HOME/.closer-studio/venv/Scripts/python.exe"; [ -x "$PY" ] || PY=python3
 ls "$KIT/inbox" "$KIT/output"
 ```
 

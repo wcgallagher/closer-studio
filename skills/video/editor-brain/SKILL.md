@@ -22,7 +22,7 @@ Mac and Linux:
 
 ```bash
 KIT="$(cat ~/.closer-studio/kit_path 2>/dev/null || pwd)"
-PY="$HOME/.closer-studio/venv/bin/python"; [ -x "$PY" ] || PY=python3
+PY="$HOME/.closer-studio/venv/bin/python"; [ -x "$PY" ] || PY="$HOME/.closer-studio/venv/Scripts/python.exe"; [ -x "$PY" ] || PY=python3
 mkdir -p "$KIT/music" "$KIT/sfx"
 "$PY" "$KIT/tools/closer.py" edit "$KIT/inbox/<file>" "a 90 second homepage VSL, premium" \
   --out "$KIT/output/<job>" --brand btc --music-dir "$KIT/music" --sfx-dir "$KIT/sfx"

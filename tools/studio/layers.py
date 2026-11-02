@@ -108,7 +108,8 @@ def resolve_scenes(L: dict, words, segs, speech_end, total) -> list[dict]:
         t0 = a - LEAD
         cues = {c: round(anchor(words, segs, v, speech_end, total) - t0, 3) for c, v in sc.get("cues", {}).items()}
         dur = (b - t0) if sc["to"] == "END" else (b + LEAD - t0)
-        G.append({"id": f"s{k + 1:02d}_{sc['scene']}", "scene": sc["scene"], "start": round(a, 3), "end": round(b, 3),
+        G.append({"id": f"s{k + 1:02d}_{sc['scene']}", "scene": sc["scene"], "text": sc.get("text"), "frost": sc.get("frost"),
+                  "start": round(a, 3), "end": round(b, 3),
                   "dur": round(dur, 3), "cues": cues, "is_end": sc["to"] == "END", "alpha": sc.get("layout") == "overlay",
                   "hard_in": sc.get("cut_in") == "hard", "hard_out": sc.get("cut_out") == "hard"})
     full = [g for g in G if not g["alpha"]]
@@ -133,7 +134,15 @@ def render_scenes(G: list[dict], out: Path, L: dict, log=print) -> Path:
     mg = out / "mg"
     mg.mkdir(parents=True, exist_ok=True)
     spec = mg / "graphics.json"
-    spec.write_text(json.dumps([{k: g[k] for k in ("id", "scene", "dur", "cues", "alpha")} for g in G], indent=1))
+    entries = []
+    for g in G:
+        e = {k: g[k] for k in ("id", "scene", "dur", "cues", "alpha", "text") if g.get(k) is not None}
+        if g.get("frost") == "solid":
+            e["frost"] = "solid"
+        entries.append(e)
+        if g.get("frost") == "mask":       # the card's matte (white, no type) for the frosted-glass pass under it
+            entries.append(dict(e, id=g["id"] + "_mask", frost="mask", alpha=True))
+    spec.write_text(json.dumps(entries, indent=1))
     log(f"rendering {len(G)} animated scenes ({sum(g['dur'] for g in G):.0f} s) ...")
     subprocess.run([node, str(MG / "render.js"), str(spec), str(mg), "--html", str(html)], check=True)
     return mg
@@ -152,15 +161,30 @@ def scene_graph(G: list[dict], mg: Path, W: int, H: int, first_input: int, base:
         if g["to_aroll"] and not g.get("hard_out"):
             blur += [(g["end"] - 0.04, g["end"] + 0.10, 2), (g["end"] + 0.10, g["end"] + 0.22, 1)]
     en = lambda lv: "+".join(f"between(t\\,{a:.3f}\\,{b:.3f})" for a, b, l in blur if l == lv) or "0"
+    inputs_mask = []
     chain = [f"{base}split=3[sv0][svb1][svb2]", "[svb1]gblur=sigma=6[sb1]", "[svb2]gblur=sigma=14[sb2]",
              f"[sv0][sb1]overlay=enable='{en(1)}'[sx1]", f"[sx1][sb2]overlay=enable='{en(2)}'[sx2]"]
     cur, inputs = "[sx2]", []
+    nxt = first_input + len(G)                 # mask inputs follow the scene inputs
     for k, g in enumerate(G):
         inputs += ["-i", str(mg / f"{g['id']}.{'mov' if g['alpha'] else 'mp4'}")]
         a0, d = g["start"] - LEAD, g["dur"]
+        if g.get("frost") == "mask":
+            # real glass: the shot under the card is blurred, desaturated and warmed, cut to the card's matte
+            inputs_mask.append(str(mg / f"{g['id']}_mask.mov"))
+            mi = nxt + len(inputs_mask) - 1
+            chain.append(f"{cur}split=2[fq{k}a][fq{k}b]")
+            chain.append(f"[fq{k}b]trim=start={max(0.0, a0):.3f}:end={a0 + d:.3f},gblur=sigma=28,eq=brightness=-0.24:saturation=0.25,"
+                         f"colorchannelmixer=rr=.62:gg=.58:bb=.54,format=rgba[fz{k}]")
+            chain.append(f"[{mi}:v]scale={W}:{H},format=rgba,alphaextract,setpts=PTS-STARTPTS+{a0:.3f}/TB[fm{k}]")
+            chain.append(f"[fz{k}][fm{k}]alphamerge[fza{k}]")
+            chain.append(f"[fq{k}a][fza{k}]overlay=eof_action=pass:enable='between(t\\,{a0:.3f}\\,{a0 + d:.3f})'[fqo{k}]")
+            cur = f"[fqo{k}]"
         fin = f"fade=t=in:st={LEAD - 0.04:.3f}:d=0.04" if g.get("hard_in") else f"fade=t=in:st=0:d={(LEAD - 0.03) if (g['from_aroll'] or g['alpha']) else 0.08:.2f}"
         f = f"[{first_input + k}:v]scale={W}:{H}:flags=lanczos:out_color_matrix=bt709:out_range=tv,format=yuva420p,{fin}:alpha=1"
-        if g["alpha"]:
+        if g["alpha"] and g.get("hard_out"):        # an overlay that leaves with a cut: gone in one frame
+            f += f",fade=t=out:st={d - LEAD:.3f}:d=0.034:alpha=1"
+        elif g["alpha"]:
             f += f",fade=t=out:st={d - LEAD:.3f}:d={LEAD:.2f}:alpha=1"
         elif g["to_aroll"] and g.get("hard_out"):
             f += f",fade=t=out:st={d - LEAD:.3f}:d=0.04:alpha=1"
@@ -169,6 +193,8 @@ def scene_graph(G: list[dict], mg: Path, W: int, H: int, first_input: int, base:
         chain.append(f + f",setpts=PTS-STARTPTS+{a0:.3f}/TB[sg{k}]")
         chain.append(f"{cur}[sg{k}]overlay=eof_action=pass:enable='between(t\\,{a0:.3f}\\,{a0 + d:.3f})'[sy{k}]")
         cur = f"[sy{k}]"
+    for m in inputs_mask:
+        inputs += ["-i", m]
     return inputs, chain, cur
 
 
@@ -460,6 +486,8 @@ def hand_events(L: dict, an: dict, segs: list[dict], cam: dict | None, W: int, H
             ch_end = next((bb for (ca, bb, *_r) in (chunks or []) if ca - 0.06 <= sp["a"] + 0.07 < bb), sp["a"] + 1.2)
             drop = next((t for t, r in track[side] if t > max(sp["a"], tp) and r[1] > top + 0.12 * H), sp["a"] + 1.6)
             sp["b"] = max(min(nxt, ch_end, drop + 0.12, sp["a"] + 1.6), min(sp["a"] + 0.45, nxt))
+        if sp.get("timed") == "hands":            # a word needs about half a second to be read where it lands
+            sp["b"] = max(sp["b"], sp["a"] + float(hd.get("min_s", 0.5)))
         a, b = sp["a"], min(sp["b"], nxt)
         tw, th = plc.text_box(text, fpath, size, 0, 0, 0.0)
         w, h = tw + 2 * padx, int(size * 0.95) + 2 * pady
@@ -469,23 +497,31 @@ def hand_events(L: dict, an: dict, segs: list[dict], cam: dict | None, W: int, H
         cx = min(max(cx, 0.05 * W + w / 2), 0.95 * W - w / 2)          # inside title-safe even when the hand clips the edge
         fade_in, fade_out = int(4 * 1000 / FPS), int(3 * 1000 / FPS)
         if sp.get("mode", "static") == "follow":
-            # rides the hand: bottom = fingertip top - gap, smoothed over 3 frames, x fixed; freezes at its out time
+            # rides the hand: bottom = fingertip top - gap, x fixed, freezes at its out time. Smoothed over `smooth` frames
+            # (default 5) and never moving more than `max_step` of the height per frame (default 2.5 %): a label that
+            # jumps with every finger twitch reads as a glitch (v9 review: 170 px in one frame at 3-frame smoothing)
             seq = sorted(inwin)
             tops = np.array([r[1] for _, r in seq]); ts_ = np.array([t for t, _ in seq])
-            if len(tops) >= 3:
-                tops = np.convolve(np.pad(tops, 1, mode="edge"), np.ones(3) / 3, "valid")
+            win = max(1, int(hd.get("smooth", 5)) | 1)
+            if len(tops) >= win > 1:
+                tops = np.convolve(np.pad(tops, win // 2, mode="edge"), np.ones(win) / win, "valid")
+            step = float(hd.get("max_step", 0.025)) * H
             n_fr = max(1, int(round((b - a) * FPS)))
+            y_prev = None
             for k in range(n_fr + 3):
                 t = a + k / FPS
                 tt = min(t, b)
                 bottom = float(np.interp(tt, ts_, tops)) - gap
                 y = max(0.06 * H + h, bottom)
+                if y_prev is not None:
+                    y = min(max(y, y_prev - step), y_prev + step)
+                y_prev = y
                 al = "" if k < n_fr else f"\\alpha&H{int(255 * (k - n_fr + 1) / 3):02X}&"
-                sc = 85 + 15 * min(1.0, k / 4)
-                tag = f"\\an2\\pos({cx:.0f},{y:.0f})\\fscx{sc:.0f}\\fscy{sc:.0f}{al}"
+                scl = 85 + 15 * min(1.0, k / 4)
+                tag = f"\\an2\\pos({cx:.0f},{y:.0f})\\fscx{scl:.0f}\\fscy{scl:.0f}{al}"
                 ev.append(f"Dialogue: 4,{ts(t)},{ts(t + 1 / FPS)},Plate,,0,0,0,,{{{tag}\\1c{bg}\\1a&H66&\\3c{cream}\\3a&HD1&\\bord{max(1, round(s))}\\shad0\\p1}}"
                           f"{_rrect_an2(w, h, rad)}{{\\p0}}")
-                ev.append(f"Dialogue: 5,{ts(t)},{ts(t + 1 / FPS)},HandText,,0,0,0,,{{\\an2\\pos({cx:.0f},{y - pady + int(4 * s):.0f})\\fscx{sc:.0f}\\fscy{sc:.0f}{al}}}{text}")
+                ev.append(f"Dialogue: 5,{ts(t)},{ts(t + 1 / FPS)},HandText,,0,0,0,,{{\\an2\\pos({cx:.0f},{y - pady + int(4 * s):.0f})\\fscx{scl:.0f}\\fscy{scl:.0f}{al}}}{text}")
             sc.report.append({"label": f"hand {text}", "a": round(a, 2), "b": round(b, 2), "mode": "follow", "x": round(cx), "ok": True})
         else:
             bottom = top - gap

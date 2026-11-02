@@ -395,7 +395,7 @@ def longform(video: Path, out: Path, an: dict, brand: dict, plat: dict, fmt: dic
     s_in, s_chain, prev = lay.scene_graph(scenes, mg, W, H, 2, prev)
     inputs += s_in
     chain += s_chain
-    first = 2 + len(scenes)
+    first = 2 + len(s_in) // 2
     for i, (t, d, clip, kind) in enumerate(cutaways):
         inputs += ["-i", clip]
         chain.append(f"[{first + i}:v]format=yuva420p,fade=t=in:st=0:d=0.10:alpha=1,fade=t=out:st={d - 0.10:.3f}:d=0.10:alpha=1,setpts=PTS-STARTPTS+{t:.3f}/TB[c{i}]")
@@ -421,7 +421,7 @@ def longform(video: Path, out: Path, an: dict, brand: dict, plat: dict, fmt: dic
     layout_times = sorted(set([c[0] for c in cutaways] + (list(hold_out) if hold_out else []) + [g["start"] for g in scenes] + [g["end"] for g in scenes] +
                               [g["start"] - lay.LEAD + v for g in scenes for v in g["cues"].values()] + chip_t + [m["a"] for m in moments] + [m["b"] for m in moments] +
                               [sg["out_t"] for sg in segs if sg.get("kick_in")] +
-                              [lay.anchor(words, segs, at, speech_end, total) for _, at in (L.get("hands") or {}).get("labels", {}).values()]))
+                              [lay.anchor(words, segs, v[1], speech_end, total) for v in (L.get("hands") or {}).get("labels", {}).values() if not isinstance(v, dict)]))
     gaps, last = [], 0.0
     for t in layout_times + [speech_end]:
         is_hold = bool(hold_out) and last == hold_out[0] and t == hold_out[1]

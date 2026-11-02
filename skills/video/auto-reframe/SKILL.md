@@ -7,7 +7,7 @@ description: Turns any horizontal or square clip into a vertical 9:16, 4:5 or 1:
 
 ```bash
 KIT="$(cat ~/.closer-studio/kit_path 2>/dev/null || pwd)"
-PY="$HOME/.closer-studio/venv/bin/python"; [ -x "$PY" ] || PY=python3
+PY="$HOME/.closer-studio/venv/bin/python"; [ -x "$PY" ] || PY="$HOME/.closer-studio/venv/Scripts/python.exe"; [ -x "$PY" ] || PY=python3
 "$PY" "$KIT/tools/closer.py" reframe "$KIT/inbox/<file>" --out "$KIT/output/<name>_vertical.mp4" --platform ig_reels
 ```
 

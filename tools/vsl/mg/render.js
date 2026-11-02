@@ -18,7 +18,7 @@ const ICONS = Object.fromEntries(fs.readdirSync(path.join(here, "icons")).filter
 
 // a clip is reusable when its scene, length and cue offsets match; where it sits in the timeline does not matter
 const SRC_MTIME = fs.statSync(HTML).mtimeMs;
-const key = (g) => JSON.stringify({ scene: g.scene, dur: Number(g.dur).toFixed(2), alpha: !!g.alpha,
+const key = (g) => JSON.stringify({ scene: g.scene, dur: Number(g.dur).toFixed(2), alpha: !!g.alpha, text: g.text || null,
   cues: Object.fromEntries(Object.entries(g.cues || {}).map(([k, v]) => [k, Number(v).toFixed(2)])) });
 const fresh = (stored) => stored._src === undefined || stored._src === SRC_MTIME;   // legacy entries carry no source stamp
 async function renderOne(browser, g) {
