@@ -134,6 +134,20 @@ def cmd_platforms(a):
     print(platforms.table())
 
 
+def cmd_compare(a):
+    from . import compare
+    labels = (a.labels.split(",") + ["A", "B"])[:2] if a.labels else ("A", "B")
+    compare.run(Path(a.a), Path(a.b), Path(a.out), tuple(labels))
+
+
+def cmd_hands(a):
+    import json
+    from . import hands
+    rows = hands.scan(Path(a.video), a.start, a.end, a.fps)
+    Path(a.out).write_text(json.dumps(rows))
+    print(f"{a.out}: {len(rows)} rows")
+
+
 def cmd_lut(a):
     print(grade.lut_path(a.preset))
 
@@ -203,5 +217,12 @@ def main(argv=None):
     p = sub.add_parser("brands", help="list brands"); p.set_defaults(f=cmd_brands)
     p = sub.add_parser("platforms", help="platform sizes and safe zones"); p.set_defaults(f=cmd_platforms)
     p = sub.add_parser("lut", help="write a grade preset as a .cube file"); p.add_argument("preset"); p.set_defaults(f=cmd_lut)
+    p = sub.add_parser("compare", help="two edits side by side with numbers: synced players, wipe, loudness, cuts, picture, faces -> compare.html")
+    p.add_argument("a"); p.add_argument("b"); p.add_argument("--out", required=True); p.add_argument("--labels", default=None, help="'v8,v9'")
+    p.set_defaults(f=cmd_compare)
+    p = sub.add_parser("hands", help="track the hands in a take (21-point model) -> a rows file for hand labels")
+    p.add_argument("video"); p.add_argument("--start", type=float, default=0.0); p.add_argument("--end", type=float, required=True)
+    p.add_argument("--fps", type=float, default=10.0); p.add_argument("--out", required=True)
+    p.set_defaults(f=cmd_hands)
     a = ap.parse_args(argv)
     a.f(a)

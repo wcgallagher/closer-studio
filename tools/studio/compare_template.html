@@ -1,0 +1,224 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Edit Compare</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #f6f4ef; --panel: #ffffff; --ink: #15171a; --mute: #6b6f76; --line: rgba(21,23,26,.10);
+  --a: #c2410c; --b: #0f766e; --accent: #b08a2e; --good: #15803d; --bad: #b91c1c;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #0d0f12; --panel: #15181d; --ink: #eef0f3; --mute: #9aa1ab; --line: rgba(238,240,243,.10);
+  --a: #fb923c; --b: #2dd4bf; --accent: #e0be66; --good: #4ade80; --bad: #f87171; } }
+:root[data-theme="dark"] {
+  --bg: #0d0f12; --panel: #15181d; --ink: #eef0f3; --mute: #9aa1ab; --line: rgba(238,240,243,.10);
+  --a: #fb923c; --b: #2dd4bf; --accent: #e0be66; --good: #4ade80; --bad: #f87171; }
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { background: var(--bg); color: var(--ink); }
+body { font: 15px/1.5 Inter, system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+main { max-width: 1280px; margin: 0 auto; padding: 28px 16px 64px; }
+h1 { font-size: 28px; font-weight: 700; letter-spacing: -.02em; }
+.sub { color: var(--mute); margin-top: 4px; }
+.mono { font-family: "JetBrains Mono", ui-monospace, monospace; font-size: 12px; }
+.row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 20px; }
+@media (max-width: 760px) { .row { grid-template-columns: 1fr; } }
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 14px; }
+.tag { display: inline-flex; align-items: center; gap: 8px; font-weight: 600; font-size: 13px; }
+.dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+video { width: 100%; display: block; border-radius: 10px; background: #000; }
+.stage { position: relative; margin-top: 20px; border-radius: 14px; overflow: hidden; background: #000; }
+.stage video { border-radius: 0; }
+.stage .top { position: absolute; inset: 0; }
+.stage .top video { height: 100%; object-fit: contain; }
+.handle { position: absolute; top: 0; bottom: 0; width: 2px; background: #fff; box-shadow: 0 0 0 1px rgba(0,0,0,.4); cursor: ew-resize; }
+.handle::after { content: ""; position: absolute; top: 50%; left: -11px; width: 24px; height: 24px; margin-top: -12px; border-radius: 50%; background: #fff; }
+.controls { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 14px; }
+button, select { font: 600 13px Inter, sans-serif; color: var(--ink); background: var(--panel); border: 1px solid var(--line); border-radius: 999px; padding: 8px 14px; cursor: pointer; }
+button.on { background: var(--ink); color: var(--bg); }
+.time { margin-left: auto; color: var(--mute); }
+canvas { width: 100%; display: block; }
+.tracks { margin-top: 20px; }
+.track { margin-top: 10px; }
+.track h3 { font-size: 12px; font-weight: 600; color: var(--mute); text-transform: uppercase; letter-spacing: .06em; }
+.film { display: flex; gap: 4px; overflow-x: auto; padding: 6px 0; scrollbar-width: thin; }
+.film img { height: 64px; border-radius: 4px; cursor: pointer; flex: none; }
+table { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 14px; }
+th, td { text-align: left; padding: 9px 10px; border-bottom: 1px solid var(--line); }
+th { color: var(--mute); font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: .05em; }
+td.n { font-variant-numeric: tabular-nums; }
+.win { color: var(--good); font-weight: 600; }
+.note { color: var(--mute); font-size: 13px; margin-top: 10px; }
+.judge p { margin-top: 8px; }
+.legend { display: flex; gap: 16px; margin-top: 6px; font-size: 13px; color: var(--mute); }
+</style>
+</head>
+<body>
+<main>
+  <h1>Edit Compare</h1>
+  <p class="sub"><span class="tag"><span class="dot" style="background:var(--a)"></span>{{LA}}</span> against <span class="tag"><span class="dot" style="background:var(--b)"></span>{{LB}}</span>. Measured, not listened: every number below is computed from the files.</p>
+
+  <div class="controls">
+    <button id="m-side" class="on">Side by side</button>
+    <button id="m-wipe">Wipe</button>
+    <button id="m-diff">Difference</button>
+    <button id="play">Play both</button>
+    <button id="mute">Sound: {{LB}}</button>
+    <span class="time mono" id="clock">0:00.0</span>
+  </div>
+
+  <div id="side" class="row">
+    <div class="card"><div class="tag"><span class="dot" style="background:var(--a)"></span>{{LA}}</div><video id="va" src="{{SRC_A}}" playsinline muted preload="auto" style="margin-top:8px"></video></div>
+    <div class="card"><div class="tag"><span class="dot" style="background:var(--b)"></span>{{LB}}</div><video id="vb" src="{{SRC_B}}" playsinline preload="auto" style="margin-top:8px"></video></div>
+  </div>
+  <div id="overlay" class="stage" hidden>
+    <video id="oa" src="{{SRC_A}}" playsinline muted preload="auto"></video>
+    <div class="top" id="otop"><video id="ob" src="{{SRC_B}}" playsinline muted preload="auto"></video></div>
+    <div class="handle" id="handle" style="left:50%"></div>
+  </div>
+
+  <div class="tracks card">
+    <div class="legend"><span><span class="dot" style="background:var(--a)"></span> {{LA}}</span><span><span class="dot" style="background:var(--b)"></span> {{LB}}</span><span>Click any track to jump there.</span></div>
+    <div class="track"><h3>Cuts</h3><canvas id="c-cuts" height="46"></canvas></div>
+    <div class="track"><h3>Loudness, momentary (LUFS)</h3><canvas id="c-loud" height="120"></canvas></div>
+    <div class="track"><h3>Brightness and contrast</h3><canvas id="c-luma" height="90"></canvas></div>
+    <div class="track"><h3>Colour (saturation)</h3><canvas id="c-sat" height="70"></canvas></div>
+    <div class="track"><h3>Motion</h3><canvas id="c-mot" height="70"></canvas></div>
+    <div class="track"><h3>Face on screen</h3><canvas id="c-face" height="40"></canvas></div>
+    <div class="track"><h3>{{LA}} filmstrip</h3><div class="film" id="fa"></div></div>
+    <div class="track"><h3>{{LB}} filmstrip</h3><div class="film" id="fb"></div></div>
+  </div>
+
+  <div class="row">
+    <div class="card"><h3 style="font-size:16px">The numbers</h3><table id="tbl"></table>
+      <p class="note">Winner marks follow the house targets: loudness near -14 LUFS, true peak at or under -1 dBTP, cuts every 2 to 6 s for a VSL, a face on screen most of the time, highlights not clipped.</p></div>
+    <div class="card judge" id="judge"><h3 style="font-size:16px">Blind judges</h3><p class="note">No verdict yet. Run the blind A/B and drop judge.json next to this page.</p></div>
+  </div>
+</main>
+<script>
+const D = /*DATA*/null;
+const TH = /*THUMBS*/null;
+const $ = (id) => document.getElementById(id);
+const css = (v) => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+const va = $("va"), vb = $("vb"), oa = $("oa"), ob = $("ob");
+let mode = "side", playing = false, soundB = true;
+const vids = () => mode === "side" ? [va, vb] : [oa, ob];
+const fmt = (t) => `${Math.floor(t / 60)}:${(t % 60).toFixed(1).padStart(4, "0")}`;
+const dur = Math.max(D.a.probe.duration, D.b.probe.duration);
+
+function setMode(m) {
+  mode = m;
+  ["side", "wipe", "diff"].forEach((k) => $("m-" + k).classList.toggle("on", k === m));
+  $("side").hidden = m !== "side"; $("overlay").hidden = m === "side";
+  ob.style.mixBlendMode = m === "diff" ? "difference" : "normal";
+  $("handle").hidden = m !== "wipe";
+  $("otop").style.clipPath = m === "wipe" ? `inset(0 0 0 ${parseFloat($("handle").style.left)}%)` : "none";
+  const t = (m === "side" ? oa : va).currentTime || 0;
+  vids().forEach((v) => (v.currentTime = t));
+  [va, vb, oa, ob].forEach((v) => v.pause()); playing = false; $("play").textContent = "Play both";
+  applySound();
+}
+function applySound() {
+  va.muted = true; oa.muted = true; ob.muted = true; vb.muted = true;
+  const [x, y] = vids();
+  (soundB ? y : x).muted = false;
+}
+$("m-side").onclick = () => setMode("side"); $("m-wipe").onclick = () => setMode("wipe"); $("m-diff").onclick = () => setMode("diff");
+$("mute").onclick = () => { soundB = !soundB; $("mute").textContent = "Sound: " + (soundB ? "{{LB}}" : "{{LA}}"); applySound(); };
+$("play").onclick = () => {
+  const [x, y] = vids();
+  if (playing) { x.pause(); y.pause(); playing = false; $("play").textContent = "Play both"; return; }
+  y.currentTime = x.currentTime; applySound();
+  Promise.all([x.play(), y.play()]).catch(() => {}); playing = true; $("play").textContent = "Pause";
+};
+function seek(t) { [va, vb, oa, ob].forEach((v) => { v.currentTime = Math.min(t, (v.duration || dur) - 0.05); }); draw(); }
+setInterval(() => {
+  const [x, y] = vids();
+  if (playing && Math.abs(x.currentTime - y.currentTime) > 0.08 && y.currentTime < (y.duration || 1e9) - 0.1) y.currentTime = x.currentTime;
+  $("clock").textContent = fmt(x.currentTime || 0); draw();
+}, 120);
+
+// wipe handle
+(() => {
+  const h = $("handle"), st = $("overlay"); let drag = false;
+  const move = (e) => { if (!drag) return; const r = st.getBoundingClientRect(); const x = ((e.touches ? e.touches[0].clientX : e.clientX) - r.left) / r.width * 100;
+    const p = Math.max(0, Math.min(100, x)); h.style.left = p + "%"; $("otop").style.clipPath = `inset(0 0 0 ${p}%)`; };
+  h.addEventListener("pointerdown", () => (drag = true)); window.addEventListener("pointerup", () => (drag = false)); window.addEventListener("pointermove", move);
+})();
+
+// tracks
+function canvasCtx(id) {
+  const c = $(id), r = c.getBoundingClientRect(), dpr = window.devicePixelRatio || 1;
+  const h = parseInt(c.getAttribute("height")); c.width = Math.round(r.width * dpr); c.height = Math.round(h * dpr);
+  const g = c.getContext("2d"); g.scale(dpr, dpr); g.clearRect(0, 0, r.width, h); return { g, w: r.width, h };
+}
+function line(g, w, h, ts, vs, lo, hi, color, width = 1.6) {
+  g.strokeStyle = color; g.lineWidth = width; g.beginPath();
+  ts.forEach((t, i) => { const x = t / dur * w, y = h - (Math.min(hi, Math.max(lo, vs[i])) - lo) / (hi - lo) * (h - 6) - 3; i ? g.lineTo(x, y) : g.moveTo(x, y); });
+  g.stroke();
+}
+function playhead(g, w, h) { const t = vids()[0].currentTime || 0; g.fillStyle = css("--ink"); g.fillRect(t / dur * w - 1, 0, 2, h); }
+function grid(g, w, h, lo, hi, step) {
+  g.fillStyle = css("--mute"); g.font = "10px JetBrains Mono";
+  for (let v = Math.ceil(lo / step) * step; v <= hi; v += step) { const y = h - (v - lo) / (hi - lo) * (h - 6) - 3; g.fillStyle = css("--line"); g.fillRect(0, y, w, 1); g.fillStyle = css("--mute"); g.fillText(v, 2, y - 2); }
+}
+function draw() {
+  const A = css("--a"), B = css("--b");
+  let { g, w, h } = canvasCtx("c-cuts");
+  D.a.cuts.forEach((t) => { g.fillStyle = A; g.fillRect(t / dur * w, 4, 2, h / 2 - 6); });
+  D.b.cuts.forEach((t) => { g.fillStyle = B; g.fillRect(t / dur * w, h / 2 + 2, 2, h / 2 - 6); });
+  playhead(g, w, h);
+  ({ g, w, h } = canvasCtx("c-loud")); grid(g, w, h, -45, -5, 10);
+  line(g, w, h, D.a.audio.momentary.t, D.a.audio.momentary.v, -45, -5, A); line(g, w, h, D.b.audio.momentary.t, D.b.audio.momentary.v, -45, -5, B); playhead(g, w, h);
+  ({ g, w, h } = canvasCtx("c-luma"));
+  line(g, w, h, D.a.picture.t, D.a.picture.luma, 0.1, 0.9, A); line(g, w, h, D.b.picture.t, D.b.picture.luma, 0.1, 0.9, B);
+  line(g, w, h, D.a.picture.t, D.a.picture.contrast.map((x) => x * 2 + 0.1), 0.1, 0.9, A, 0.8); line(g, w, h, D.b.picture.t, D.b.picture.contrast.map((x) => x * 2 + 0.1), 0.1, 0.9, B, 0.8); playhead(g, w, h);
+  ({ g, w, h } = canvasCtx("c-sat"));
+  line(g, w, h, D.a.picture.t, D.a.picture.sat, 0, 0.5, A); line(g, w, h, D.b.picture.t, D.b.picture.sat, 0, 0.5, B); playhead(g, w, h);
+  ({ g, w, h } = canvasCtx("c-mot"));
+  line(g, w, h, D.a.picture.t, D.a.picture.motion, 0, 0.12, A); line(g, w, h, D.b.picture.t, D.b.picture.motion, 0, 0.12, B); playhead(g, w, h);
+  ({ g, w, h } = canvasCtx("c-face"));
+  const fa = D.a.faces, fb = D.b.faces;
+  fa.on.forEach((v, i) => { if (v) { g.fillStyle = A; g.fillRect(i * fa.every / dur * w, 4, fa.every / dur * w + 0.5, h / 2 - 6); } });
+  fb.on.forEach((v, i) => { if (v) { g.fillStyle = B; g.fillRect(i * fb.every / dur * w, h / 2 + 2, fb.every / dur * w + 0.5, h / 2 - 6); } });
+  playhead(g, w, h);
+}
+document.querySelectorAll("canvas").forEach((c) => c.addEventListener("click", (e) => { const r = c.getBoundingClientRect(); seek((e.clientX - r.left) / r.width * dur); }));
+window.addEventListener("resize", draw);
+
+// filmstrips
+[["fa", TH.a], ["fb", TH.b]].forEach(([id, list]) => list.forEach((src, i) => { const im = new Image(); im.src = src; im.loading = "lazy"; im.title = fmt(i * 2); im.onclick = () => seek(i * 2); $(id).appendChild(im); }));
+
+// table
+(() => {
+  const a = D.a, b = D.b, L = D.labels;
+  const rows = [
+    ["Length", a.probe.duration.toFixed(1) + " s", b.probe.duration.toFixed(1) + " s", null],
+    ["Loudness", a.audio.lufs + " LUFS", b.audio.lufs + " LUFS", Math.abs(a.audio.lufs + 14) <= Math.abs(b.audio.lufs + 14) ? 0 : 1],
+    ["True peak", a.audio.true_peak + " dBTP", b.audio.true_peak + " dBTP", (a.audio.true_peak <= -1) === (b.audio.true_peak <= -1) ? null : (a.audio.true_peak <= -1 ? 0 : 1)],
+    ["Loudness range (approx.)", a.audio.lra_approx + " LU", b.audio.lra_approx + " LU", null],
+    ["Shots", a.shots.n + " (" + a.shots.per_min + " / min)", b.shots.n + " (" + b.shots.per_min + " / min)", null],
+    ["Longest shot", a.shots.max_s + " s", b.shots.max_s + " s", a.shots.max_s <= b.shots.max_s ? 0 : 1],
+    ["Face on screen", Math.round(a.faces.share * 100) + " %", Math.round(b.faces.share * 100) + " %", null],
+    ["Clipped highlights", (avg(a.picture.clip) * 100).toFixed(2) + " %", (avg(b.picture.clip) * 100).toFixed(2) + " %", avg(a.picture.clip) <= avg(b.picture.clip) ? 0 : 1],
+    ["Saturation", avg(a.picture.sat).toFixed(3), avg(b.picture.sat).toFixed(3), null],
+  ];
+  if (a.audio.dnsmos && a.audio.dnsmos.ovrl_mos) rows.push(["DNSMOS overall (mix)", a.audio.dnsmos.ovrl_mos.toFixed(2), b.audio.dnsmos.ovrl_mos.toFixed(2), a.audio.dnsmos.ovrl_mos >= b.audio.dnsmos.ovrl_mos ? 0 : 1]);
+  function avg(x) { return x.reduce((s, v) => s + v, 0) / Math.max(1, x.length); }
+  $("tbl").innerHTML = `<tr><th>Measure</th><th>${L[0]}</th><th>${L[1]}</th></tr>` + rows.map(([k, x, y, wn]) =>
+    `<tr><td>${k}</td><td class="n ${wn === 0 && x !== y ? "win" : ""}">${x}</td><td class="n ${wn === 1 && x !== y ? "win" : ""}">${y}</td></tr>`).join("");
+})();
+
+// judge
+if (D.judge) {
+  const j = D.judge, el = $("judge");
+  el.innerHTML = `<h3 style="font-size:16px">Blind judges</h3>` + (j.summary ? `<p>${j.summary}</p>` : "") +
+    (j.votes || []).map((v) => `<p><b>${v.judge}</b>: picked <b>${v.pick}</b> (${v.score_a} vs ${v.score_b}). ${v.why || ""}</p>`).join("");
+}
+draw();
+</script>
+</body>
+</html>

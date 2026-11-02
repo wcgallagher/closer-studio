@@ -189,6 +189,11 @@ def longform(video: Path, out: Path, an: dict, brand: dict, plat: dict, fmt: dic
         cards.end_card(brand, W, H, end_hold, out / "segs" / "zzz_end.mp4", cta, preset, crf)
         _run(["ffmpeg", "-v", "error", "-y", "-f", "lavfi", "-i", "anullsrc=r=48000:cl=stereo", "-t", f"{end_hold:.3f}", "-c:a", "pcm_s16le", out / "segs" / "r999_end.wav"])
     concat(out)
+    if L and L.get("finish"):            # the colourist's pass on the cut picture, before any graphics
+        from . import finish as fin, placement as plc
+        sc0 = plc.Scene(W, H, plc.Mapper(an, segs, cam, W, H, 0.025, KY), *plc.face_track(an))
+        faces = [sc0.face_rect(i / FPS) for i in range(int(round(total * FPS)) + 2)]
+        fin.run(out / "base.mkv", faces, log)
 
     # animated scenes from the layers file, anchored to words on this cut
     scenes = lay.resolve_scenes(L, words, segs, speech_end, total) if L else []
@@ -266,6 +271,15 @@ def longform(video: Path, out: Path, an: dict, brand: dict, plat: dict, fmt: dic
     else:
         head = captions.header(W, H, brand, "clean", band_bottom)
         ev = []
+    # the placement engine sees the face, the captions on screen and everything placed so far
+    from . import placement as plc
+    psc = plc.Scene(W, H, plc.Mapper(an, segs, cam, W, H, 0.025, KY), *plc.face_track(an))
+    if caps in ("impact", "clean", "serif", "boxed"):
+        csz = int(H * captions.STYLES[caps]["size"] * (1.85 if W > H else 1.0))
+        crect = (0.07 * W, band_bottom - 1.35 * csz, 0.93 * W, band_bottom + 0.12 * csz)
+        offw = cap_kw.get("off") or []
+        psc.captions = [(a, b, crect) for a, b, _t in srt if not any(oa - 0.05 <= a < ob for oa, ob in offw)]
+    psc.frames = plc.frame_sampler(out / "base.mkv", W, H)
     if caps == "pops" and pops == "auto":
         pop_list = pops_from_words(segs, words)
     elif caps == "pops" and pops not in ("auto", "off", None):
@@ -302,10 +316,11 @@ def longform(video: Path, out: Path, an: dict, brand: dict, plat: dict, fmt: dic
         ev.append(cards.pop_event(txt, t, d, W, H, side))
     moments, chip_t = [], []
     if L:
-        lev, moments, chip_t = lay.text_events(L, words, segs, speech_end, total, W, H, brand, scenes)
-        lev += lay.hand_events(L, an, segs, cam, W, H, 0.025, KY, words, speech_end, total)
+        lev, moments, chip_t = lay.text_events(L, words, segs, speech_end, total, W, H, brand, scenes, scene=psc)
+        lev += lay.hand_events(L, an, segs, cam, W, H, 0.025, KY, words, speech_end, total, scene=psc, chunks=srt, brand=brand)
         head = head.replace("\n[Events]", "\n" + "\n".join(lay.styles(W, H, brand)) + "\n\n[Events]", 1)
         ev += lev
+    plc.write_report(psc, out / "placement.json")
     (out / "captions.ass").write_text(head + "\n".join(ev) + "\n")
     captions.write_srt(out / "captions.srt", srt)
 
@@ -325,7 +340,39 @@ def longform(video: Path, out: Path, an: dict, brand: dict, plat: dict, fmt: dic
         music = str(lm["file"] if Path(lm["file"]).is_absolute() else Path(L["_base"]) / lm["file"])
     bed = music if music else (brand["style"].get("music") or None if music_mode != "none" else None)
     mutes = [(lay.anchor(words, segs, a, speech_end, total), lay.anchor(words, segs, b, speech_end, total)) for a, b in lm.get("mute", [])]
-    mix(out, total, speech_end, hits, bed, float(lm.get("start", 0.0)) if music and lm.get("file") else 0.0, mutes)
+    sd = L.get("sound") if L else None
+    if sd:
+        from . import sound as snd
+        ow = snd.out_words(an, segs)
+        snd.assemble_voice(voice_in, segs, total, out / "voice_raw.wav")
+        A_ = lambda x: lay.anchor(words, segs, x, speech_end, total)
+        evs = [{"kind": "card_in", "at": c[0], "why": f"cut to {c[3]}"} for c in cutaways if c[3] != "quote"]
+        evs += [{"kind": "end_card" if g["is_end"] else "card_in", "at": g["start"], "why": f"card {g['scene']} in"} for g in scenes if g["from_aroll"] or g["is_end"]]
+        evs += [{"kind": "card_out", "at": g["end"], "why": f"card {g['scene']} out"} for g in scenes if g.get("to_aroll")]
+        evs += [{"kind": "card_element", "at": g["start"] - lay.LEAD + v, "why": f"{g['scene']} element lands"} for g in scenes for v in g["cues"].values()]
+        evs += [{"kind": "chip", "at": t, "why": "chip in"} for t in chip_t]
+        evs += [{"kind": "section_change", "at": sg["out_t"], "why": "take change"} for sg in segs if sg.get("kick_in")]
+        evs += [{"kind": "punch_in", "at": sg["out_t"], "why": "punch-in"} for sg in segs if sg.get("kick") and not sg.get("cont") and not sg.get("kick_in")]
+        for fx in L.get("sfx", []):
+            evs.append({"kind": fx.get("event", "card_in"), "at": A_(fx["at"]), "why": fx.get("why", "layers file"), "gain_db": float(fx.get("gain_db", 0))})
+        land = A_(sd["land"]) if sd.get("land") is not None else None
+        secs = None
+        if sd.get("sections"):
+            secs = []
+            for i, sc in enumerate(sd["sections"]):
+                a0 = A_(sc["from"]) if sc.get("from") is not None else 0.0
+                b0 = A_(sd["sections"][i + 1]["from"]) if i + 1 < len(sd["sections"]) else total
+                secs.append({"name": sc["name"], "a": a0, "b": b0, "vm": float(sc["vm"]), "p10": float(sc.get("p10", sc["vm"] - 6))})
+        sfx_dir = sd.get("sfx_dir")
+        if sfx_dir and not Path(sfx_dir).is_absolute():
+            sfx_dir = str(Path(L["_base"]) / sfx_dir)
+        rules = dict(sd.get("rules") or {})
+        if sd.get("dialect"):
+            rules["sfx"] = dict(rules.get("sfx") or {}, dialect=sd["dialect"])
+        snd.direct(out, out / "voice_raw.wav", ow, total, speech_end, Path(bed) if bed else None, evs, mutes, land,
+                   rules, log=log, sections=secs, sfx_dir=Path(sfx_dir) if sfx_dir else None)
+    else:
+        mix(out, total, speech_end, hits, bed, float(lm.get("start", 0.0)) if music and lm.get("file") else 0.0, mutes)
     m = voice.measure(out / "mix.wav", plat["lufs"], plat["tp"])
 
     # composite the cutaways over the base, burn pops/captions, loudness, encode

@@ -35,6 +35,8 @@ import shutil
 import subprocess
 from pathlib import Path
 
+import numpy as np
+
 from .common import FPS, KIT, hex_ass, norm, ts
 
 LEAD = 0.25          # a scene is rendered this long before and after its window, for the dissolve
@@ -210,6 +212,7 @@ def styles(W: int, H: int, brand: dict) -> list[str]:
         f"Style: Pointer,{f.get('ui', cap)},{int(58 * s)},{txt},{txt},{acc},&H00000000,-1,0,0,0,100,100,0,0,3,{max(3, int(16 * s))},0,9,0,0,0,1",
         f"Style: LockMoment,{f['display']},{int(96 * s)},{txt},{txt},&H00000000,&H00000000,-1,0,0,0,100,100,0,0,1,0,0,7,0,0,0,1",
         f"Style: Hand,{cap},{int(84 * s)},{txt},{txt},{acc},&H00000000,0,0,0,0,100,100,2,0,3,{max(4, int(22 * s))},0,2,0,0,0,1",
+        f"Style: HandText,{f.get('ui', cap)},{int(62 * s)},{txt},{txt},&H00000000,&H00000000,-1,0,0,0,100,100,{max(1, int(2 * s))},0,1,0,0,5,0,0,0,1",
     ]
 
 
@@ -233,7 +236,7 @@ def _plus(text: str, brand: dict) -> str:
     return text.replace("+", f"{{\\fn{ui}}}+{{\\fn{disp}}}") if ui and "+" in text else text
 
 
-def text_events(L: dict, words, segs, speech_end, total, W, H, brand, scenes: list[dict]) -> tuple[list[str], list[dict], list[float]]:
+def text_events(L: dict, words, segs, speech_end, total, W, H, brand, scenes: list[dict], scene=None) -> tuple[list[str], list[dict], list[float]]:
     """ASS events for the headline, the proof card, chips and moment lines; returns (events, moments, chip_times)."""
     ev, moments, chip_t = [], [], []
     A = lambda s: anchor(words, segs, s, speech_end, total)
@@ -256,6 +259,8 @@ def text_events(L: dict, words, segs, speech_end, total, W, H, brand, scenes: li
         ev.append(f"Dialogue: 3,{ts(a)},{ts(hb)},LockEyebrow,,0,0,0,,{{\\an7\\pos({x0 + pad},{y1 + int(30 * s)})\\fad(0,300)}}{lk.get('eyebrow', '')}")
         ev.append(f"Dialogue: 3,{ts(a)},{ts(hb)},LockHead,,0,0,0,,{{\\an7\\pos({x0 + pad},{y1 + int(lk.get('head_y', 118) * s)})\\fad(0,300)}}{lk.get('headline', '')}")
         ev += _glass(x0, y2, w, h2, s, brand, a, b, "\\fad(0,250)")
+        if scene is not None:
+            scene.overlays += [(a, hb, (x0, y1, x0 + w, y1 + h1), "lockup"), (a, b, (x0, y2, x0 + w, y2 + h2), "lockup")]
         ev.append(f"Dialogue: 3,{ts(a)},{ts(b)},Plate,,0,0,0,,{{\\an7\\pos({x0 + pad},{y2 + int(22 * s)})\\1c{gold}\\bord0\\shad0\\fad(0,250)\\p1}}m 0 0 l {int(120 * s)} 0 l {int(120 * s)} {max(2, int(3 * s))} l 0 {max(2, int(3 * s))}{{\\p0}}")
         ev.append(f"Dialogue: 3,{ts(a)},{ts(b)},LockBig,,0,0,0,,{{\\an7\\pos({x0 + pad - int(4 * s)},{y2 + int(36 * s)})\\fad(0,250)}}{_plus(lk.get('big', ''), brand)}")
         ev.append(f"Dialogue: 3,{ts(a)},{ts(b)},LockLabel,,0,0,0,,{{\\an7\\pos({x0 + pad},{y2 + int(lk.get('label_y', 178) * s)})\\fad(0,250)}}{lk.get('label', '')}")
@@ -283,9 +288,22 @@ def text_events(L: dict, words, segs, speech_end, total, W, H, brand, scenes: li
         if kind == "pointer":       # a red pill top right that points at the page button under the video
             x, y = int(W * ch.get("x", 0.955)), int(H * ch.get("y", 0.075))
             ev.append(f"Dialogue: 5,{ts(t)},{ts(t + hold)},Pointer,,0,0,0,,{{\\an9\\pos({x},{y})\\fad(0,120)}}{ch['text']}")
+            if scene is not None:
+                from . import placement as plc
+                fs = int(58 * H / 1080)
+                pw, ph = plc.text_box(ch["text"], font_file(brand["fonts"].get("ui", "Inter")), fs, int(16 * H / 1080), int(16 * H / 1080))
+                scene.overlays.append((t, t + hold, (x - pw, y, x, y + ph), "pointer"))
         else:
             st = "ChipQuiet" if kind == "quiet" else "Chip"
-            x, y = int(W * ch.get("x", 0.69)), int(H * (ch.get("y", 0.40) + 0.095 * int(ch.get("row", 0))))
+            if scene is not None and "x" not in ch:
+                from . import placement as plc
+                fs = int((56 if kind == "quiet" else 58) * H / 1080)
+                pad = int(16 * H / 1080)
+                cw_, chh = plc.text_box(ch["text"], font_file(brand["fonts"]["caption"]), fs, pad, pad, 0.017)
+                x, y, _r = plc.place(scene, cw_, chh, t - 0.1, t + hold, group="chips", style="plate", label=f"chip {ch['text']}")
+                x, y = x + pad, y + pad
+            else:
+                x, y = int(W * ch.get("x", 0.69)), int(H * (ch.get("y", 0.40) + 0.095 * int(ch.get("row", 0))))
             ev.append(f"Dialogue: 5,{ts(t)},{ts(t + hold)},{st},,0,0,0,,{{\\an7\\move({x + int(70 * H / 1080)},{y},{x},{y},0,170)\\fad(120,200)}}{ch['text']}")
         chip_t.append(t)
     for m in L.get("moments", []):
@@ -314,20 +332,45 @@ def text_events(L: dict, words, segs, speech_end, total, W, H, brand, scenes: li
     return ev, moments, chip_t
 
 
+def font_file(family: str, bold: bool = True) -> Path | None:
+    """The kit's font file for a family name (fonts/ holds Inter-Bold.ttf, Montserrat-Black.ttf, ...)."""
+    from .common import FONTS
+    key = family.replace(" ", "").lower()
+    files = sorted(FONTS.glob("*.ttf"))
+    pick = [f for f in files if f.stem.replace("-", "").lower().startswith(key)] or \
+           [f for f in files if f.stem.split("-")[0].lower() == family.split()[0].lower()]
+    if not pick:
+        return None
+    if bold:
+        b = [f for f in pick if any(x in f.stem for x in ("Black", "Bold", "ExtraBold"))]
+        return (b or pick)[0]
+    return pick[0]
+
+
 def hand_events(L: dict, an: dict, segs: list[dict], cam: dict | None, W: int, H: int, push: float, ky: float,
-                words, speech_end, total) -> list[str]:
-    """Labels that ride a tracked hand (a rows file: [{"t": take seconds, "hands": [{"side", "cx", "top", "px"}]}]).
-    Each label appears on its anchor word and leaves when the hand drops or disappears."""
+                words, speech_end, total, scene=None, chunks=None, brand=None) -> list[str]:
+    """Labels for a hand gesture (a rows file: [{"t": take seconds, "hands": [{"side", "cx", "top", "left", "right", "bottom", "px"}]}]).
+
+    v2 rules (owner note 2026-11-02: the v8 labels "didn't watch the video"):
+      - a label shows only while its word is the caption line on screen, and never together with the next label
+      - it appears on its word (2 frames early) and leaves when the hand drops, the caption line changes or the next
+        label comes, whichever is first, and stays at least 0.45 s
+      - it sits beside the hand at the top of the gesture (the median of the frames within 4 % of the highest point),
+        chosen by the placement engine so it never touches the face or the captions, and it holds still: a label that
+        chases a moving hand reads as a glitch
+      - a gold pill with dark type, popped in over 6 frames, faded out over 5"""
     hd = L.get("hands")
     if not hd or not cam:
         return []
+    from . import placement as plc
     path = Path(hd["file"]) if Path(hd["file"]).is_absolute() else Path(L["_base"]) / hd["file"]
     rows = sorted(json.loads(path.read_text()), key=lambda r: r["t"])
     ranges = [r for r in an.get("beats", []) if r["take"] == hd["take"]]
-    labels = {side: (text, anchor(words, segs, at, speech_end, total)) for side, (text, at) in hd["labels"].items()}
     min_px, s = float(hd.get("min_px", 2500)), H / 1080
-    sw, sh, fps = an["w"], an["h"], cam["fps"]
-    ev, last, born, gone, peak = [], {}, {}, {}, {}
+    mp = scene.mapper if scene is not None and scene.mapper is not None else plc.Mapper(an, segs, cam, W, H, push, ky)
+    sc = scene or plc.Scene(W, H, mp, *plc.face_track(an))
+    # hand boxes on the output clock, per side
+    track = {"L": [], "R": []}
     for row in rows:
         rr = [r for r in ranges if r["src_in"] <= row["t"] < r["src_out"]]
         if not rr:
@@ -336,41 +379,48 @@ def hand_events(L: dict, an: dict, segs: list[dict], cam: dict | None, W: int, H
         sg = next((g for g in segs if g["in"] <= t_sel < g["in"] + g["frames"] / FPS), None)
         if sg is None:
             continue
-        tau, D, z = t_sel - sg["in"], sg["frames"] / FPS, sg["zoom"]
-        t_out = sg["out_t"] + tau
-        i = min(cam["n"] - 1, int(round(t_sel * fps)))
-        x0, y0 = cam["rects"][i][0], cam["rects"][i][1]
-        cw, ch = cam["rects"][min(cam["n"] - 1, int(round(sg["in"] * fps)))][2:4]
-        k = 1.02 + push * tau / D + (0.08 * max(0.0, 1 - tau / 0.27) ** 2 if sg.get("kick_in") else 0.0)
-        sc = W * k / (cw / z)
-        seen = {h["side"]: h for h in row["hands"] if h.get("px", 1e9) >= min_px}
-        for side, (text, t_on) in labels.items():
-            if t_out < t_on:
+        t_out = sg["out_t"] + t_sel - sg["in"]
+        for h in row["hands"]:
+            if h.get("px", 0) < min_px or h.get("side") not in track:
                 continue
-            h = seen.get(side)
-            if h:
-                gone[side] = 0
-                px, py = h["cx"] * sw - x0 - (cw - cw / z) / 2, h["top"] * sh - y0 - (ch - ch / z) * ky
-                x = px * sc - (W * k - W) / 2
-                y = py * sc - ((ch / z) * sc - H) * 0.4 - 40 * s
-                peak[side] = min(peak.get(side, y), y)
-                if y > peak[side] + 0.10 * H:           # the hand is coming down: the label holds, then leaves
-                    gone[side] = gone.get(side, 0) + 2
-                    if gone[side] > 4:
-                        continue
-                    x, y = last.get(side, (x, y))
-                elif side in last:
-                    lx, ly = last[side]
-                    x, y = lx + max(-24, min(24, 0.25 * (x - lx))), ly + max(-24, min(24, 0.25 * (y - ly)))
-                last[side] = (x, y)
-            else:
-                gone[side] = gone.get(side, 0) + 1
-                if gone[side] > 4 or side not in last:
-                    continue
-            x, y = last[side]
-            x = max(0.10 * W, min(0.90 * W, x)); y = max(0.14 * H, y)     # keep the label box inside the frame
-            born.setdefault(side, t_out)
-            kk = min(1.0, (t_out - born[side]) / (7 / FPS))
-            pc = int(100 * (0.55 + 0.45 * (1 - (1 - kk) ** 3)))
-            ev.append(f"Dialogue: 1,{ts(t_out)},{ts(t_out + 1 / FPS)},Hand,,0,0,0,,{{\\pos({x:.0f},{y:.0f})\\fscx{pc}\\fscy{pc}}}{text}")
+            r = mp.rect(t_out, h.get("left", h["cx"] - 0.05), h["top"], h.get("right", h["cx"] + 0.05), h.get("bottom", h["top"] + 0.2))
+            if r:
+                track[h["side"]].append((t_out, r))
+    for side in track:
+        sc.hands += [(t - 0.02, t + 0.05, r) for t, r in track[side]]
+    labels = sorted(((side, text, anchor(words, segs, at, speech_end, total)) for side, (text, at) in hd["labels"].items()), key=lambda x: x[2])
+    ui = (brand or {}).get("fonts", {}).get("ui", "Inter")
+    size = int(hd.get("size", 62) * s)
+    fpath = font_file(ui)
+    bg = hex_ass((brand or {}).get("colors", {}).get("gold_hot", "#E0BE66")) if brand else "&H0066BEE0"
+    ink = hex_ass((brand or {}).get("colors", {}).get("bg", "#0e1114")) if brand else "&H0014110E"
+    ev = []
+    for i, (side, text, t_on) in enumerate(labels):
+        a = t_on - 2 / FPS
+        nxt = labels[i + 1][2] - 2 / FPS if i + 1 < len(labels) else 1e9
+        ch_end = next((b for (ca, b, *_r) in (chunks or []) if ca - 0.06 <= t_on + 0.05 < b), t_on + 1.2)
+        pts = [(t, r) for t, r in track[side] if t_on - 0.35 <= t <= t_on + 0.8]
+        if not pts:
+            continue
+        top = min(r[1] for _, r in pts)
+        peak = [r for _, r in pts if r[1] <= top + 0.04 * H]
+        pr = tuple(float(np.median([r[k] for r in peak])) for k in range(4))
+        drop = next((t for t, r in track[side] if t > t_on and r[1] > top + 0.12 * H), t_on + 1.6)
+        b = min(nxt, ch_end, drop + 0.12, t_on + 1.6)
+        b = max(b, min(a + 0.45, nxt))
+        w, h = plc.text_box(text, fpath, size, int(26 * s), int(14 * s), 0.04)
+        half = (0.0, 0.0, 0.62, 1.0) if (pr[0] + pr[2]) / 2 < W / 2 else (0.38, 0.0, 1.0, 1.0)
+        x, y, rep = plc.place(sc, w, h, a, b, group="hands", near=pr, style="plate", region=half, label=f"hand {text}")
+        rr = int(min(h / 2, 22 * s))
+        cx, cy = x + w // 2, y + h // 2
+        anim = "\\fscx78\\fscy78\\t(0,120,0.6,\\fscx104\\fscy104)\\t(120,200,\\fscx100\\fscy100)"
+        fad = f"\\fad(90,160)"
+        ev.append(f"Dialogue: 4,{ts(a)},{ts(b)},Plate,,0,0,0,,{{\\an5\\pos({cx},{cy})\\1c{bg}\\bord0\\shad0{fad}{anim}\\p1}}"
+                  f"{_rrect_c(w, h, rr)}{{\\p0}}")
+        ev.append(f"Dialogue: 5,{ts(a)},{ts(b)},HandText,,0,0,0,,{{\\an5\\pos({cx},{cy + int(2 * s)})\\1c{ink}{fad}{anim}}}{text}")
     return ev
+
+
+def _rrect_c(w: int, h: int, r: int) -> str:
+    """Rounded rectangle path centred on its origin (for \\an5 scaling about the middle)."""
+    return _rrect(w, h, r)

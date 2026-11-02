@@ -125,6 +125,7 @@ def run_long(job: Path, j: dict, log=print) -> dict:
         add("caption words to proofread", True, f"words from a locked word map (proofed in the source project); low-confidence: {low[:12]}")
     else:
         add("caption words to proofread", len(low) <= 5, f"low-confidence words: {low[:12]}" if low else "none")
+    extra_checks(job, add)
     sheet = contact_sheet(final, job / "sheet.jpg", every=max(2.0, info["dur"] / 48))
     report = {"file": str(final), "duration_s": round(info["dur"], 2), "checks": checks, "sheet": str(sheet), "passed": all(c["ok"] for c in checks)}
     json.dump(report, open(job / "report.json", "w"), indent=1)
@@ -170,3 +171,28 @@ def sync_check(final, an, segs, sr: int = 8000) -> tuple[bool, str]:
     bad = [r for r in rows if abs(r[1] - med) > 40 or r[2] < 0.2]
     detail = f"{len(rows)} pieces, offset {med:.0f} ms" + (f"; out of step or not matching at {[round(r[0], 1) for r in bad]} s" if bad else ", none drifting")
     return len(bad) <= max(0, len(rows) // 20), detail
+
+
+def extra_checks(job: Path, add):
+    """Checks on what the placement engine, the sound director and the finish pass wrote (when they ran)."""
+    pj = job / "placement.json"
+    if pj.exists():
+        placed = json.loads(pj.read_text()).get("placed", [])
+        bad = [p for p in placed if not p.get("ok", True)]
+        add("graphics clear of the face and the captions", not bad,
+            "; ".join(f"{p['label']} at {p['a']} s: face {p['face_overlap']:.0%}, captions {p['caption_overlap']:.0%}" for p in bad[:6]) if bad
+            else f"{len(placed)} placed elements, none on the face or the captions")
+    sj = job / "sound.json"
+    if sj.exists():
+        r = json.loads(sj.read_text())
+        q = r.get("qc", {})
+        if "voice_over_music_median_db" in q:
+            add("voice clear of the music", q.get("music_ok", False),
+                f"voice over music: median {q['voice_over_music_median_db']} dB, worst 5 % {q['voice_over_music_p5_db']} dB (want >= 15 and >= 9)")
+        add("no clicks at the audio cuts", q.get("click_suspects", 0) == 0, f"{q.get('click_suspects', 0)} suspects")
+        per_min = r.get("sfx", {}).get("per_min", 0)
+        add("sound effects stay rare", per_min <= 12, f"{per_min} per minute (budget 12; dropped {len(r.get('sfx', {}).get('dropped', []))})")
+    fj = job / "finish.json"
+    if fj.exists():
+        st = json.loads(fj.read_text()).get("stats", {})
+        add("finish pass measured the footage", True, f"face luma {st.get('face_luma')}, sky {st.get('sky_luma')}, clipped {st.get('clipped_share')}")
