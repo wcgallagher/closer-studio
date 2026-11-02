@@ -152,13 +152,18 @@ def sync_check(final, an, segs, sr: int = 8000) -> tuple[bool, str]:
     for sg in segs:
         if sg["frames"] / FPS < 1.0:
             continue
-        a, b = pcm(final, sg["out_t"] + 0.25, 0.6), pcm(src, start + sg["in"] + 0.10, 0.9)
-        if len(a) < 100 or len(b) < len(a) or a.std() < 1e-3:
-            continue
-        a, b = (a - a.mean()) / (a.std() + 1e-6), (b - b.mean()) / (b.std() + 1e-6)
-        c = np.correlate(b, a, mode="valid") / len(a)
-        i = int(np.argmax(c))
-        rows.append((sg["out_t"], (i / sr - 0.15) * 1000, float(c[i])))
+        best = None
+        for off in sorted({0.25, round(max(0.25, sg["frames"] / FPS / 2 - 0.3), 2)}):   # a soft word under music can hide one window
+            a, b = pcm(final, sg["out_t"] + off, 0.6), pcm(src, start + sg["in"] + off - 0.15, 0.9)
+            if len(a) < 100 or len(b) < len(a) or a.std() < 1e-3:
+                continue
+            a, b = (a - a.mean()) / (a.std() + 1e-6), (b - b.mean()) / (b.std() + 1e-6)
+            c = np.correlate(b, a, mode="valid") / len(a)
+            i = int(np.argmax(c))
+            if best is None or c[i] > best[2]:
+                best = (sg["out_t"], (i / sr - 0.15) * 1000, float(c[i]))
+        if best:
+            rows.append(best)
     if not rows:
         return True, "no piece long enough to check"
     med = float(np.median([r[1] for r in rows]))
