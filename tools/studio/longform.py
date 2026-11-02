@@ -274,7 +274,8 @@ def longform(video: Path, out: Path, an: dict, brand: dict, plat: dict, fmt: dic
               "words_range": cl.get("words") or fmt.get("caption_words"),
               "plain": [(g["start"], g["end"]) for g in scenes if not g["alpha"]] if cl.get("plain_over_scenes") else None,
               "off": [(A(a), A(b)) for a, b in cl.get("off", [])],
-              "breaks": [A(x) for x in cl.get("breaks", [])] or None}
+              "breaks": [A(x) for x in cl.get("breaks", [])] or None,
+              "display": {k.lower(): v for k, v in (cl.get("display") or {}).items()} or None}
     cap_from = A(cl["from"]) if cl.get("from") is not None else 0.0
     ev, srt = captions.events(segs, words, brand, "clean", speech_end, 0.0, None)
     if caps in captions.STYLES:

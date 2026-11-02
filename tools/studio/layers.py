@@ -348,12 +348,12 @@ def text_events(L: dict, words, segs, speech_end, total, W, H, brand, scenes: li
                 x, y = int(W * ch.get("x", 0.69)) - padx, int(H * (ch.get("y", 0.40) + 0.095 * int(ch.get("row", 0))))
             c = brand["colors"]
             bg, sand, gold = hex_ass(c.get("bg", "#0e1114")), hex_ass(c.get("sand", "#F1EADD")), hex_ass(c.get("gold_hot", c.get("accent", "#E0BE66")))
-            fad, mv = "\\fad(140,180)", int(18 * s_)
-            ev.append(f"Dialogue: 4,{ts(t)},{ts(t + hold)},Plate,,0,0,0,,{{\\an7\\move({x},{y + mv},{x},{y},0,220)\\1c{bg}\\1a&H38&\\3c{sand}\\3a&HD0&\\bord{max(1, round(s_))}\\shad0{fad}\\p1}}{_rrect(pw, ph, ph // 2)}{{\\p0}}")
+            fad, mv = "\\fad(200,180)", int(18 * s_)     # a 300 ms rise: MO-01 and the vsl band of 8-12 frames
+            ev.append(f"Dialogue: 4,{ts(t)},{ts(t + hold)},Plate,,0,0,0,,{{\\an7\\move({x},{y + mv},{x},{y},0,300)\\1c{bg}\\1a&H38&\\3c{sand}\\3a&HD0&\\bord{max(1, round(s_))}\\shad0{fad}\\p1}}{_rrect(pw, ph, ph // 2)}{{\\p0}}")
             bx, by = x + padx, y + ph // 2 - bead // 2
-            ev.append(f"Dialogue: 5,{ts(t)},{ts(t + hold)},Plate,,0,0,0,,{{\\an7\\move({bx},{by + mv},{bx},{by},0,220)\\1c{gold}\\bord0\\shad0{fad}\\p1}}{_rrect(bead, bead, bead // 2)}{{\\p0}}")
+            ev.append(f"Dialogue: 5,{ts(t)},{ts(t + hold)},Plate,,0,0,0,,{{\\an7\\move({bx},{by + mv},{bx},{by},0,300)\\1c{gold}\\bord0\\shad0{fad}\\p1}}{_rrect(bead, bead, bead // 2)}{{\\p0}}")
             tx, ty = bx + bead + int(16 * s_), y + ph // 2
-            ev.append(f"Dialogue: 5,{ts(t)},{ts(t + hold)},GlassChip,,0,0,0,,{{\\an4\\move({tx},{ty + mv},{tx},{ty},0,220){fad}}}{ch['text']}")
+            ev.append(f"Dialogue: 5,{ts(t)},{ts(t + hold)},GlassChip,,0,0,0,,{{\\an4\\move({tx},{ty + mv},{tx},{ty},0,300){fad}}}{ch['text']}")
         else:
             st = "ChipQuiet" if kind == "quiet" else "Chip"
             if scene is not None and "x" not in ch:

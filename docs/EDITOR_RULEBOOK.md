@@ -1050,6 +1050,13 @@ line, captions hidden under overlays, paraphrased card copy, hits at the voice's
 that survive the A/B swap is a lean, not a win: the owner's blind pick settles it.
 - source: PANEL_V9 round 4.
 
+**BP-14** (FIX, process). Read a panel through its order-stable lenses and check every "missing" claim against the
+render's own files before building. With three samples per order, the cut shown second won 69% of 36 samples and
+three of six lenses followed position. Every claim that a caption was missing came from the 1 fps sheets and was false
+in captions.ass. When a persona lens (the muted target viewer) prefers the older cut in every round, stop iterating
+against it and hand the owner a split test, with a variant built to test its stated reason.
+- source: PANEL_V9 round 5.
+
 ## 14. Sources
 
 Each key used above, with where it points and the date read. Kit files are this repository's own.

@@ -160,12 +160,12 @@ class _KwMap(dict):
         return bp
 
 
-def _label(w, case):
+def _label(w, case, disp=None):
     raw = w["w"]
     t = raw.strip(",.?!;:")
     if "." in t and raw.rstrip(",?!;:").endswith("."):      # an abbreviation keeps its last period ("p.m.")
         t = raw.rstrip(",?!;:")
-    t = DISPLAY.get(t.lower(), t)
+    t = (disp or {}).get(t.lower()) or DISPLAY.get(t.lower(), t)     # a layers file's own spellings win (CP-04)
     if case == "upper":
         return t.upper()
     if case == "sentence":
@@ -220,9 +220,10 @@ def _snap(a, b, cuts):
 
 
 def events(segs, words, brand, style_id, speech_end, hook_end=0.0, max_words=None, words_range=None, plain=None, off=None,
-           cuts=None, breaks=None):
+           cuts=None, breaks=None, display=None):
     """plain: output windows where the line shows without the spoken-word highlight (over a card); off: windows with no
-    burned caption at all (the SRT keeps every line); breaks: output times of words a line must start on."""
+    burned caption at all (the SRT keeps every line); breaks: output times of words a line must start on; display:
+    {spoken form: shown form} for this video, so a caption spells a term as its cards do ("p.m." -> "PM")."""
     st = STYLES[style_id]
     lo, hi = tuple(words_range) if words_range else st["words"]
     inside = lambda t, wins: any(a - 0.05 <= t < b for a, b in (wins or []))
@@ -252,7 +253,7 @@ def events(segs, words, brand, style_id, speech_end, hook_end=0.0, max_words=Non
         chunks = chunk(ws, lo, hi, st.get("max_chars"), brk)
         if st["mechanism"] == "keyword":
             for ci, c in enumerate(chunks):
-                labels = [_label(w, st["case"]) for w in c]
+                labels = [_label(w, st["case"], display) for w in c]
                 a0 = max(0.0, O(c[0]))
                 b0 = max(a0 + 0.3, Oe(c[-1]) + 0.25)
                 srt.append((a0, min(b0, seg_end), " ".join(w["w"] for w in c)))
@@ -274,7 +275,7 @@ def events(segs, words, brand, style_id, speech_end, hook_end=0.0, max_words=Non
                 ev.append(f"Dialogue: 2,{ts(a)},{ts(b)},Cap,,0,0,0,,{{\\fad({fin},60)\\blur1.5}}{' '.join(parts)}")
             continue
         for ci, c in enumerate(chunks):
-            labels = [_label(w, st["case"]) for w in c]
+            labels = [_label(w, st["case"], display) for w in c]
             a0 = max(0.0, O(c[0]))
             b0 = max(a0 + 0.2, Oe(c[-1]) + 0.2)
             srt.append((a0, min(b0, seg_end), " ".join(w["w"] for w in c)))

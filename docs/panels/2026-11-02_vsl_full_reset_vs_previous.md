@@ -93,3 +93,31 @@ only the owner can settle: the word on screen for agents, the music licence, the
 Claims that did not survive checking: "the bed comes back about 40 dB at 64.15 s, mid line" is the sound grammar's
 reverse swell into the bed's return; the music stem stays under -66 dB until 65.6 s. "Caption ghosts at 30% opacity"
 are contact-sheet frames caught inside an 80 ms fade. Confirmed: the click at 51.5 s (BP-12).
+
+## Round 5: the split deal slam (P5) against full-frame slams (Q5), full house protocol
+
+The first round run as section 8 of the rulebook specifies: six lenses, both orders, three samples per order (36 reviews),
+criteria scores with timestamps before any preference, a lens counted only where its majority holds in both orders.
+P5 cut the 7.4 s deal slam to two rows in the speaker's words for 2.1 s (rulebook BP-11), fixed the take-change click
+(BP-12) and took the round-4 devil's advocate's cleared fixes. Raw votes P5 27, Q5 9. Order-stable lenses: retention,
+cinematic and sound chose P5 in both orders (3 to 0); direct response, the agent as viewer and compliance each went to
+whichever cut was shown second. The second-shown cut won 25 of 36 samples (69%). Criteria means favoured P5 on hook
+(3.96 against 3.47), pacing (3.93 against 3.14) and graphics restraint (3.92 against 3.18); Q5 led only on caption
+legibility (3.69 against 3.33), from its full-frame deal card. Speaker hidden 27% against 34%.
+
+A six-sample muted-phone viewer check against the shipped cut went to the shipped cut 6 to 0 (3 to 0 in each order).
+Its reasons: the shipped cut's deal card says who sets, who closes and what is split; its book and call panels read at
+phone size; its program-difference card answers "another program"; its proof names peers. P5 won the opening seconds
+and the claims check (the shipped cut still carries the $3.8M figure the owner retired).
+
+The devil's advocate struck about half of the merged fixes as breaks of rules written one round earlier (the full
+four-row deal card against BP-11 and CP-04, a disclaimer under the payout line against BP-04, captions hidden under
+overlays against BP-09, capitals on hand labels against TY-07, sidechain and voice-boost settings against AU-05 and
+AU-06) and found what both cuts shared: an empty dimmed field before the book card, a pushed-in face beside the path
+card, a hand label left over the sky, three spellings of the training time, an uncaptioned CTA card, and the literal
+word on screen that CP-07 blocks (an owner ruling, since the speech says it).
+
+Claims that did not survive checking: "'You set an appointment' and 'And you'll get paid' play with no caption" (both
+are captioned, 8.57-9.43 s and 12.54-13.28 s in captions.ass); "caption gaps at 63.5 and 65.5 s" (both captioned); "the
+regret drop is digital silence" (it sits at -41 dBFS RMS). The contact-sheet tiles are stamped N but sampled near
+N + 0.5 s, and a caption shorter than a second can fall between tiles.
