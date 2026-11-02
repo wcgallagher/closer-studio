@@ -131,13 +131,13 @@ The finish is measured, not a recipe (`tools/studio/finish.py`). It first measur
 
 | Profile (`FINISH_PROFILES`) | Halation | Grain | Vignette (corner, computed) |
 |---|---|---|---|
-| vsl | off | 0.007 | 0.12 (about -0.18 stops) |
+| vsl | off (and no sky or face moves) | 0 | 0.10 (about -0.15 stops) |
 | reel | off | 0.006 | 0.10 (about -0.15 stops) |
 | brand | when the sky covers over 3% of the frame or over 0.2% clips | 0.012 | 0.16 (about -0.25 stops) |
 
 Before the finish, every long-form piece already goes through `grade.POST` in `tools/studio/grade.py` (applied in `tools/studio/render.py`): two unsharp passes and an ffmpeg vignette at a=0.35, measured at -0.36 stops. So a VSL's corners land near -0.54 stops in total, and the double sharpening is the rulebook's open TX-04 item, the one that makes a face look crunchy and AI-made. Look at the face at full size before you ship.
 
-A sales VSL sells trust in a person, so it gets the clean finish: a natural grade, no halation, no letterbox, light grain that must survive the web player's re-encode. Teal-orange belongs to B-roll and brand moments only. The skin-hue check warns and never auto-corrects. No generative face fixes: no eye-contact correction, no synthesized jump cuts, no face swap, no beauty filter.
+A sales VSL sells trust in a person, so it gets the clean finish: a natural grade, no halation, no letterbox, no grain, and no local moves at all. In a blind panel on 2026-11-02 the measured sky pull-down, face lift and grain read as "a halo around the head and a blotchy, posterized sky" at phone size, and the cut without them won (rulebook BP-02, `docs/panels/2026-11-02_vsl_full_reset_vs_previous.md`). The simplest finish for a VSL is to leave `finish` out of the layers file. Teal-orange belongs to B-roll and brand moments only. The skin-hue check warns and never auto-corrects. No generative face fixes: no eye-contact correction, no synthesized jump cuts, no face swap, no beauty filter.
 
 ## 6. AI-slop tells
 

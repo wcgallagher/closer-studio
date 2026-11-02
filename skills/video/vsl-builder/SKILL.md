@@ -64,7 +64,7 @@ The parts, all optional:
 - `music` (`file`, `start`, `mute` windows, an optional third value is the lead in seconds), `sfx` (a file, or an `event` name the sound grammar turns into a sound and a level), `kicks` (zoom kick and whoosh at section changes), `zoom` (hold a framing, for hand labels), `end_hold`.
 - `sound`: the sound director (`skills/video/sound-director/SKILL.md`). `dialect` (`gadzhi`, `nelk`, or your own under `rules.sfx.grammar`), `sections` (each a `name`, a `from` anchor, `vm` the voice-over-music target in LU and `p10` its floor), `music_enter` (the word the track's strong bar lands on), `pre_roll` (`filtered` or `dry`), `hole_s` (the gap before the drop) and `sfx_dir` (recorded sounds named `role__name.wav`). Give a loud drop its own section: one hook section calibrated to its median let the drop sit on the voice in v9's first preview, because the quiet pre-roll pulled that median down.
 - `breath`: `sentence` (seconds kept between sentences) and `after` (`[anchor, seconds]` holds after a line, before a claim or the ask).
-- `finish`: `profile` `vsl` (no halation, light grain), `reel` or `brand`.
+- `finish`: `profile` `vsl` (no local moves, no grain, a light vignette), `reel` or `brand`. For a sales VSL, leave `finish` out: in the 2026-11-02 blind panel the measured finish read as a halo and a posterized sky (rulebook BP-02).
 - On a scene: `text` (its copy, swapped in without editing the HTML) and `frost` (`mask` for frosted glass over the speaker, `solid`). On a chip: `style` `glass` (placed by the engine clear of the face and captions).
 
 Every number on a card comes from the project's audit file or the owner. Spoken-only numbers never go on a card or a chip.

@@ -132,7 +132,8 @@ It passes the spectral gate on every band and is darker than the Gadzhi beds at 
 
 ### Fitting it to the cut (engine)
 
-- The track is cut on bar lines. A long track starts on a bar inside its first 40%, chosen so a section change lands near the `land` word, and splices on a bar into its own last 4 bars with a 40 ms equal-power crossfade, so it ends on its real ending; only the last 1.2 s fade (kit_sound).
+- The track is cut on bar lines. A long track starts on a bar inside its first 40%, chosen so a section change lands near the `land` word, and splices on a bar into its own last 4 bars with a 40 ms equal-power crossfade, so it ends on its real ending; only the last 1.2 s fade (kit_sound). A track whose own ending is a fade (last 4 bars more than 6 dB under its median bar) ends on a button instead: full level under the last word, then the first downbeat after it decays 60 dB over 2.4 s. The bed never fades under the ask (v9 review, 2026-11-02; kit_sound).
+- Effects are one-shots: a start-timed sound whose peak comes late for its role is refused, peak-timed swells keep at most 1.5 s of build, and every sound stops a role-sized time after its hit with a 0.25 s fade (`SOUND_RULES["sfx"]`: `max_lead_s`, `lead_trim_s`, `tail_max_s`; kit_sound).
 - A short track plays from the top and repeats an even number of bars whose loudness matches across the splice. It never restarts from zero (kit_sound).
 - Proposed: a tempo nudge of at most 3% (ffmpeg's rubberband filter if present, otherwise atempo); exact-length services such as Epidemic's EditRecording (through its MCP server) or its adapt-length API (beta, 1 s to 5 min), or an ElevenLabs Music composition plan (house; epidemic_mcp; epidemic_api; el_music).
 

@@ -31,9 +31,11 @@ FINISH_RULES = {
 }
 
 
-# profiles: a sales VSL sells trust in a person, so it gets the clean finish (no halation, lighter grain and vignette);
-# a brand film gets the full one. Web players re-encode at low bitrates and turn heavy grain into mush.
-FINISH_PROFILES = {"vsl": {"halation": False, "grain": 0.007, "vignette": 0.12},
+# profiles: a sales VSL sells trust in a person, so it gets no local moves at all: in the v9 blind A/B (2026-11-02,
+# 12 reviews) the sky pull, the face window and grain read as "a halo around the head and a blotchy, posterized
+# sky", cited by 6 reviewers, and the cut without a finish pass won. Only a light vignette stays. A brand film gets
+# the full pass. Web players re-encode at low bitrates and turn grain into mush.
+FINISH_PROFILES = {"vsl": {"halation": False, "grain": 0.0, "vignette": 0.10, "sky": False, "face": False},
                    "reel": {"halation": False, "grain": 0.006, "vignette": 0.10},
                    "brand": {}}
 
@@ -118,7 +120,12 @@ def plan(stats: dict, profile: str = "brand") -> dict:
         face_ev = float(np.clip(np.log2(R["face"]["target_luma"] / max(stats["face_luma"], 0.05)) * 0.8, 0.0, R["face"]["ev_max"]))
     pr = FINISH_PROFILES.get(profile, {})
     hal = stats.get("sky_share", 0) > 0.03 or stats.get("clipped_share", 0) > 0.002
-    return {"profile": profile, "sky_ev": round(sky_ev, 3), "face_ev": round(face_ev, 3), "sky_on": stats.get("sky_share", 0) > 0.03,
+    if not pr.get("sky", True):
+        sky_ev = 0.0
+    if not pr.get("face", True):
+        face_ev = 0.0
+    return {"profile": profile, "sky_ev": round(sky_ev, 3), "face_ev": round(face_ev, 3),
+            "sky_on": pr.get("sky", True) and stats.get("sky_share", 0) > 0.03,
             "halation": hal and pr.get("halation", True), "grain": pr.get("grain", R["grain"]["amount"]),
             "vignette": pr.get("vignette", R["vignette"]["strength"])}
 

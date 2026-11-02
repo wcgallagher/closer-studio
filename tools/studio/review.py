@@ -173,6 +173,33 @@ def sync_check(final, an, segs, sr: int = 8000) -> tuple[bool, str]:
     return len(bad) <= max(0, len(rows) // 20), detail
 
 
+def _stem_checks(job: Path, r: dict, add):
+    """Two failures a mixer hears at once and a level meter misses (both shipped in v9's first master, 2026-11-02):
+    a bed that fades away under the last words, and a sound effect that keeps playing long after its frame."""
+    import numpy as np
+    from . import sound
+    se = (r.get("inputs") or {}).get("speech_end")
+    mw, sw = job / "music.wav", job / "sfx.wav"
+    if se and mw.exists():
+        t, m = sound.loudness_curve(sound.read_audio(mw))
+        body = m[(t > 6.0) & (t < se - 3.0) & (m > -70)]
+        ask = m[(t >= se - 3.0) & (t <= se)]
+        if len(body) and len(ask):
+            b_med, a_med = float(np.median(body)), float(np.median(ask))
+            add("the bed holds under the ask", a_med >= b_med - 8.0,
+                f"music {a_med:.1f} LUFS under the last 3 s of speech, {b_med:.1f} under the body (gate: within 8 dB)")
+    placed = (r.get("sfx") or {}).get("placed", [])
+    if sw.exists() and placed:
+        t, m = sound.loudness_curve(sound.read_audio(sw))
+        ats = np.array([p["at"] for p in placed])
+        loud = m > -50
+        near = np.array([bool(np.any((tt >= ats - 3.0) & (tt <= ats + 2.5))) for tt in t])
+        stray = float((loud & ~near).sum()) * 0.1
+        add("no sound effect outstays its frame", stray <= 0.5,
+            f"{stray:.1f} s of effects louder than -50 LUFS more than 2.5 s after (or 3 s before) any placed sound"
+            + (f"; library refused {len(r['sfx'].get('library_rejected', []))} files that are not one-shots" if r.get("sfx", {}).get("library_rejected") else ""))
+
+
 def extra_checks(job: Path, add):
     """Checks on what the placement engine, the sound director and the finish pass wrote (when they ran)."""
     pj = job / "placement.json"
@@ -198,6 +225,7 @@ def extra_checks(job: Path, add):
         per_min = r.get("sfx", {}).get("per_min", 0)
         bud = {"gadzhi": 6, "nelk": 14}.get(r.get("sfx", {}).get("dialect"), 14)
         add("sound effects stay rare", per_min <= bud, f"{per_min} per minute ({r.get('sfx', {}).get('dialect')} budget {bud}; left dry or dropped {len(r.get('sfx', {}).get('dropped', []))})")
+        _stem_checks(job, r, add)
     fj = job / "finish.json"
     if fj.exists():
         st = json.loads(fj.read_text()).get("stats", {})

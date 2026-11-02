@@ -142,6 +142,9 @@ def cmd_edit(a):
 
 def cmd_remix(a):
     from . import sound
+    missing = [m for m in a.music if not Path(m).is_file()]
+    if missing:          # check every track before the first mix, so a typo does not cost the renders before it
+        raise SystemExit("remix: no such music file: " + ", ".join(missing))
     for m in a.music:
         dst = Path(a.out) / f"{Path(a.job).name}__{Path(m).stem}.mp4"
         sound.remix(Path(a.job), Path(m), dst)

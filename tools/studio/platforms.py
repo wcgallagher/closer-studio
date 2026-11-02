@@ -42,7 +42,7 @@ PLATFORMS = {
     "youtube": {"name": "YouTube (16:9)", "w": 1920, "h": 1080, "fps": 30, "max_s": 0,
                 "safe": {"top": 0, "bottom": 110, "left": 60, "right": 60}, "lufs": -14, "tp": -1.5, "maxrate": "14M", "ext": "mp4"},
     "web_vsl": {"name": "Website VSL (16:9)", "w": 1920, "h": 1080, "fps": 30, "max_s": 0,
-                "safe": {"top": 0, "bottom": 90, "left": 60, "right": 60}, "lufs": -15, "tp": -1.2, "maxrate": "14M", "ext": "mp4"},
+                "safe": {"top": 0, "bottom": 90, "left": 60, "right": 60}, "lufs": -14, "tp": -1.5, "maxrate": "14M", "ext": "mp4"},
     "broadcast": {"name": "Broadcast / TV (16:9, EBU R128)", "w": 1920, "h": 1080, "fps": 30, "max_s": 0,
                   "safe": {"top": 54, "bottom": 54, "left": 96, "right": 96}, "lufs": -23, "tp": -1.0, "maxrate": "20M", "ext": "mp4"},
 }

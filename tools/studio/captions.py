@@ -20,27 +20,65 @@ STYLES = {
     "serif": {"font": "display", "size": 0.040, "case": "sentence", "words": (3, 6), "mechanism": "none", "outline": 0, "shadow": 3, "pop": False, "box": False},
     # TikTok-native: dark plate behind the line, spoken word in the accent
     "boxed": {"font": "caption", "size": 0.044, "case": "upper", "words": (2, 4), "mechanism": "color", "outline": 0, "shadow": 0, "pop": False, "box": True},
+    # premium VSL / brand film: the UI face in bold, the speaker's own case, a soft shadow instead of a stroke, gold on
+    # at most one meaning word per line and 15 % of all words, no per-word flicker, phrases of 3 to 7 words. From the
+    # v9 blind A/B (2026-11-02): both cinematic reviews read the caps-and-stroke karaoke as "the Submagic template"
+    # under an editorial card system, and the rulebook keeps capitals for reels (TY-07) and two families (TY-01)
+    "premium": {"font": "ui", "size": 0.036, "case": "mixed", "words": (3, 7), "mechanism": "keyword", "outline": 3, "shadow": 0,
+                "pop": False, "box": False, "bold": True, "soft": True},
 }
+
+# words that bind to the word after them: a line never ends on one (an article, a preposition, an auxiliary or modal,
+# a negation, a subject pronoun, a contraction). v8 broke "DON'T / WANT", "WHAT I'M / GOING", "WE'VE / DONE".
+BIND_NEXT = {"a", "an", "the", "to", "of", "in", "on", "at", "for", "with", "from", "by", "about", "into", "over", "as",
+             "and", "or", "but", "if", "so", "that", "which", "who", "than", "my", "your", "our", "their", "his", "her", "its",
+             "i", "you", "we", "they", "he", "she", "it", "is", "are", "was", "were", "be", "been", "am", "do", "does", "did",
+             "have", "has", "had", "can", "could", "will", "would", "should", "may", "might", "must", "not", "no", "going",
+             "gonna", "want", "wanna", "im", "youre", "were", "theyre", "its", "thats", "whats", "theres", "dont", "doesnt",
+             "didnt", "cant", "wont", "isnt", "arent", "wasnt", "ive", "weve", "youve", "theyve", "ill", "youll", "id",
+             "youd", "just", "very", "these", "those", "this", "every", "some", "any", "how", "what", "where", "when",
+             # adverbs before their verb and adjectives before their noun ("I always | recommend", "live | sales")
+             "always", "never", "also", "actually", "really", "even", "still", "extremely", "live", "good", "existing",
+             "old", "new", "real", "big", "whole", "next", "last", "first", "simple"}
+# pairs read as one unit: never split between them
+COLLOC = {("life", "insurance"), ("mortgage", "protection"), ("right", "now"), ("50-50", "split"), ("one", "thing"), ("p.m.", "we"), ("book", "of"), ("of", "business"),
+          ("two", "or"), ("or", "three"), ("a", "lot"), ("each", "other"), ("sales", "presentations"), ("time", "commitment")}
+# meaning words that may take the gold in the keyword mechanism, besides any number or money figure
+KEYWORDS = {"free", "money", "bag", "split", "50-50", "wednesday", "regret", "sell", "set", "selling", "setting", "close",
+            "retirement", "401k", "401(k)", "ira", "training", "account", "simple", "big", "paid", "exactly", "program"}
 
 
 def chunk(ws, lo=2, hi=4):
     """Split a run of words into caption chunks of lo..hi words, at clause ends and pauses, off function words.
     Clauses longer than hi words are split by a dynamic program over the cut positions (linear in the clause length):
-    groups near hi words, a group of one word costs extra, a cut on a function word costs 2 per side, a cut at a pause
-    of more than 150 ms earns 2."""
-    clauses, cur = [], []
-    for w in ws:
+    groups near hi words, a group of one word costs extra, a line that ends on a word binding to the next (BIND_NEXT)
+    or splits a fixed pair (COLLOC) costs 5, a line starting on a function word 0.5, a cut at a pause of more than
+    150 ms earns 2. A beat change in a multi-take selects (the words' "beat") is a sentence end even without a period."""
+    clauses, ends, cur = [], [], []
+    for k, w in enumerate(ws):
         cur.append(w)
-        if w["w"][-1:] in ".,?!;:":
-            clauses.append(cur); cur = []
+        nb = ws[k + 1].get("beat") if k + 1 < len(ws) else None
+        beat_end = nb is not None and w.get("beat") is not None and nb != w["beat"]
+        if w["w"][-1:] in ".,?!;:" or beat_end:
+            clauses.append(cur); ends.append(w["w"][-1:] in ".?!" or beat_end); cur = []
     if cur:
-        clauses.append(cur)
-    merged = []
-    for c in clauses:
-        if merged and (len(c) < lo or len(merged[-1]) < lo):
-            merged[-1] = merged[-1] + c
+        clauses.append(cur); ends.append(True)
+    # a short clause joins its neighbour: the one before when it continues that sentence, the one after when it opens
+    # a new sentence ("Finally," + "a program that's here..."); a whole short sentence ("Pretty simple.") keeps its line
+    merged, m_end, carry = [], [], []
+    for k, c in enumerate(clauses):
+        c = carry + c; carry = []
+        starts_sentence = k == 0 or ends[k - 1]
+        if len(c) < lo and starts_sentence and not ends[k] and k + 1 < len(clauses):
+            carry = c; continue
+        if merged and len(c) < lo and not (starts_sentence and ends[k]) and not m_end[-1]:
+            merged[-1] = merged[-1] + c; m_end[-1] = ends[k]
+        elif merged and len(merged[-1]) < lo and not m_end[-1]:
+            merged[-1] = merged[-1] + c; m_end[-1] = ends[k]
         else:
-            merged.append(c)
+            merged.append(c); m_end.append(ends[k])
+    if carry:
+        merged.append(carry); m_end.append(True)
     out = []
     for c in merged:
         n = len(c)
@@ -54,10 +92,12 @@ def chunk(ws, lo=2, hi=4):
                 j = i - size
                 if j < 0:
                     break
-                cost = best[j] + 0.5 * (hi - size) + (3.0 if size == 1 else 0.0)
+                cost = best[j] + 0.5 * (hi - size) + (3.0 if size == 1 else 2.5 if size < lo else 0.0)   # no orphan lines
                 if j > 0:
-                    if norm(c[j]["w"]) in FUNC: cost += 2
-                    if norm(c[j - 1]["w"]) in FUNC: cost += 2
+                    prev, nxt = norm(c[j - 1]["w"]), norm(c[j]["w"])
+                    if prev in BIND_NEXT or prev in FUNC: cost += 5       # a line never ends on a word that needs the next
+                    if nxt in FUNC: cost += 0.5                          # starting on "and" / "to" reads fine
+                    if (c[j - 1]["w"].lower().strip(",.?!;:"), c[j]["w"].lower().strip(",.?!;:")) in COLLOC: cost += 5
                     if c[j]["s"] - c[j - 1]["e"] > 0.15: cost -= 2
                 if cost < best[i]:
                     best[i], back[i] = cost, j
@@ -73,6 +113,38 @@ def chunk(ws, lo=2, hi=4):
         else:
             final.append(c)
     return final
+
+
+def _keywords(words, segs, share=0.15):
+    """{index of a chunk's first word -> position of its gold word}: computed per chunk later; here, which words may
+    take the gold at all: a number or money figure (score 3), a meaning word (2), a loudness emphasis (1), keeping the
+    best `share` of all words."""
+    def score(w):
+        t = w["w"].lower().strip(",.?!;:")
+        if "$" in t or "%" in t or "-" in t and any(ch.isdigit() for ch in t) or sum(ch.isdigit() for ch in t) >= 2:
+            return 3                                    # a figure (a lone digit, as in "1 p.m.", is not one)
+        return 2 if t in KEYWORDS else 0                # loudness alone does not earn the gold
+    idx = [i for i, w in enumerate(words) if score(w) > 0]
+    idx.sort(key=lambda i: -score(words[i]))
+    keep = set(idx[:max(1, int(len(words) * share))])
+    return _KwMap(words, keep, score)
+
+
+class _KwMap(dict):
+    """Looks up a chunk by its first word's index and returns the position of its best allowed word (one per line)."""
+    def __init__(self, words, keep, score):
+        super().__init__(); self.words, self.keep, self.score = words, keep, score
+
+    def get(self, i0, default=None):
+        best, bp, k = 0, None, 0
+        while i0 + k < len(self.words) and k < 8:
+            i = i0 + k
+            if i in self.keep and self.score(self.words[i]) > best:
+                best, bp = self.score(self.words[i]), k
+            if self.words[i]["w"][-1:] in ".,?!;:" and k > 0:
+                break
+            k += 1
+        return bp
 
 
 def _label(w, case):
@@ -93,7 +165,8 @@ def text_top(H, style_id, band_bottom, lines=2):
 def header(W, H, brand, style_id, band_bottom, hook_size=None, placement="bottom", top_margin=0):
     st = STYLES[style_id]
     fonts = brand["fonts"]
-    fam = {"caption": fonts["caption"], "caption_2": fonts.get("caption_2", fonts["caption"]), "display": fonts["display"]}
+    fam = {"caption": fonts["caption"], "caption_2": fonts.get("caption_2", fonts["caption"]), "display": fonts["display"],
+           "ui": fonts.get("ui", "Inter")}
     cap_font = fam[st["font"]]
     txt, acc = hex_ass(brand["colors"]["text"]), hex_ass(brand["colors"]["accent"])
     size = int(H * st["size"] * (1.85 if W > H else 1.0))     # a 16:9 frame needs about the same pixel height as a 9:16 one (v7: 96 px at 1080)
@@ -107,7 +180,7 @@ def header(W, H, brand, style_id, band_bottom, hook_size=None, placement="bottom
         "[Script Info]", "ScriptType: v4.00+", f"PlayResX: {W}", f"PlayResY: {H}", "WrapStyle: 2", "ScaledBorderAndShadow: yes", "YCbCr Matrix: TV.709", "",
         "[V4+ Styles]",
         "Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding",
-        f"Style: Cap,{cap_font},{size},{txt},{txt},&H00000000,{back},0,0,0,0,100,100,0,0,{border},{outline},{sh},{align},70,70,{mv},1",
+        f"Style: Cap,{cap_font},{size},{txt},{txt},{'&HA0000000' if st.get('soft') else '&H00000000'},{back},{-1 if st.get('bold') else 0},0,0,0,100,100,0,0,{border},{outline},{sh},{align},70,70,{mv},1",
         f"Style: CapB,{fam['caption']},{size},{txt},{txt},&H00000000,{back},0,0,0,0,100,100,0,0,{border},{outline},{sh},{align},70,70,{mv},1",
         f"Style: Hook,{fam['caption']},{hook_size or int(H * 0.044)},{acc},{acc},&H00000000,&H78000000,0,0,0,0,100,100,0,0,1,5,2,5,80,80,0,1",
         f"Style: HookSerif,{fam['display']},{hook_size or int(H * 0.052)},{txt},{txt},&H00000000,&H90000000,0,0,0,0,100,100,0,0,1,2,4,5,80,80,0,1",
@@ -128,6 +201,7 @@ def events(segs, words, brand, style_id, speech_end, hook_end=0.0, max_words=Non
         hi = max(lo, min(hi, max_words))
     acc, txt = hex_ass(brand["colors"].get("caption_accent") or brand["colors"]["accent"]), hex_ass(brand["colors"]["text"])
     ev, srt = [], []
+    kw = _keywords(words, segs) if st["mechanism"] == "keyword" else {}
     # chunk over a whole breath (a piece and the punch-ins that continue it), not per punch-in, so a chunk never starts
     # on the tail of a phrase just because the framing changed there
     runs = []
@@ -146,6 +220,25 @@ def events(segs, words, brand, style_id, speech_end, hook_end=0.0, max_words=Non
         seg_end = run[-1]["out_t"] + run[-1]["frames"] / FPS
         sg = run[0]
         chunks = chunk(ws, lo, hi)
+        if st["mechanism"] == "keyword":
+            for ci, c in enumerate(chunks):
+                labels = [_label(w, st["case"]) for w in c]
+                a0 = max(0.0, O(c[0]))
+                b0 = max(a0 + 0.3, Oe(c[-1]) + 0.25)
+                srt.append((a0, min(b0, seg_end), " ".join(w["w"] for w in c)))
+                if inside(a0, off):
+                    continue
+                a, b = a0, min(b0, seg_end, speech_end + 0.15)
+                if ci + 1 < len(chunks):        # one line on screen at a time
+                    b = min(b, O(chunks[ci + 1][0]) - 1 / FPS)
+                if a < hook_end or b - a < 0.05:
+                    continue
+                if not ev and a < 0.8 and hook_end <= 0:      # the first line is on frame 0: a muted autoplay opens on words
+                    a = 0.0
+                k = None if inside(a0, plain) else kw.get(pos[id(c[0])])
+                parts = [(f"{{\\1c{acc}}}{lab}{{\\1c{txt}}}" if (k is not None and m == k) else lab) for m, lab in enumerate(labels)]
+                ev.append(f"Dialogue: 2,{ts(a)},{ts(b)},Cap,,0,0,0,,{{\\fad(80,60)\\blur4}}{' '.join(parts)}")
+            continue
         for ci, c in enumerate(chunks):
             labels = [_label(w, st["case"]) for w in c]
             a0 = max(0.0, O(c[0]))

@@ -34,7 +34,7 @@ How to read it:
 | intro density multiplier | 1x (already dense) | 2-3x for the first 30-60 s | 1.5-2x for the first 60 s | 2-5x (4-10 visuals per min) | brand sourced; others house | SOZAI_GADZHI |  |
 | sfx per min | up to 10 in the body, up to 4 in the first 5 s | 4-6 | up to 4, soft UI and hits only | 4-6 | yt and brand sourced-low; reel and vsl house | YTSFX (business 4-6 per min); YTSFX_CREATORS | gadzhi 8 in the first 20 s then 4 per 60 s; review gate 12 per min |
 | music gap lu under voice | 20, or no music | 20-24 | off by default; 22-26 if used | 15-20 | house | WCAG147 (at least 20 dB); OVERSEER (finance 20-26, storytelling 15-20); CHOPPITY_AH (subtle music) | edit.py DEFAULTS win (AU-04): vsl_hero 11 / 14 / 12, paid ad 12, organic reel 16, yt_authority and skool_lesson 20 |
-| caption mode | 1 to 6 words, one emphasis mechanism, UPPER allowed (KIT_EG) | phrases of 3-5 words in sentence case, or none | phrases of 4-7 words, up to 42 chars, 1-2 lines, sentence case (DA-3) | none, or sentence-case keywords only | reel measured; yt sourced; vsl and brand house | KIT_EG; NFX_TTSG; CHOPPITY_LH (no burned captions) | vsl_hero renders `impact` (caps, 2-4 words, a colour accent; formats.json, captions.py); the closest to the vsl column is longform `--captions serif` with layers `"captions": {"words": [4, 7]}` |
+| caption mode | 1 to 6 words, one emphasis mechanism, UPPER allowed (KIT_EG) | phrases of 3-5 words in sentence case, or none | phrases of 4-7 words, up to 42 chars, 1-2 lines, sentence case (DA-3) | none, or sentence-case keywords only | reel measured; yt sourced; vsl and brand house | KIT_EG; NFX_TTSG; CHOPPITY_LH (no burned captions) | vsl_hero renders `impact` by default (caps, 2-4 words, a colour accent; formats.json, captions.py); layers `"captions": {"style": "premium", "words": [3, 7]}` gives the vsl column: Inter bold in the speaker's case, a soft shadow, gold on at most one meaning word per line and 15 % of words, line breaks per CP-03 (captions.py `BIND_NEXT`, `COLLOC`) |
 | caption font px | 64-96 on 9:16 | 44-56 on 16:9 | at least 64 on 9:16, at least 52 on 16:9 | 40-52 on 16:9 | house | HIG_TYPE (see TY-02) |  |
 | entrance frames 30fps | 3-4 for pops, otherwise 6-9 | 6-10 | 8-12 | 9-12; slow title reveals up to 24 | bands sourced; profile split house | NNG; M3 |  |
 | overshoot max pct | 10 | 4.6 | 1 | 1 | computed values; assignment house | APPLE_SPRING; BACK |  |
@@ -124,7 +124,7 @@ Dropped from this copy for lack of a public source: punch-and-shake hit accents 
 - clumps: 1-2 px at delivery (sourced; GIST_grain)
 - mask: midtone-weighted, peaking near luma 75 (sourced; GIST_grain)
 - check: On a flat mid-grey patch the added temporal luma std is 1.3-2.5 code values, and std is below 0.5 in pixels at 235 or above.
-- engine: tools/studio/finish.py adds grain once, after the face and sky moves and before any graphics: amount 0.007 (vsl profile), 0.006 (reel), 0.012 (brand), weighted 4L(1-L) so it peaks at mid grey, from half-resolution noise upscaled. 0.007 is about 1.8 code values at mid grey before the upscale (computed).
+- engine: tools/studio/finish.py adds grain once, after the face and sky moves and before any graphics: amount 0 (vsl profile since BP-02), 0.006 (reel), 0.012 (brand), weighted 4L(1-L) so it peaks at mid grey, from half-resolution noise upscaled. 0.007 is about 1.8 code values at mid grey before the upscale (computed).
 
 **TX-03** (WARN). The texture must survive encoding.
 
@@ -980,6 +980,46 @@ These five rules are the most likely to be wrong, or to backfire, on a sales VSL
 - The Hormozi caption colour (#FDE047 or #EAC70C) and font (sources disagree).
 - The Instrument Serif and DeepFilterNet licence files.
 
+## Lessons from the blind panels
+
+Rules added after a blind panel judged a full re-edit against the shipped cut (2026-11-02; the panel, its votes and the
+claims that did not survive checking are in `docs/panels/2026-11-02_vsl_full_reset_vs_previous.md`, source PANEL_V9).
+
+**BP-01** (BLOCK, vsl). The offer lands by 15 s: what the viewer gets and what it costs are said (and, muted, shown)
+before the 15th second. The re-edit that put it at 36-41 s lost to the cut that put it at 11 s, on the three lenses
+that answered the same in both orders.
+- check: the first word of the offer sentence on the output clock (transcript.txt) is under 15.0 s.
+- source: PANEL_V9 (direct-response editor and target viewer, both orders).
+
+**BP-02** (FIX, vsl). No local moves on a talking head: no sky pull-down, no tracked face lift, no grain. A light
+whole-frame vignette only. The measured local moves read as a halo and a posterized sky at phone size.
+- engine: finish.py `FINISH_PROFILES["vsl"]` has `sky` and `face` off and grain 0 since this panel.
+- source: PANEL_V9 (6 reviews).
+
+**BP-03** (BLOCK). A sourced number lands already final: no count-up, roll or ticker on it, since every intermediate
+frame is an unsourced number on screen. Scale or blur it in instead.
+- source: PANEL_V9 (12 of 12 reviews).
+
+**BP-04** (FIX). No fine print that hedges a verified claim. A qualifier names a real limit (who, when, results vary),
+it never takes the claim back.
+- source: PANEL_V9 (9 reviews read "Real splits are agreed up front" under a verified 50/50 as "the 50/50 is not real").
+
+**BP-05** (FIX). No empty container on any frame: a card's box and its text enter together and leave together.
+- check: no sampled frame shows a card box without its first line.
+- source: PANEL_V9 (5 reviews).
+
+**BP-06** (FIX). Overlay card type at 1080: body lines 44 px or more, labels 30 px or more, fine print 34 px or more;
+judge every card at 360 px wide. Hold the 100 % framing while a card sits beside the head.
+- source: PANEL_V9 (6 reviews measured body type near 20 px at 1920 wide, about 6-8 px on a phone); house.
+
+**BP-07** (FIX). The bed never fades under the ask, and effects are one-shots that stop near their hit (AUDIO_SPEC,
+"The ending" and the one-shot rule; review gates "the bed holds under the ask" and "no sound effect outstays its frame").
+- source: PANEL_V9 (mixer, both orders); kit_sound measurements in `skills/video/sound-director/AUDIT.md`.
+
+**BP-08** (FIX, process). A reviewer's measurement is a claim: reproduce it on the source before acting. A reviewer's
+timecode is a pointer: take every cut point from the word map. Count only lenses whose preference survives the A/B swap.
+- source: PANEL_V9 ("Claims that did not survive checking").
+
 ## 14. Sources
 
 Each key used above, with where it points and the date read. Kit files are this repository's own.
@@ -1153,6 +1193,7 @@ Each key used above, with where it points and the date read. Kit files are this 
 | VIDEOAGENT | https://github.com/HKUDS/VideoAgent; 2026-07-22; MIT |
 | VIDEOUSE | https://github.com/browser-use/video-use; last push 2026-10-08; MIT |
 | VIDPROS | https://vidpros.com/fix-background-music-too-loud-video/; 2026-05-21 |
+| PANEL_V9 | docs/panels/2026-11-02_vsl_full_reset_vs_previous.md (this kit); 2026-11-02; 12 blind reviews and a devil's advocate |
 | VIMEO_FRAMING | https://vimeo.com/blog/post/framing-and-composition/; unverified date |
 | VIVICT | https://github.com/svt/vivict; 2026-11-02; MIT |
 | VIZARD_PAUSE | https://agent.vizard.ai/how-to/cut-the-pauses-and-stutters-out-of-a-raw-talking-head-video.html; 2026-10-10 |

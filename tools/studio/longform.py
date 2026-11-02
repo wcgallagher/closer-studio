@@ -266,13 +266,15 @@ def longform(video: Path, out: Path, an: dict, brand: dict, plat: dict, fmt: dic
     # captions: pops or burned
     band_top, band_bottom = platforms.caption_band(plat)
     cl = L.get("captions") or {}
+    if cl.get("style") in captions.STYLES:      # the layers file can pick the caption style (e.g. "premium")
+        caps = cl["style"]
     A = lambda x: lay.anchor(words, segs, x, speech_end, total)
     cap_kw = {"words_range": cl.get("words") or fmt.get("caption_words"),
               "plain": [(g["start"], g["end"]) for g in scenes if not g["alpha"]] if cl.get("plain_over_scenes") else None,
               "off": [(A(a), A(b)) for a, b in cl.get("off", [])]}
     cap_from = A(cl["from"]) if cl.get("from") is not None else 0.0
     ev, srt = captions.events(segs, words, brand, "clean", speech_end, 0.0, None)
-    if caps in ("impact", "clean", "serif", "boxed"):
+    if caps in captions.STYLES:
         ev, srt = captions.events(segs, words, brand, caps, speech_end, cap_from, None, **cap_kw)
         head = captions.header(W, H, brand, caps, band_bottom)
     else:
@@ -281,7 +283,7 @@ def longform(video: Path, out: Path, an: dict, brand: dict, plat: dict, fmt: dic
     # the placement engine sees the face, the captions on screen and everything placed so far
     from . import placement as plc
     psc = plc.Scene(W, H, plc.Mapper(an, segs, cam, W, H, 0.025, KY), *plc.face_track(an))
-    if caps in ("impact", "clean", "serif", "boxed"):
+    if caps in captions.STYLES:
         csz = int(H * captions.STYLES[caps]["size"] * (1.85 if W > H else 1.0))
         crect = (0.07 * W, band_bottom - 1.35 * csz, 0.93 * W, band_bottom + 0.12 * csz)
         offw = cap_kw.get("off") or []
