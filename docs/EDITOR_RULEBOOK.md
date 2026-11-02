@@ -323,7 +323,7 @@ Dropped from this copy for lack of a public source: punch-and-shake hit accents 
 - order: subtitle filter is last in the graph (sourced; VIDEOUSE)
 - check: Graph order plus sampled frames.
 
-**CP-07** (BLOCK). Owner copy lint for SMA work: on-screen text never contains the word 'annuity' and never contains an em dash.
+**CP-07** (BLOCK). Owner copy lint for SMA work: on-screen text never contains the word 'annuity' and never contains an em dash. Scope: client-facing pieces (consumers). Agent-facing pieces (the setmoreannuities.com VSL, agent recruiting and training) may name the product on screen; the em dash ban still holds (owner ruling, 2026-11-02).
 
 - hits: 0 (sourced; KIT_RULES)
 - check: Case-insensitive regex over ASS and scene text. A hit also flags the script line it came from.
@@ -893,6 +893,7 @@ Not yet run on a Windows machine.
 | Splice crossfade length | 10 ms (audiojs); 20-50 ms (AFP); 30 ms (video-use); 2 frames = 67 ms (1of10) | range 10-67 ms; the engine uses 10 ms equal-power | VO-09 |
 | Reel sentence gaps | 150-250 ms against 167-333 ms (5-10 frames) | 170-300 ms plus tagged beats of 350-500 ms | R_EDITORS; VIZARD_PAUSE |
 | Caption case | UPPER (Hormozi) against sentence case (Kapwing, Joyspace) | UPPER in reels only | TY-07 |
+| The product word on screen (CP-07 against CP-04) | never on screen; or captions must match the speech word for word | CP-07 covers client-facing pieces only; agent-facing pieces may show it, so captions keep the speech exact | owner ruling 2026-11-02 |
 | 9:16 bottom clearance | about 22% (organic Reels, platforms.py), 25% (Opus, Reap, TikTok), 35% (Meta ads) | platform presets; the universal default takes the strictest Instagram and TikTok edges (bottom 25%) | section 2 |
 | Caption chunk size | 1 to 6 words (kit grammar); 5-7 words (Opus); 42 chars x 2 lines (Netflix) | by caption mode per profile; VSL uses phrase mode | CP-01; DA-3 |
 | Graphic cadence | a visible change every 3 to 8 s in reels (kit grammar) against about 2 graphics per minute in a Gadzhi body | per profile; VSL 2-4 per minute | MO-07; DA-1 |
