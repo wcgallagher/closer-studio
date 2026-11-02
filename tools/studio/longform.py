@@ -192,7 +192,8 @@ def longform(video: Path, out: Path, an: dict, brand: dict, plat: dict, fmt: dic
     with ThreadPoolExecutor(max_workers=4) as ex:
         list(ex.map(_run, jobs))
     if end_card:
-        cards.end_card(brand, W, H, end_hold, out / "segs" / "zzz_end.mp4", cta, preset, crf)
+        own_end = any(str(sc.get("to", "")).upper() == "END" for sc in (L.get("scenes") or [])) if L else False
+        cards.end_card(brand, W, H, end_hold, out / "segs" / "zzz_end.mp4", cta, preset, crf, plain=own_end)
         _run(["ffmpeg", "-v", "error", "-y", "-f", "lavfi", "-i", "anullsrc=r=48000:cl=stereo", "-t", f"{end_hold:.3f}", "-c:a", "pcm_s16le", out / "segs" / "r999_end.wav"])
     concat(out)
     if L and L.get("finish"):            # the colourist's pass on the cut picture, before any graphics
@@ -269,7 +270,8 @@ def longform(video: Path, out: Path, an: dict, brand: dict, plat: dict, fmt: dic
     if cl.get("style") in captions.STYLES:      # the layers file can pick the caption style (e.g. "premium")
         caps = cl["style"]
     A = lambda x: lay.anchor(words, segs, x, speech_end, total)
-    cap_kw = {"words_range": cl.get("words") or fmt.get("caption_words"),
+    cap_kw = {"cuts": sorted({g["start"] for g in scenes if not g["alpha"]} | {g["end"] for g in scenes if not g["alpha"]} | {speech_end}),
+              "words_range": cl.get("words") or fmt.get("caption_words"),
               "plain": [(g["start"], g["end"]) for g in scenes if not g["alpha"]] if cl.get("plain_over_scenes") else None,
               "off": [(A(a), A(b)) for a, b in cl.get("off", [])]}
     cap_from = A(cl["from"]) if cl.get("from") is not None else 0.0

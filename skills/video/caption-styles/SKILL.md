@@ -13,7 +13,7 @@ Five looks, one rule: one emphasis mechanism per video. Pick the look, never mix
 | `clean` | Montserrat ExtraBold, mixed case, soft shadow, no box, 2 to 3 words | the operative word in the heavier weight, no colour | the 2024+ Hormozi look, advice monologues, older audiences |
 | `serif` | Fraunces Display, sentence case, one line, fades | none | cinematic cuts, Set More Annuities, lower thirds in a VSL |
 | `boxed` | Montserrat Black on a dark plate, caps | spoken word in the accent | TikTok-native feel, busy backgrounds |
-| `premium` | Inter bold in the speaker's own case, a soft shadow and no stroke, phrases of 3 to 7 words, a gentle fade per line | gold on at most one meaning word per line (a figure, or a word in `KEYWORDS`), at most 15 % of all words, no per-word flicker | sales VSLs and brand films next to a serif card system |
+| `premium` | Inter bold in the speaker's own case, a firm 3 px dark outline with a light blur, phrases of 3 to 7 words, a gentle fade per line | gold on at most one meaning word per line (a figure, or a word in `KEYWORDS`), at most 15 % of all words, no per-word flicker | sales VSLs and brand films next to a serif card system |
 
 Set it per run with `--style`, per brand in `brand/<id>.json` under `style.captions`, or per job in the layers file: `"captions": {"style": "premium", "words": [3, 7]}`. In a blind panel on 2026-11-02 both cinematic reviewers read `impact` under an editorial card system as a stock caption template, which is why `premium` exists.
 
@@ -31,8 +31,10 @@ a time. `--hook-serif` sets it in Fraunces for the Set More Annuities look.
 
 ## Sizes
 
-Caption size is a fraction of frame height (impact 4.8 %, clean 4.4 %, serif 4.0 %, boxed 4.4 %, premium 3.6 %), so the
-same style reads the same on 9:16, 4:5 and 16:9 (16:9 multiplies it by 1.85: premium is about 72 px at 1080). To change it, edit `STYLES` in `tools/studio/captions.py` and say so in the
+Caption size is a fraction of frame height (impact 4.8 %, clean 4.4 %, serif 4.0 %, boxed 4.4 %, premium 4.6 %), so the
+same style reads the same on 9:16, 4:5 and 16:9 (16:9 multiplies it by 1.85: premium is about 92 px at 1080). Premium
+went from 3.6 % with a soft glow to 4.6 % with an outline after a second blind panel measured its captions near 1.4:1
+against bright sky. A line never straddles a full-screen card's cut: it starts on the cut or ends 2 frames before it. To change it, edit `STYLES` in `tools/studio/captions.py` and say so in the
 reply; do not pass ad-hoc sizes.
 
 ## Text

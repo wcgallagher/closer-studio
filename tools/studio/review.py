@@ -188,6 +188,19 @@ def _stem_checks(job: Path, r: dict, add):
             b_med, a_med = float(np.median(body)), float(np.median(ask))
             add("the bed holds under the ask", a_med >= b_med - 8.0,
                 f"music {a_med:.1f} LUFS under the last 3 s of speech, {b_med:.1f} under the body (gate: within 8 dB)")
+    mx = job / "mix.wav"
+    if mx.exists():           # rulebook VO-13 (BLOCK): no digital silence after the first sound, end card included
+        y = sound.read_audio(mx)
+        nz = np.flatnonzero(np.abs(y) > 1e-6)
+        if len(nz):
+            seg = np.abs(y[nz[0]:]) <= 3e-5                  # under -90 dBFS
+            run, longest = 0, 0
+            for v in seg[::48]:                                # 1 ms steps
+                run = run + 1 if v else 0
+                longest = max(longest, run)
+            tail = 20 * np.log10(np.sqrt(np.mean(y[-sound.SR:] ** 2)) + 1e-12)
+            add("no digital silence", longest < 50 and tail > -80,
+                f"longest run under -90 dBFS {longest} ms (gate 50 ms); last second {tail:.1f} dBFS RMS (gate -80)")
     placed = (r.get("sfx") or {}).get("placed", [])
     if sw.exists() and placed:
         t, m = sound.loudness_curve(sound.read_audio(sw))

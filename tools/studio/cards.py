@@ -54,7 +54,10 @@ def pill_events(items: list[tuple[float, float, str]]) -> list[str]:
     return [f"Dialogue: 4,{ts(a)},{ts(b)},Pill,,0,0,0,,{{\\fad(80,80)}}  {label.upper()}  " for a, b, label in items]
 
 
-def end_card(brand: dict, W: int, H: int, dur: float, out: Path, cta: str | None = None, preset="medium", crf="18"):
+def end_card(brand: dict, W: int, H: int, dur: float, out: Path, cta: str | None = None, preset="medium", crf="18",
+             plain: bool = False):
+    """The kit's own end card. plain=True renders only the brand background: a layers scene draws the real card over it,
+    and the kit's text must never show through (v10 flashed it for 2-3 frames before the designed card)."""
     from PIL import ImageFont
     f1 = FONTS / brand["fonts"]["caption_file"]; f2 = FONTS / brand["fonts"]["caption_2_file"]
     c = brand["colors"]; cta = cta or brand["cta"]["line"]
@@ -62,9 +65,11 @@ def end_card(brand: dict, W: int, H: int, dur: float, out: Path, cta: str | None
     while big > 24 and ImageFont.truetype(str(f1), big).getlength(cta.upper()) > W * 0.86:
         big -= 2
     lines = [f"drawtext=fontfile={f1}:text='{esc_drawtext(cta.upper())}':fontsize={big}:fontcolor={c['accent']}:x=(w-tw)/2:y=h*0.44"]
-    if brand["cta"].get("sub"):
+    if plain:
+        lines = ["null"]
+    if brand["cta"].get("sub") and not plain:
         lines.append(f"drawtext=fontfile={f2}:text='{esc_drawtext(brand['cta']['sub'])}':fontsize={small}:fontcolor={c['text']}:x=(w-tw)/2:y=h*0.52")
-    if brand.get("handle"):
+    if brand.get("handle") and not plain:
         lines.append(f"drawtext=fontfile={f2}:text='{esc_drawtext(brand['handle'])}':fontsize={int(small * 0.9)}:fontcolor={c['text']}@0.7:x=(w-tw)/2:y=h*0.57")
     sh(["ffmpeg", "-v", "error", "-y", "-f", "lavfi", "-i", f"color=c={c['bg']}:s={W}x{H}:d={dur}:r=30",
         "-vf", ",".join(lines) + ",vignette=a=0.4,format=yuv420p", "-c:v", "libx264", "-preset", preset, "-crf", crf, str(out)])

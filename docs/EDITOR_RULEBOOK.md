@@ -1012,8 +1012,10 @@ it never takes the claim back.
 judge every card at 360 px wide. Hold the 100 % framing while a card sits beside the head.
 - source: PANEL_V9 (6 reviews measured body type near 20 px at 1920 wide, about 6-8 px on a phone); house.
 
-**BP-07** (FIX). The bed never fades under the ask, and effects are one-shots that stop near their hit (AUDIO_SPEC,
-"The ending" and the one-shot rule; review gates "the bed holds under the ask" and "no sound effect outstays its frame").
+**BP-07** (FIX). The bed never fades under the ask and never leaves the end card silent: it holds under the end card and
+fades on the last frame, floored above digital zero. Effects are one-shots that stop near their hit (AUDIO_SPEC; review
+gates "the bed holds under the ask", "no digital silence" and "no sound effect outstays its frame"). A second panel on
+the same night rejected a button ending that left 2.8 s of near silence under the end card (11 of 12 reviews).
 - source: PANEL_V9 (mixer, both orders); kit_sound measurements in `skills/video/sound-director/AUDIT.md`.
 
 **BP-08** (FIX, process). A reviewer's measurement is a claim: reproduce it on the source before acting. A reviewer's

@@ -52,7 +52,7 @@ SOUND_RULES = {
         "gap_min_s": 1.2, "gap_lift_db": 6.0, "gap_lift_hook_db": 8.0, "hook_s": 8.0,
         "duck_lead_s": 0.2, "duck_ramp_s": 0.15, "lift_delay_s": 0.25, "lift_ramp_s": 0.6,
         "pocket_hz": [300, 4000], "pocket_static_db": -2.0,
-        "outro_lift_db": 6.0, "outro_ramp_s": 2.0, "fade_out_s": 1.2,
+        "outro_lift_db": 6.0, "outro_ramp_s": 2.0, "fade_out_s": 1.5,
         "drop_db": -40.0, "drop_lead_s": 0.4, "drop_ramp_s": 0.06, "return_ramp_s": 0.02, "return_downbeat_within_s": 1.0, "drops_max": 3,
         "cta_lift_db": 2.0,
         "splice_xfade_s": 0.04,
@@ -60,11 +60,12 @@ SOUND_RULES = {
         # bed calibrated to the voice by loudness sits inaudible on a phone (v8 and v9 sound reviews, 2026-11-02)
         "bed_low_shelf_db": -3.0, "bed_low_shelf_hz": 120.0,
         # the ending: a track whose last 4 bars fade more than `fade_drop_db` under its median bar never fades under the
-        # ask. It stays at full level under the last word, then stops on the next downbeat and dies away over
-        # `button_decay_s` (60 dB): a button, the way a mixer ends a promo. "own" keeps the track's ending; "auto"
-        # buttons only fading tracks (v9 review 2026-11-02: Lord Knows' own fade took the bed from -14 to -55 LUFS
-        # under the CTA and left the end card near silent)
-        "ending": "auto", "fade_drop_db": 6.0, "fade_body_tol_db": 4.0, "button_decay_s": 2.4,
+        # ask (v9: Lord Knows' own fade took the bed from -14 to -55 LUFS under the CTA). "auto"/"hold" keeps it at full
+        # level under the end card to the last frame, where the final fade (`fade_out_s`, floored at `fade_floor_db`)
+        # takes it down: the second panel (2026-11-02, 11 of 12 reviews) rejected a silent end card, and a run of
+        # digital zeros is a BLOCK (rulebook VO-13). "button" stops on the downbeat after the last word and dies away
+        # over `button_decay_s`; "own" keeps the track's ending
+        "ending": "auto", "fade_drop_db": 6.0, "fade_body_tol_db": 4.0, "button_decay_s": 2.4, "fade_floor_db": -48.0,
         "pick": {"tempo": [70, 115], "voice_band_max": 0.42, "prefer_minor": True, "want_build": True},
     },
     "sfx": {
@@ -612,9 +613,10 @@ def fade_start(bars, bar_db, rules: dict | None = None) -> float | None:
     return float(bars[full[-1] + 1]) if len(full) else None
 
 
-def _button(full: np.ndarray, bars, bar_db, sb: float, need: float, end_at: float, f0: float, R: dict, splice) -> tuple[np.ndarray, str]:
-    """Full-level music from `sb`, extended inside [sb, f0] by repeating matched bars when it is short, stopped on the
-    first downbeat after the last word and decayed 60 dB over `button_decay_s`."""
+def _button(full: np.ndarray, bars, bar_db, sb: float, need: float, end_at: float | None, f0: float, R: dict, splice) -> tuple[np.ndarray, str]:
+    """Full-level music from `sb`, extended inside [sb, f0] by repeating matched bars when it is short. With `end_at`
+    it stops on the first downbeat after the last word and decays 60 dB over `button_decay_s` (a button); with None it
+    holds to the video's end, where the automation's final fade takes it down (the default since the second panel)."""
     S = lambda t: int(round(t * SR))
     bars, bar_db = np.asarray(bars, float), np.asarray(bar_db, float)
     inside = np.where((bars >= sb - 1e-3) & (bars <= f0 + 1e-3))[0]
@@ -624,8 +626,9 @@ def _button(full: np.ndarray, bars, bar_db, sb: float, need: float, end_at: floa
     decay = float(R["button_decay_s"])
     y, how = full[S(sb):S(f0)], ""
     guard = 0
-    while len(y) / SR < end_at + bl + decay and guard < 8 and len(rdb) > 8:
-        short = end_at + bl + decay - len(y) / SR
+    want = (end_at + bl + decay) if end_at is not None else need
+    while len(y) / SR < want and guard < 8 and len(rdb) > 8:
+        short = want - len(y) / SR
         k = min(max(4, int(math.ceil(short / bl / 4) * 4)), max(4, len(rdb) // 2 // 4 * 4))   # whole 4-bar phrases
         lo, hi = len(rdb) // 5, len(rdb) - k - 1
         if hi <= lo:
@@ -634,9 +637,11 @@ def _button(full: np.ndarray, bars, bar_db, sb: float, need: float, end_at: floa
         y = splice(y[:S(rel[i + k])], y[S(rel[i]):])
         how += f"; repeated bars {i}-{i + k} ({rel[i + k] - rel[i]:.1f} s)"
         guard += 1
-    cut = math.ceil((end_at - 0.25) / bl) * bl            # the first downbeat at (or a hair before) the end of the last word
     n = S(need)
     y = y[:n] if len(y) >= n else np.pad(y, ((0, n - len(y)), (0, 0)))
+    if end_at is None:
+        return y, how + "; holds at full level under the end card (its own ending fades), the final fade ends on the last frame"
+    cut = math.ceil((end_at - 0.25) / bl) * bl            # the first downbeat at (or a hair before) the end of the last word
     t = np.arange(len(y)) / SR
     env = np.where(t < cut, 1.0, undb(-60.0 * np.clip((t - cut) / decay, 0, 1)))
     y = y * env[:, None]
@@ -666,8 +671,11 @@ def fit_music(path: Path, prof: dict, length: float, land: float | None = None, 
         return np.concatenate([a_seg[:-x], a_seg[-x:] * np.sqrt(1 - w) + b_seg[:x] * np.sqrt(w), b_seg[x:]])
 
     S = lambda t: int(round(t * SR))
-    f0 = fade_start(bars, bar_db, R) if R.get("ending", "auto") == "auto" else (dur if R.get("ending") == "button" else None)
+    mode_end = R.get("ending", "auto")
+    f0 = fade_start(bars, bar_db, R) if mode_end in ("auto", "hold") else (fade_start(bars, bar_db, R) or dur if mode_end == "button" else None)
     if f0 is not None and end_at is not None and need - end_at >= 1.0:
+        if mode_end != "button":      # hold under the end card; never a silent end card (second panel: 11 reviews)
+            end_at = None
         sb = float(bars[np.argmin(abs(bars - start_at))]) if start_at is not None else 0.0
         if start_at is None and land is not None and len(secs):      # a section change near `land`, as below
             best_cost = 1e9
@@ -772,7 +780,8 @@ def music_automation(n: int, words: list[dict], total: float, speech_end: float,
     out_mask = tl > speech_end + 0.2
     g[out_mask] = np.minimum(R["outro_lift_db"], (tl[out_mask] - speech_end - 0.2) / R["outro_ramp_s"] * R["outro_lift_db"])
     fo = tl > total - R["fade_out_s"]
-    g[fo] += 40 * np.log10(np.clip((total - tl[fo]) / R["fade_out_s"], 1e-3, 1))
+    floor = 10 ** (float(R.get("fade_floor_db", -48.0)) / 40)       # the last frame still carries the bed, never digital zero
+    g[fo] += 40 * np.log10(np.clip((total - tl[fo]) / R["fade_out_s"], floor, 1))
     bars = np.array(bars) if bars is not None and len(bars) else None
     used = []
     for a, b in list(drops)[:R["drops_max"]]:

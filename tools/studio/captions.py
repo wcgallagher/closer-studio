@@ -24,7 +24,9 @@ STYLES = {
     # at most one meaning word per line and 15 % of all words, no per-word flicker, phrases of 3 to 7 words. From the
     # v9 blind A/B (2026-11-02): both cinematic reviews read the caps-and-stroke karaoke as "the Submagic template"
     # under an editorial card system, and the rulebook keeps capitals for reels (TY-07) and two families (TY-01)
-    "premium": {"font": "ui", "size": 0.036, "case": "mixed", "words": (3, 7), "mechanism": "keyword", "outline": 3, "shadow": 0,
+    # second panel (2026-11-02): at 3.6 % with a soft glow the captions measured about 1.4:1 against bright sky and lost
+    # the muted-phone viewer, so 4.6 % (about 92 px at 1080 on 16:9) with a firm 3 px dark outline and a light blur
+    "premium": {"font": "ui", "size": 0.046, "case": "mixed", "words": (3, 7), "mechanism": "keyword", "outline": 3, "shadow": 2,
                 "pop": False, "box": False, "bold": True, "soft": True},
 }
 
@@ -41,7 +43,8 @@ BIND_NEXT = {"a", "an", "the", "to", "of", "in", "on", "at", "for", "with", "fro
              "always", "never", "also", "actually", "really", "even", "still", "extremely", "live", "good", "existing",
              "old", "new", "real", "big", "whole", "next", "last", "first", "simple"}
 # pairs read as one unit: never split between them
-COLLOC = {("life", "insurance"), ("mortgage", "protection"), ("right", "now"), ("50-50", "split"), ("one", "thing"), ("p.m.", "we"), ("book", "of"), ("of", "business"),
+COLLOC = {("life", "insurance"), ("mortgage", "protection"), ("right", "now"), ("worry", "about"), ("ask", "of"),
+          ("training", "calls"), ("can", "now"), ("now", "capture"), ("50-50", "split"), ("one", "thing"), ("p.m.", "we"), ("book", "of"), ("of", "business"),
           ("two", "or"), ("or", "three"), ("a", "lot"), ("each", "other"), ("sales", "presentations"), ("time", "commitment")}
 # meaning words that may take the gold in the keyword mechanism, besides any number or money figure
 KEYWORDS = {"free", "money", "bag", "split", "50-50", "wednesday", "regret", "sell", "set", "selling", "setting", "close",
@@ -180,7 +183,7 @@ def header(W, H, brand, style_id, band_bottom, hook_size=None, placement="bottom
         "[Script Info]", "ScriptType: v4.00+", f"PlayResX: {W}", f"PlayResY: {H}", "WrapStyle: 2", "ScaledBorderAndShadow: yes", "YCbCr Matrix: TV.709", "",
         "[V4+ Styles]",
         "Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding",
-        f"Style: Cap,{cap_font},{size},{txt},{txt},{'&HA0000000' if st.get('soft') else '&H00000000'},{back},{-1 if st.get('bold') else 0},0,0,0,100,100,0,0,{border},{outline},{sh},{align},70,70,{mv},1",
+        f"Style: Cap,{cap_font},{size},{txt},{txt},{'&H30000000' if st.get('soft') else '&H00000000'},{back},{-1 if st.get('bold') else 0},0,0,0,100,100,0,0,{border},{outline},{sh},{align},70,70,{mv},1",
         f"Style: CapB,{fam['caption']},{size},{txt},{txt},&H00000000,{back},0,0,0,0,100,100,0,0,{border},{outline},{sh},{align},70,70,{mv},1",
         f"Style: Hook,{fam['caption']},{hook_size or int(H * 0.044)},{acc},{acc},&H00000000,&H78000000,0,0,0,0,100,100,0,0,1,5,2,5,80,80,0,1",
         f"Style: HookSerif,{fam['display']},{hook_size or int(H * 0.052)},{txt},{txt},&H00000000,&H90000000,0,0,0,0,100,100,0,0,1,2,4,5,80,80,0,1",
@@ -191,7 +194,19 @@ def header(W, H, brand, style_id, band_bottom, hook_size=None, placement="bottom
     return "\n".join(lines) + "\n"
 
 
-def events(segs, words, brand, style_id, speech_end, hook_end=0.0, max_words=None, words_range=None, plain=None, off=None):
+def _snap(a, b, cuts):
+    """No line straddles a hard cut (a full-screen card in or out, the end card): a line that would start just before
+    a cut starts on it; a line a cut interrupts ends 2 frames before it (rulebook CP-02, AS-29)."""
+    for c in cuts or []:
+        if c - 0.2 <= a < c:
+            a = c
+        elif a < c < b:
+            b = c - 2 / FPS
+    return a, b
+
+
+def events(segs, words, brand, style_id, speech_end, hook_end=0.0, max_words=None, words_range=None, plain=None, off=None,
+           cuts=None):
     """plain: output windows where the line shows without the spoken-word highlight (over a card); off: windows with no
     burned caption at all (the SRT keeps every line)."""
     st = STYLES[style_id]
@@ -235,9 +250,12 @@ def events(segs, words, brand, style_id, speech_end, hook_end=0.0, max_words=Non
                     continue
                 if not ev and a < 0.8 and hook_end <= 0:      # the first line is on frame 0: a muted autoplay opens on words
                     a = 0.0
+                a, b = _snap(a, b, cuts)
+                if b - a < 0.05:
+                    continue
                 k = None if inside(a0, plain) else kw.get(pos[id(c[0])])
                 parts = [(f"{{\\1c{acc}}}{lab}{{\\1c{txt}}}" if (k is not None and m == k) else lab) for m, lab in enumerate(labels)]
-                ev.append(f"Dialogue: 2,{ts(a)},{ts(b)},Cap,,0,0,0,,{{\\fad(80,60)\\blur4}}{' '.join(parts)}")
+                ev.append(f"Dialogue: 2,{ts(a)},{ts(b)},Cap,,0,0,0,,{{\\fad(80,60)\\blur1.5}}{' '.join(parts)}")
             continue
         for ci, c in enumerate(chunks):
             labels = [_label(w, st["case"]) for w in c]
