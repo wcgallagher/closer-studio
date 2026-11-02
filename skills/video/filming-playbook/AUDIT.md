@@ -4,8 +4,8 @@ Every figure, path, command and tool in SKILL.md, with its source. Checked 2026-
 
 Sources used below:
 
-- **R**: the filming research, `/tmp/claude-0/-home-user/6b640de9-51c7-5bc9-9c3e-23ab49bd83f8/tasks/w6rxupr9a.output`, angle 5 "How to film for the edit" (items 0 to 26 and its rules), angle 1 rules FILM-1 to FILM-4 and HARD-4, and the plan's rank 4 "ingest-gate" and rank 7 "filming-playbook" entries.
-- **A**: the audio research, `/tmp/claude-0/-home-user/6b640de9-51c7-5bc9-9c3e-23ab49bd83f8/scratchpad/audio_spec_v1.json`.
+- **R**: the filming research, `<research run w6rxupr9a (session output, not in this repo)>`, angle 5 "How to film for the edit" (items 0 to 26 and its rules), angle 1 rules FILM-1 to FILM-4 and HARD-4, and the plan's rank 4 "ingest-gate" and rank 7 "filming-playbook" entries.
+- **A**: the audio research, `<session scratchpad>/audio_spec_v1.json`.
 - R and A are session files, not shipped in the kit, so a stranger cannot open them. The kit's own copy of A is `docs/AUDIO_SPEC.md` (line 26 "sounds too enhanced", lines 43 and 44 the high-pass and wind-burst rules, line 66 "under 0.2 of the pause energy sits below 150 Hz", line 75 "pause SNR at least 30 dB ... (house)"). R has no copy in the kit; `docs/EDITOR_RULEBOOK.md` FR-01 (180-degree shutter) and FR-02 (a 9:16 crop from 16:9 needs a 4K source) repeat two of its points.
 - **Cold check**: a second, zero-context pass on 2026-11-02 read SKILL.md against `tools/studio/*.py` and re-ran every code block literally on the takes from a scratch copy of the kit layout (`tools` linked to the kit, the takes linked into `inbox/`, so the kit's own `inbox/` and `output/` stayed empty). Rows marked "cold check" come from that pass.
 - **Takes**: the three raw takes of the first shoot the kit cut (the Set More Annuities website VSL: take1 92.5 s, take2 100.1 s, take3 69.5 s, all 3840x2160 at 30/1 fps, audio 44100 Hz), measured on 2026-11-02 with the skill's own commands. Test outputs went to a scratch folder, not to the kit.

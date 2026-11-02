@@ -1,10 +1,10 @@
 # AUDIT: placement
 
 Research file for every row marked "research": the placement and pacing sweep of 2026-11-02, saved at
-/tmp/claude-0/-home-user/6b640de9-51c7-5bc9-9c3e-23ab49bd83f8/tasks/w6rxupr9a.output (JSON: `result.plan` section
+<research run w6rxupr9a (session output, not in this repo)> (JSON: `result.plan` section
 `2_placement_engine`, and `result.sweep[0]` (placement) and `result.sweep[3]` (what the viewer sees) with their items and
 rules). The public URL of each source is given in the row. Line numbers were re-checked against the working tree on 2026-11-02 04:19 UTC, after the `home` term (`placement.py`), the `glass` chip and the hand-drop change (`layers.py`) landed uncommitted; other agents edit `longform.py`, `layers.py` and `cli.py` the same night, so search for the quoted code if a line has moved. Synthetic runs: the first two scripts were written in this session's scratchpad on 2026-11-02 and call `place` and `hand_events` directly with the kit's venv Python; the cold check of 04:19 UTC added three more in
-/tmp/claude-0/-home-user/6b640de9-51c7-5bc9-9c3e-23ab49bd83f8/scratchpad/placement_check/ (`home_run.py`, `reel_run.py`, `hand_run.py`), run the same way.
+<session scratchpad>/placement_check/ (`home_run.py`, `reel_run.py`, `hand_run.py`), run the same way.
 
 | Claim | Status | Source |
 |---|---|---|

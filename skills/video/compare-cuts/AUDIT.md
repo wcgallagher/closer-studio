@@ -1,6 +1,6 @@
 # AUDIT: compare-cuts
 
-Research file cited below as RES: `/tmp/claude-0/-home-user/6b640de9-51c7-5bc9-9c3e-23ab49bd83f8/tasks/wabmd4de8.output`, angle 6 of the sweep (tools to compare two edits) with its items and rules, and the `comparison_tool` section of the rulebook in the same file. Line numbers for kit files are as of 2026-11-02. Test runs used a 94.6 s 1080p cut and a 12 s 1080p cut in the session scratchpad.
+Research file cited below as RES: `<research run wabmd4de8 (session output, not in this repo)>`, angle 6 of the sweep (tools to compare two edits) with its items and rules, and the `comparison_tool` section of the rulebook in the same file. Line numbers for kit files are as of 2026-11-02. Test runs used a 94.6 s 1080p cut and a 12 s 1080p cut in the session scratchpad.
 
 | Claim | Status | Source |
 |---|---|---|

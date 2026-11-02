@@ -1,9 +1,9 @@
 # AUDIT: sound-director
 
 Written 2026-11-02; cold check against the working tree the same night (line numbers below are from that check). Code is the source of truth (`tools/studio/sound.py` `SOUND_RULES`, `SECTION_PRESETS`, `PRIORITY`). Research sources:
-R1 = `/tmp/claude-0/-home-user/6b640de9-51c7-5bc9-9c3e-23ab49bd83f8/scratchpad/audio_spec_v1.json` (closer-studio audio spec v1, with its own `sources` table);
-R2 = `/tmp/claude-0/-home-user/6b640de9-51c7-5bc9-9c3e-23ab49bd83f8/tasks/wc5x1yypj.output` (raw research, five angles, with measurements of real creator mixes);
-RUNDIR = `/tmp/claude-0/-home-user/6b640de9-51c7-5bc9-9c3e-23ab49bd83f8/scratchpad/vsl_kit/snd/v2_vertigo/` (the sound director run on the SMA VSL v8 cut, 2026-11-02, made by `vsl_kit/sound_test.py` calling `sound.direct`).
+R1 = `<session scratchpad>/audio_spec_v1.json` (closer-studio audio spec v1, with its own `sources` table);
+R2 = `<research run wc5x1yypj (session output, not in this repo)>` (raw research, five angles, with measurements of real creator mixes);
+RUNDIR = `<session scratchpad>/vsl_kit/snd/v2_vertigo/` (the sound director run on the SMA VSL v8 cut, 2026-11-02, made by `vsl_kit/sound_test.py` calling `sound.direct`).
 
 ## Setup and wiring
 
@@ -112,7 +112,7 @@ RUNDIR = `/tmp/claude-0/-home-user/6b640de9-51c7-5bc9-9c3e-23ab49bd83f8/scratchp
 | Claim | Status | Source |
 |---|---|---|
 | Recorded sounds read as real; synthesized ones are the fallback | INFERRED | R2 Nelk angle (meme SFX are recorded library sounds; "Sine sweeps and filtered noise do not match them (inference)"); R1 `3_sfx_grammar.global_rules` rule 1 |
-| `<role>__<anything>.<ext>`; the role in lower case; the eight roles; the seven extensions; files without `__` skipped | RUN / VERIFIED | `Library` (lines 847-892): extension test is `f.suffix.lower()`, the role is `f.stem.split("__")[0]` with no case folding, and `pick` looks roles up by the grammar's lower-case names; test 2026-11-02 in `/tmp/claude-0/-home-user/6b640de9-51c7-5bc9-9c3e-23ab49bd83f8/scratchpad/sfxlib_test`: `whoosh__soft.wav` loaded, `notes.wav` ignored |
+| `<role>__<anything>.<ext>`; the role in lower case; the eight roles; the seven extensions; files without `__` skipped | RUN / VERIFIED | `Library` (lines 847-892): extension test is `f.suffix.lower()`, the role is `f.stem.split("__")[0]` with no case folding, and `pick` looks roles up by the grammar's lower-case names; test 2026-11-02 in `<session scratchpad>/sfxlib_test`: `whoosh__soft.wav` loaded, `notes.wav` ignored |
 | index.json: onset within 30 dB of the peak, peak, end 20 dB under for good, loudest 400 ms, length; cached by file name | RUN | same test: index.json held `onset 0.078`, `peak 0.369`, `end 0.491`, `max_m`, `dur 0.6`; code keys on `f.name` and re-measures only names not in the index |
 | Files rotate per role; one file repeats every time | RUN | `Library.pick` (round robin); RUNDIR sound.json placed `reverse__2900.mp3` three times with a one-file reverse role |
 | A missing role falls back to the synthesized sound, logged as `synth` | RUN | same test: `pick('impact')` returned source `synth`; `sfx_stem` logs `file: src` |
