@@ -44,7 +44,7 @@ BIND_NEXT = {"a", "an", "the", "to", "of", "in", "on", "at", "for", "with", "fro
              "old", "new", "real", "big", "whole", "next", "last", "first", "simple"}
 # pairs read as one unit: never split between them
 COLLOC = {("life", "insurance"), ("mortgage", "protection"), ("right", "now"), ("worry", "about"), ("ask", "of"),
-          ("training", "calls"), ("can", "now"), ("now", "capture"), ("50-50", "split"), ("one", "thing"), ("p.m.", "we"), ("book", "of"), ("of", "business"),
+          ("training", "calls"), ("can", "now"), ("now", "capture"), ("protection", "agents"), ("insurance", "agents"), ("50-50", "split"), ("one", "thing"), ("p.m.", "we"), ("book", "of"), ("of", "business"),
           ("two", "or"), ("or", "three"), ("a", "lot"), ("each", "other"), ("sales", "presentations"), ("time", "commitment")}
 # meaning words that may take the gold in the keyword mechanism, besides any number or money figure
 KEYWORDS = {"free", "money", "bag", "split", "50-50", "wednesday", "regret", "sell", "set", "selling", "setting", "close",
@@ -52,7 +52,7 @@ KEYWORDS = {"free", "money", "bag", "split", "50-50", "wednesday", "regret", "se
 
 
 # display spellings: the same word on screen in captions and cards (rulebook CP-04); formatting, never rewording
-DISPLAY = {"401k": "401(k)", "401ks": "401(k)s", "403b": "403(b)", "457b": "457(b)"}
+DISPLAY = {"401k": "401(k)", "401ks": "401(k)s", "403b": "403(b)", "457b": "457(b)", "50-50": "50/50"}
 
 
 def chunk(ws, lo=2, hi=4, max_chars=None):
@@ -102,6 +102,8 @@ def chunk(ws, lo=2, hi=4, max_chars=None):
                 cost = best[j] + 0.5 * (hi - size) + (3.0 if size == 1 else 2.5 if size < lo else 0.0)   # no orphan lines
                 if max_chars and len(" ".join(w["w"] for w in c[j:i])) > max_chars:
                     cost += 8.0                                   # one line of at most max_chars (rulebook CP-01: 42)
+                if c[i - 1]["e"] - c[j]["s"] < 0.6:
+                    cost += 3.0                                   # a line read in under 0.6 s is a flash (CP-02)
                 if j > 0:
                     prev, nxt = norm(c[j - 1]["w"]), norm(c[j]["w"])
                     if prev in BIND_NEXT or prev in FUNC: cost += 5       # a line never ends on a word that needs the next
@@ -157,7 +159,10 @@ class _KwMap(dict):
 
 
 def _label(w, case):
-    t = w["w"].strip(",.?!;:")
+    raw = w["w"]
+    t = raw.strip(",.?!;:")
+    if "." in t and raw.rstrip(",?!;:").endswith("."):      # an abbreviation keeps its last period ("p.m.")
+        t = raw.rstrip(",?!;:")
     t = DISPLAY.get(t.lower(), t)
     if case == "upper":
         return t.upper()
