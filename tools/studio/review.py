@@ -202,6 +202,12 @@ def _stem_checks(job: Path, r: dict, add):
 
 def extra_checks(job: Path, add):
     """Checks on what the placement engine, the sound director and the finish pass wrote (when they ran)."""
+    jj = job / "job.json"
+    if jj.exists():
+        sm = json.loads(jj.read_text()).get("summary", {})
+        if sm.get("offer_s") is not None:
+            lim = 15.0 if "vsl" in str(sm.get("format", "")) else 30.0
+            add("the offer lands early", sm["offer_s"] <= lim, f"offer starts at {sm['offer_s']} s (gate {lim:.0f} s; rulebook BP-01)")
     pj = job / "placement.json"
     if pj.exists():
         placed = json.loads(pj.read_text()).get("placed", [])

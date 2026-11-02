@@ -176,7 +176,11 @@ def scene_graph(G: list[dict], mg: Path, W: int, H: int, first_input: int, base:
             chain.append(f"{cur}split=2[fq{k}a][fq{k}b]")
             chain.append(f"[fq{k}b]trim=start={max(0.0, a0):.3f}:end={a0 + d:.3f},gblur=sigma=28,eq=brightness=-0.24:saturation=0.25,"
                          f"colorchannelmixer=rr=.62:gg=.58:bb=.54,format=rgba[fz{k}]")
-            chain.append(f"[{mi}:v]scale={W}:{H},format=rgba,alphaextract,setpts=PTS-STARTPTS+{a0:.3f}/TB[fm{k}]")
+            # the matte fades exactly as its card does (below), so glass never outlives the card on top of it: v9's
+            # colour clip faded at its cut while the matte stayed up, leaving an empty frosted slab for 0.25 s
+            m_in = f"fade=t=in:st={LEAD - 0.04:.3f}:d=0.04" if g.get("hard_in") else f"fade=t=in:st=0:d={LEAD - 0.03:.2f}"
+            m_out = f"fade=t=out:st={d - LEAD:.3f}:d={0.034 if g.get('hard_out') else LEAD:.3f}"
+            chain.append(f"[{mi}:v]scale={W}:{H},format=rgba,alphaextract,{m_in},{m_out},setpts=PTS-STARTPTS+{a0:.3f}/TB[fm{k}]")
             chain.append(f"[fz{k}][fm{k}]alphamerge[fza{k}]")
             chain.append(f"[fq{k}a][fza{k}]overlay=eof_action=pass:enable='between(t\\,{a0:.3f}\\,{a0 + d:.3f})'[fqo{k}]")
             cur = f"[fqo{k}]"

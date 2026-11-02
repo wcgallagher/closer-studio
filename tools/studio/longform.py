@@ -441,6 +441,8 @@ def longform(video: Path, out: Path, an: dict, brand: dict, plat: dict, fmt: dic
                "length_warning": None, "cover": cov, "source": f"{video.name} {start:.1f}-{an['end']:.1f} s"}
     from . import formats as fm
     summary["length_warning"] = fm.check_length(fmt, total)
+    if L and L.get("offer"):          # the word the offer starts on (rulebook BP-01: a VSL's offer lands by 15 s)
+        summary["offer_s"] = round(lay.anchor(words, segs, L["offer"], speech_end, total), 2)
     json.dump({"summary": summary, "segs": segs}, open(out / "job.json", "w"), indent=1)
     (out / "beats.txt").write_text(cutmod.beat_map(segs, words) + "\n")
     log(f"done: {final} ({total:.0f} s, {len(cutaways)} cutaways, {len(pop_list)} pops, {fin['i']:.1f} LUFS)")
