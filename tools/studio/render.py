@@ -97,7 +97,7 @@ def static_crop(sw: int, shh: int, W: int, H: int, fx: float, fy: float) -> str:
 def piece_jobs(video, out, segs, cam, base_crop, W, H, lut, grain, preset, crf, start, push=0.03):
     """ffmpeg commands for the footage pieces that are not rendered yet. Cached pieces are dropped when the cut changed."""
     import hashlib, os
-    sig = hashlib.sha1(json.dumps([(sg["in"], sg["frames"], sg["zoom"], bool(sg.get("kick_in"))) for sg in segs] + [W, H, str(lut), grain, preset]).encode()).hexdigest()
+    sig = hashlib.sha1(json.dumps([(sg["in"], sg["frames"], sg["zoom"], bool(sg.get("kick_in"))) for sg in segs] + [W, H, str(lut), grain, preset, str(crf), str(video), os.path.getsize(video), os.path.getmtime(video)]).encode()).hexdigest()
     sig_file = out / "segs" / ".sig"
     if not sig_file.exists() or sig_file.read_text() != sig:
         for f in (out / "segs").glob("*"):
@@ -129,7 +129,16 @@ def piece_jobs(video, out, segs, cam, base_crop, W, H, lut, grain, preset, crf, 
 def prepare_voice(video, out, an, denoise, log):
     """One clean mono 48 kHz window of the source audio (optionally through DeepFilterNet); runs are cut from it."""
     src_wav = out / "voice_src.wav"
+    import os
+    st = os.stat(video)
+    stamp = out / "voice_src.key"
+    key = f"{video}|{st.st_size}|{st.st_mtime}|{an['start']:.3f}|{an['dur']:.3f}"
+    if src_wav.exists() and (not stamp.exists() or stamp.read_text() != key):
+        src_wav.unlink()                     # the source changed (a re-assembled selects file): never reuse its old audio
+        for f in (out / "voice_df").glob("*") if (out / "voice_df").exists() else []:
+            f.unlink()
     if not src_wav.exists():
+        stamp.write_text(key)
         _run(["ffmpeg", "-v", "error", "-y", "-ss", f"{an['start']:.3f}", "-t", f"{an['dur'] + 0.2:.3f}", "-i", video, "-vn", "-ac", "1", "-ar", "48000",
               "-c:a", "pcm_s16le", src_wav])
     if denoise == "deep":

@@ -17,3 +17,4 @@
 | Blind A/B with labels A and B only | INFERRED | house method; run on SMA VSL v8 against v7 on 2026-11-01 |
 | No unsourced number on screen; a caption is fixed by cutting audio, never by rewording | USER / VERIFIED | `HOUSE_RULES.md`; the owner's audit rules in `skills/video/vsl-producer/SKILL.md` |
 | Example times in the spec and the anchor table (5.7, 13.5, 19.0, 36.8, 42.4 s) | RUN | word times from the SMA takes' frame maps (`vsl/frame_map/take2.json`, `take3.json` in the sellmoreannuities repo); illustrative only |
+| `cut_in` / `cut_out` hard cuts; moment card with big number and label; one caption line at a time; `--crf 15` for the master; card content above the caption band | RUN / INFERRED | `tools/studio/layers.py` (hard_in, hard_out, dict card), `tools/studio/captions.py` (chunk end clamped to the next chunk), `tools/studio/cli.py` `--crf`; the caption-band rule is the blind A/B panel's fix 1 on SMA VSL v8 (2026-11-02, 4 of 5 reviewers) |

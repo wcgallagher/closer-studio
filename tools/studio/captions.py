@@ -155,6 +155,8 @@ def events(segs, words, brand, style_id, speech_end, hook_end=0.0, max_words=Non
                 continue
             if st["mechanism"] == "none" or inside(a0, plain):
                 a, b = a0, min(b0, seg_end, speech_end + 0.15)
+                if ci + 1 < len(chunks):        # one line on screen at a time: never overlap the next chunk
+                    b = min(b, O(chunks[ci + 1][0]) - 1 / FPS)
                 if a < hook_end or b - a < 0.05:
                     continue
                 ev.append(f"Dialogue: 2,{ts(a)},{ts(b)},Cap,,0,0,0,,{{\\fad(90,120)}}{' '.join(labels)}")

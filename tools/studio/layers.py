@@ -107,7 +107,8 @@ def resolve_scenes(L: dict, words, segs, speech_end, total) -> list[dict]:
         cues = {c: round(anchor(words, segs, v, speech_end, total) - t0, 3) for c, v in sc.get("cues", {}).items()}
         dur = (b - t0) if sc["to"] == "END" else (b + LEAD - t0)
         G.append({"id": f"s{k + 1:02d}_{sc['scene']}", "scene": sc["scene"], "start": round(a, 3), "end": round(b, 3),
-                  "dur": round(dur, 3), "cues": cues, "is_end": sc["to"] == "END", "alpha": sc.get("layout") == "overlay"})
+                  "dur": round(dur, 3), "cues": cues, "is_end": sc["to"] == "END", "alpha": sc.get("layout") == "overlay",
+                  "hard_in": sc.get("cut_in") == "hard", "hard_out": sc.get("cut_out") == "hard"})
     full = [g for g in G if not g["alpha"]]
     for k, g in enumerate(full):
         g["from_aroll"] = k == 0 or g["start"] - full[k - 1]["end"] > 0.3
@@ -144,9 +145,9 @@ def scene_graph(G: list[dict], mg: Path, W: int, H: int, first_input: int, base:
     for g in G:
         if g["alpha"]:
             continue
-        if g["from_aroll"]:
+        if g["from_aroll"] and not g.get("hard_in"):
             blur += [(g["start"] - 0.26, g["start"] - 0.13, 1), (g["start"] - 0.13, g["start"] + 0.04, 2)]
-        if g["to_aroll"]:
+        if g["to_aroll"] and not g.get("hard_out"):
             blur += [(g["end"] - 0.04, g["end"] + 0.10, 2), (g["end"] + 0.10, g["end"] + 0.22, 1)]
     en = lambda lv: "+".join(f"between(t\\,{a:.3f}\\,{b:.3f})" for a, b, l in blur if l == lv) or "0"
     chain = [f"{base}split=3[sv0][svb1][svb2]", "[svb1]gblur=sigma=6[sb1]", "[svb2]gblur=sigma=14[sb2]",
@@ -155,9 +156,12 @@ def scene_graph(G: list[dict], mg: Path, W: int, H: int, first_input: int, base:
     for k, g in enumerate(G):
         inputs += ["-i", str(mg / f"{g['id']}.{'mov' if g['alpha'] else 'mp4'}")]
         a0, d = g["start"] - LEAD, g["dur"]
-        f = f"[{first_input + k}:v]scale={W}:{H}:flags=lanczos,format=yuva420p,fade=t=in:st=0:d={(LEAD - 0.03) if (g['from_aroll'] or g['alpha']) else 0.08:.2f}:alpha=1"
+        fin = f"fade=t=in:st={LEAD - 0.04:.3f}:d=0.04" if g.get("hard_in") else f"fade=t=in:st=0:d={(LEAD - 0.03) if (g['from_aroll'] or g['alpha']) else 0.08:.2f}"
+        f = f"[{first_input + k}:v]scale={W}:{H}:flags=lanczos,format=yuva420p,{fin}:alpha=1"
         if g["alpha"]:
             f += f",fade=t=out:st={d - LEAD:.3f}:d={LEAD:.2f}:alpha=1"
+        elif g["to_aroll"] and g.get("hard_out"):
+            f += f",fade=t=out:st={d - LEAD:.3f}:d=0.04:alpha=1"
         elif g["to_aroll"]:
             f += f",fade=t=out:st={d - LEAD - 0.05:.3f}:d={LEAD + 0.05:.2f}:alpha=1"
         chain.append(f + f",setpts=PTS-STARTPTS+{a0:.3f}/TB[sg{k}]")
@@ -197,13 +201,13 @@ def styles(W: int, H: int, brand: dict) -> list[str]:
         f"Style: Chip,{cap},{int(58 * s)},{txt},{txt},{acc},&H00000000,0,0,0,0,100,100,1,0,3,{max(3, int(16 * s))},0,7,0,0,0,1",
         f"Style: Moment,{f['display']},{int(120 * s)},{txt},{txt},&H00000000,&H00000000,-1,0,0,0,100,100,0,0,1,{o},0,5,0,0,0,1",
         f"Style: Moment2,{f['display']},{int(74 * s)},{gold},{gold},&H00000000,&H00000000,-1,0,0,0,100,100,0,0,1,{o},0,5,0,0,0,1",
-        f"Style: LockEyebrow,{f.get('mono', 'JetBrains Mono')},{int(36 * s)},{sand},{sand},&H00000000,&H00000000,0,0,0,0,100,100,{max(1, int(2 * s))},0,1,0,0,7,0,0,0,1",
+        f"Style: LockEyebrow,{f.get('mono', 'JetBrains Mono')},{int(40 * s)},{sand},{sand},&H00000000,&H00000000,0,0,0,0,100,100,0,0,1,0,0,7,0,0,0,1",
         f"Style: LockHead,{f['display']},{int(92 * s)},{txt},{txt},&H00000000,&H00000000,-1,0,0,0,100,100,0,0,1,0,0,7,0,0,0,1",
         f"Style: LockBig,{f['display']},{int(124 * s)},{gold_hot},{gold_hot},&H00000000,&H00000000,-1,0,0,0,100,100,0,0,1,0,0,7,0,0,0,1",
-        f"Style: LockLabel,{f.get('ui', cap2)},{int(44 * s)},{txt},{txt},&H00000000,&H00000000,-1,0,0,0,100,100,0,0,1,0,0,7,0,0,0,1",
+        f"Style: LockLabel,{f.get('ui', cap2)},{int(48 * s)},{txt},{txt},&H00000000,&H00000000,-1,0,0,0,100,100,0,0,1,0,0,7,0,0,0,1",
         f"Style: LockName,{f.get('ui', cap2)},{int(36 * s)},{sand},{sand},&H00000000,&H00000000,0,0,0,0,100,100,0,0,1,0,0,7,0,0,0,1",
-        f"Style: ChipQuiet,{cap},{int(48 * s)},{sand},{sand},{hex_ass(c.get('bg', '#0e1114'), '40')},&H00000000,0,0,0,0,100,100,1,0,3,{max(3, int(14 * s))},0,7,0,0,0,1",
-        f"Style: Pointer,{cap},{int(50 * s)},{txt},{txt},{acc},&H00000000,0,0,0,0,100,100,1,0,3,{max(3, int(14 * s))},0,9,0,0,0,1",
+        f"Style: ChipQuiet,{cap},{int(56 * s)},{sand},{sand},{hex_ass(c.get('bg', '#0e1114'), '40')},&H00000000,0,0,0,0,100,100,1,0,3,{max(3, int(14 * s))},0,7,0,0,0,1",
+        f"Style: Pointer,{f.get('ui', cap)},{int(58 * s)},{txt},{txt},{acc},&H00000000,-1,0,0,0,100,100,0,0,3,{max(3, int(16 * s))},0,9,0,0,0,1",
         f"Style: LockMoment,{f['display']},{int(96 * s)},{txt},{txt},&H00000000,&H00000000,-1,0,0,0,100,100,0,0,1,0,0,7,0,0,0,1",
         f"Style: Hand,{cap},{int(84 * s)},{txt},{txt},{acc},&H00000000,0,0,0,0,100,100,2,0,3,{max(4, int(22 * s))},0,2,0,0,0,1",
     ]
@@ -221,6 +225,12 @@ def _glass(x: int, y: int, w: int, h: int, s: float, brand: dict, a: float, b: f
     bg, sand = hex_ass(c.get("bg", "#0e1114")), hex_ass(c.get("sand", "#F1EADD"))
     return [f"Dialogue: {layer},{ts(a)},{ts(b)},Plate,,0,0,0,,{{\\an7\\pos({x},{y})\\1c{bg}\\1a&H4D&\\3c{sand}\\3a&HDE&\\bord{max(1, round(s))}\\shad0{fad}\\p1}}"
             f"{_rrect(w, h, int(14 * s))}{{\\p0}}"]
+
+
+def _plus(text: str, brand: dict) -> str:
+    """Display serifs often draw "+" small and high; set it in the UI face so "20+" reads as a count."""
+    ui, disp = brand["fonts"].get("ui"), brand["fonts"]["display"]
+    return text.replace("+", f"{{\\fn{ui}}}+{{\\fn{disp}}}") if ui and "+" in text else text
 
 
 def text_events(L: dict, words, segs, speech_end, total, W, H, brand, scenes: list[dict]) -> tuple[list[str], list[dict], list[float]]:
@@ -247,7 +257,7 @@ def text_events(L: dict, words, segs, speech_end, total, W, H, brand, scenes: li
         ev.append(f"Dialogue: 3,{ts(a)},{ts(hb)},LockHead,,0,0,0,,{{\\an7\\pos({x0 + pad},{y1 + int(lk.get('head_y', 118) * s)})\\fad(0,300)}}{lk.get('headline', '')}")
         ev += _glass(x0, y2, w, h2, s, brand, a, b, "\\fad(0,250)")
         ev.append(f"Dialogue: 3,{ts(a)},{ts(b)},Plate,,0,0,0,,{{\\an7\\pos({x0 + pad},{y2 + int(22 * s)})\\1c{gold}\\bord0\\shad0\\fad(0,250)\\p1}}m 0 0 l {int(120 * s)} 0 l {int(120 * s)} {max(2, int(3 * s))} l 0 {max(2, int(3 * s))}{{\\p0}}")
-        ev.append(f"Dialogue: 3,{ts(a)},{ts(b)},LockBig,,0,0,0,,{{\\an7\\pos({x0 + pad - int(4 * s)},{y2 + int(36 * s)})\\fad(0,250)}}{lk.get('big', '')}")
+        ev.append(f"Dialogue: 3,{ts(a)},{ts(b)},LockBig,,0,0,0,,{{\\an7\\pos({x0 + pad - int(4 * s)},{y2 + int(36 * s)})\\fad(0,250)}}{_plus(lk.get('big', ''), brand)}")
         ev.append(f"Dialogue: 3,{ts(a)},{ts(b)},LockLabel,,0,0,0,,{{\\an7\\pos({x0 + pad},{y2 + int(lk.get('label_y', 178) * s)})\\fad(0,250)}}{lk.get('label', '')}")
         if lk.get("name"):
             ev.append(f"Dialogue: 3,{ts(a)},{ts(b)},LockName,,0,0,0,,{{\\an7\\pos({x0 + pad},{y2 + int(lk.get('name_y', 252) * s)})\\fad(0,250)}}{lk['name']}")
@@ -272,7 +282,7 @@ def text_events(L: dict, words, segs, speech_end, total, W, H, brand, scenes: li
         kind = ch.get("style", "chip")
         if kind == "pointer":       # a red pill top right that points at the page button under the video
             x, y = int(W * ch.get("x", 0.955)), int(H * ch.get("y", 0.075))
-            ev.append(f"Dialogue: 5,{ts(t)},{ts(t + hold)},Pointer,,0,0,0,,{{\\an9\\move({x + int(60 * H / 1080)},{y},{x},{y},0,200)\\fad(150,150)}}{ch['text']}")
+            ev.append(f"Dialogue: 5,{ts(t)},{ts(t + hold)},Pointer,,0,0,0,,{{\\an9\\pos({x},{y})\\fad(0,120)}}{ch['text']}")
         else:
             st = "ChipQuiet" if kind == "quiet" else "Chip"
             x, y = int(W * ch.get("x", 0.69)), int(H * (ch.get("y", 0.40) + 0.095 * int(ch.get("row", 0))))
@@ -281,18 +291,26 @@ def text_events(L: dict, words, segs, speech_end, total, W, H, brand, scenes: li
     for m in L.get("moments", []):
         a, b = A(m["from"]), A(m["to"])
         moments.append({"a": a, "b": b, "style": m.get("style", "bw"), "saturation": float(m.get("saturation", 0.25))})
-        if m.get("card"):           # one line in the lockup's proof position, on glass
+        if isinstance(m.get("card"), dict):   # the opening proof again: big number and its label, on glass
+            s = H / 1080
+            lk = L.get("lockup") or {}
+            x0, w = int(lk.get("x", 70) * s), int(lk.get("width", 650) * s)
+            y2 = int((lk.get("y", 96) + lk.get("head_h", 420) + 14) * s)
+            ev += _glass(x0, y2, w, int(lk.get("proof_h", 300) * s), s, brand, a, b, "\\fad(150,200)")
+            ev.append(f"Dialogue: 3,{ts(a)},{ts(b)},LockBig,,0,0,0,,{{\\an7\\pos({x0 + int(26 * s)},{y2 + int(36 * s)})\\fad(150,200)}}{_plus(m['card'].get('big', ''), brand)}")
+            ev.append(f"Dialogue: 3,{ts(a)},{ts(b)},LockLabel,,0,0,0,,{{\\an7\\pos({x0 + int(30 * s)},{y2 + int(lk.get('label_y', 178) * s)})\\fad(150,200)}}{m['card'].get('label', '')}")
+        elif m.get("card"):           # one line in the lockup's proof position, on glass
             s = H / 1080
             x0, w, y2 = int(70 * s), int(650 * s), int((96 + 420 + 14) * s)
             ev += _glass(x0, y2, w, int(150 * s), s, brand, a, b, "\\fad(150,200)")
-            ev.append(f"Dialogue: 3,{ts(a)},{ts(b)},LockMoment,,0,0,0,,{{\\an7\\pos({x0 + int(30 * s)},{y2 + int(16 * s)})\\fad(150,200)}}{m['card']}")
+            ev.append(f"Dialogue: 3,{ts(a)},{ts(b)},LockMoment,,0,0,0,,{{\\an7\\pos({x0 + int(30 * s)},{y2 + int(16 * s)})\\fad(150,200)}}{_plus(m['card'], brand)}")
         lines = m.get("lines") or []
         x, y = m.get("pos", [0.24, 0.40])
         for i, ln in enumerate(lines):
             ta = a + 0.35 * i
             st = "Moment" if i == 0 else "Moment2"
             anim = "\\fscx112\\fscy112\\t(0,160,\\fscx100\\fscy100)" if i == 0 else ""
-            ev.append(f"Dialogue: 6,{ts(ta)},{ts(b)},{st},,0,0,0,,{{\\an5\\pos({int(W * x)},{int(H * (y + 0.10 * i))})\\fad(120,180){anim}}}{ln}")
+            ev.append(f"Dialogue: 6,{ts(ta)},{ts(b)},{st},,0,0,0,,{{\\an5\\pos({int(W * x)},{int(H * (y + 0.10 * i))})\\fad(120,180){anim}}}{_plus(ln, brand)}")
     return ev, moments, chip_t
 
 

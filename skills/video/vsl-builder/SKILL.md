@@ -55,12 +55,12 @@ Every time in it is a word on the selects clock, read from transcript.txt:
 
 The parts, all optional:
 
-- `scenes`: animated cards from a scenes HTML file (`scenes_html`), each with `from`, `to` and `cues` (element name to anchor). `"layout": "overlay"` renders the card on a transparent background beside the speaker instead of full screen. A scene `to` `"END"` becomes the end card.
+- `scenes`: animated cards from a scenes HTML file (`scenes_html`), each with `from`, `to` and `cues` (element name to anchor). `"layout": "overlay"` renders the card on a transparent background beside the speaker instead of full screen. `"cut_in": "hard"` or `"cut_out": "hard"` replaces the blur dissolve with a hard cut. A scene `to` `"END"` becomes the end card. Keep card content above the caption band (the bottom fifth of the frame) so captions never sit on a card's payoff.
 - `lockup`: the opening glass card on the left, on screen from frame 0: eyebrow, headline (leaves at `head_until`), the proof number, its label and the name (leave at `until`).
-- `captions`: `from` (start after the headline), `words` (chunk size), `plain_over_scenes` (no spoken-word highlight over a card), `off` (windows with no burned caption).
+- `captions`: `from` (start after the headline), `words` (chunk size), `plain_over_scenes` (no spoken-word highlight over a card), `off` (windows with no burned caption, for a card that already shows the words). One caption line is on screen at a time.
 - `chips` (`at`, `text`, `hold` or `until`, `row`; `style` `quiet` for a calm one, `pointer` for the red pill that points at the page button).
 - `hands`: labels that ride a tracked hand (a rows file of hand positions on the take's clock).
-- `moments`: a tinted stretch (`saturation`) with an optional one-line `card`.
+- `moments`: a tinted stretch (`saturation`) with an optional `card`: one line, or `{"big": ..., "label": ...}` to bring the opening proof back.
 - `music` (`file`, `start`, `mute` windows), `sfx` (a riser into the ask), `kicks` (zoom kick and whoosh at section changes), `zoom` (hold a framing, for hand labels), `end_hold`.
 
 Every number on a card comes from the project's audit file or the owner. Spoken-only numbers never go on a card or a chip.
@@ -72,7 +72,7 @@ Every number on a card comes from the project's audit file or the owner. Spoken-
   --brand sma --format vsl_hero --platform web_vsl --layers layers.json --preview
 ```
 
-`vsl_hero` is the homepage video (about 100 s, 16:9, burned captions, music faint); a longer page VSL is `vsl_book_call`. `--preview` first; drop it for the delivery. The scenes render once and are reused while their length and cues stay the same.
+`vsl_hero` is the homepage video (about 100 s, 16:9, burned captions, music faint); a longer page VSL is `vsl_book_call`. `--preview` first; drop it for the delivery, and add `--crf 15` for the master. The scenes render once and are reused while their length and cues stay the same.
 
 ## 5. Judge it
 

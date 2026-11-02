@@ -130,7 +130,7 @@ def png_clip(png: Path, dst: Path, dur: float, preset, crf):
 def longform(video: Path, out: Path, an: dict, brand: dict, plat: dict, fmt: dict, chapters: str | None = None,
              quotes: list[str] | None = None, pops: str = "auto", broll: Path | None = None, music: str | None = None,
              fillers: str | None = None, caps: str | None = None, cta: str | None = None, title: str | None = None,
-             grade_preset: str | None = None, preview: bool = False, denoise: str = "chain", change_every: float | None = None, audience: str | None = None, hold: str | None = None, layers: Path | None = None, log=print) -> dict:
+             grade_preset: str | None = None, preview: bool = False, denoise: str = "chain", change_every: float | None = None, audience: str | None = None, hold: str | None = None, layers: Path | None = None, crf_master: int | None = None, log=print) -> dict:
     W, H = plat["w"], plat["h"]
     out.mkdir(parents=True, exist_ok=True)
     (out / "segs").mkdir(exist_ok=True)
@@ -177,7 +177,7 @@ def longform(video: Path, out: Path, an: dict, brand: dict, plat: dict, fmt: dic
     lut = grade.lut_path(grade_preset or brand["style"].get("lut", "clean"))
     grain = float(brand["style"].get("grain", 0) or 0)
     grade.write_fill(out / "fill.png", W, H, 0.5, 0.40, 0.22)
-    crf, preset = ("26", "veryfast") if preview else ("18", "medium")
+    crf, preset = ("26", "veryfast") if preview else (str(crf_master or 18), "medium")
 
     jobs = piece_jobs(video, out, segs, cam, base_crop, W, H, lut, grain, preset, crf, start, push=0.025)
     voice_in = prepare_voice(video, out, an, denoise, log)
