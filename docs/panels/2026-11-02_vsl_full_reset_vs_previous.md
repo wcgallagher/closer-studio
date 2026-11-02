@@ -53,3 +53,28 @@ face time (24 % hidden against 35 %).
 Run both orders and count only lenses that agree with themselves; give the merge step neutral labels; have a devil's
 advocate check the winner against the house rules the reviewers did not check (type families, loudness on the encoded
 file, caption line breaks, speech rate); re-judge the fixed cut instead of asserting the fixes worked.
+
+## Round 2: the rebuild (P2) against the shipped cut (Q)
+
+P2 kept the re-edit's best parts, moved the offer to 6.4 s, dropped the finish pass, rebuilt the cards as glass overlays
+and switched to sentence-case captions. Votes P2 7, Q 5; mean 6.52 against 5.98. Three lenses flipped with position.
+Of the three that held, retention and compliance chose P2 both times, and the target viewer chose Q both times: on a
+muted phone, the overlay text and the softer captions read at about 7-9 px, and Q's full-screen cards read at once.
+The devil's advocate found what the panel missed: the bed dropped to digital zero under a silent end card (a button
+ending), the kit's own end card flashed for 2-3 frames before the designed one, a card line nobody says, and captions
+near 1.4:1 against bright sky.
+
+## Round 3: the fixed rebuild (P3) against the shipped cut, loudness-matched
+
+Fixes: captions 28 % larger with a firm outline and on under every overlay, card copy in the speaker's words, example
+policies and premiums on the book card, the bed held under the end card, a beat on the face before it, the number
+card on its payoff word. Both cuts' audio was matched to -14.1 LUFS for the judges. Votes P3 9, Q 3; mean 6.82
+against 5.80; the three lenses that held across the swap (direct response, retention, compliance) chose P3 6 to 0, and
+P3 drew SHIP from 5 of 12 reviews against none for Q. The devil's advocate still listed card wording that paraphrased
+the speech, lines over 42 characters, and a deal read at 270 words a minute with 0.03-0.25 s between sentences.
+
+## What the three rounds say together
+
+Structure beat engines in round 1, legibility beat taste in round 2, and the fixes that won round 3 were all
+measurable: words per minute, pause lengths, caption size and contrast, words on screen matching words spoken,
+loudness under the end card. Each is now a rule or a review gate (rulebook BP-01 to BP-10).

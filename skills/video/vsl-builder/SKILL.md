@@ -32,7 +32,7 @@ Read every take's words first. A take with a word map already (a project that lo
 }
 ```
 
-`from_s` and `to_s` are the approximate times of those words in that take, so the right occurrence is picked. A beat can be a whole sentence or a half: drop a phrase by ending one beat before it and starting the next after it. Only the speaker's own words, never a re-worded line; a caption is fixed by cutting audio, not by rewording.
+`from_s` and `to_s` are the approximate times of those words in that take, so the right occurrence is picked. A beat can also give exact `in` and `out` seconds: put them inside the measured silences around the line (the word map's `silences`), never tight on the first and last word, so the pause a person leaves can exist at a take change and a `breath` hold has room (rulebook BP-10; tight edges left a 2026-11-02 cut at about 270 words a minute across the offer). A beat can be a whole sentence or a half: drop a phrase by ending one beat before it and starting the next after it. Only the speaker's own words, never a re-worded line; a caption is fixed by cutting audio, not by rewording.
 
 ## 2. Assemble
 
@@ -57,7 +57,7 @@ The parts, all optional:
 
 - `scenes`: animated cards from a scenes HTML file (`scenes_html`), each with `from`, `to` and `cues` (element name to anchor). `"layout": "overlay"` renders the card on a transparent background beside the speaker instead of full screen. `"cut_in": "hard"` or `"cut_out": "hard"` replaces the blur dissolve with a hard cut. A scene `to` `"END"` becomes the end card. Keep card content above the caption band (the bottom fifth of the frame) so captions never sit on a card's payoff.
 - `lockup`: the opening glass card on the left, on screen from frame 0: eyebrow, headline (leaves at `head_until`), the proof number, its label and the name (leave at `until`).
-- `captions`: `from` (start after the headline), `words` (chunk size), `plain_over_scenes` (no spoken-word highlight over a card), `off` (windows with no burned caption, for a card that already shows the words). One caption line is on screen at a time.
+- `captions`: `from` (start after the headline), `words` (chunk size), `style` (`premium` for a VSL), `plain_over_scenes` (no spoken-word highlight over a card), `off` (windows with no burned caption, only for a full-screen card that already shows the words). One caption line is on screen at a time. Captions stay on under overlay cards beside the speaker, and card lines that mirror the speech use it word for word (rulebook BP-09).
 - `chips` (`at`, `text`, `hold` or `until`, `row`; `style` `quiet` for a calm one, `pointer` for the red pill that points at the page button).
 - `hands`: labels that ride a tracked hand. Track the take first: `closer.py hands TAKE.mp4 --start 33.6 --end 36.6 --fps 30 --out hands.json` (take seconds). Each label is `{"text", "in", "out", "mode", "x", "gap"}`: `in` and `out` are take seconds read off that track (the hand rising and dropping, not the word), `mode` `static` holds still beside the top of the gesture, `follow` rides the fingertips. `min_s` (default 0.5) is the shortest time on screen; `smooth` (frames, default 5) and `max_step` (share of the height per frame, default 0.025) keep a follow label steady.
 - `moments`: a tinted stretch (`saturation`) with an optional `card`: one line, or `{"big": ..., "label": ...}` to bring the opening proof back. `"style": "dim"` with `blur`, `brightness` and `saturation` pushes the speaker back under a full-screen number.

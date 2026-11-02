@@ -1022,6 +1022,17 @@ the same night rejected a button ending that left 2.8 s of near silence under th
 timecode is a pointer: take every cut point from the word map. Count only lenses whose preference survives the A/B swap.
 - source: PANEL_V9 ("Claims that did not survive checking").
 
+**BP-09** (FIX, vsl). An overlay card beside the speaker never replaces the captions: captions run under every overlay,
+and only a full-screen card that shows the same words takes them off. Card lines that mirror speech use the speech word
+for word (CP-04), with one spelling per term in cards and captions (captions.py `DISPLAY`).
+- source: PANEL_V9 rounds 2 and 3 (the target-viewer lens chose the cut with readable full-screen cards in both orders
+  until captions ran under the overlays).
+
+**BP-10** (FIX, multi-take). Beat edges sit inside the measured silences around each line (frame_map silences), so
+the pauses a person leaves can exist at take changes; then hold them (layers `breath.after`). Tight beat edges made
+the offer run at about 270 words a minute with 0.03-0.25 s between sentences.
+- source: PANEL_V9 round 3 (devil's advocate measurements on the word map).
+
 ## 14. Sources
 
 Each key used above, with where it points and the date read. Kit files are this repository's own.

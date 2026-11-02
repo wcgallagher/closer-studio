@@ -27,7 +27,7 @@ STYLES = {
     # second panel (2026-11-02): at 3.6 % with a soft glow the captions measured about 1.4:1 against bright sky and lost
     # the muted-phone viewer, so 4.6 % (about 92 px at 1080 on 16:9) with a firm 3 px dark outline and a light blur
     "premium": {"font": "ui", "size": 0.046, "case": "mixed", "words": (3, 7), "mechanism": "keyword", "outline": 3, "shadow": 2,
-                "pop": False, "box": False, "bold": True, "soft": True},
+                "pop": False, "box": False, "bold": True, "soft": True, "max_chars": 42},
 }
 
 # words that bind to the word after them: a line never ends on one (an article, a preposition, an auxiliary or modal,
@@ -51,7 +51,11 @@ KEYWORDS = {"free", "money", "bag", "split", "50-50", "wednesday", "regret", "se
             "retirement", "401k", "401(k)", "ira", "training", "account", "simple", "big", "paid", "exactly", "program"}
 
 
-def chunk(ws, lo=2, hi=4):
+# display spellings: the same word on screen in captions and cards (rulebook CP-04); formatting, never rewording
+DISPLAY = {"401k": "401(k)", "401ks": "401(k)s", "403b": "403(b)", "457b": "457(b)"}
+
+
+def chunk(ws, lo=2, hi=4, max_chars=None):
     """Split a run of words into caption chunks of lo..hi words, at clause ends and pauses, off function words.
     Clauses longer than hi words are split by a dynamic program over the cut positions (linear in the clause length):
     groups near hi words, a group of one word costs extra, a line that ends on a word binding to the next (BIND_NEXT)
@@ -96,6 +100,8 @@ def chunk(ws, lo=2, hi=4):
                 if j < 0:
                     break
                 cost = best[j] + 0.5 * (hi - size) + (3.0 if size == 1 else 2.5 if size < lo else 0.0)   # no orphan lines
+                if max_chars and len(" ".join(w["w"] for w in c[j:i])) > max_chars:
+                    cost += 8.0                                   # one line of at most max_chars (rulebook CP-01: 42)
                 if j > 0:
                     prev, nxt = norm(c[j - 1]["w"]), norm(c[j]["w"])
                     if prev in BIND_NEXT or prev in FUNC: cost += 5       # a line never ends on a word that needs the next
@@ -152,6 +158,7 @@ class _KwMap(dict):
 
 def _label(w, case):
     t = w["w"].strip(",.?!;:")
+    t = DISPLAY.get(t.lower(), t)
     if case == "upper":
         return t.upper()
     if case == "sentence":
@@ -234,7 +241,7 @@ def events(segs, words, brand, style_id, speech_end, hook_end=0.0, max_words=Non
         Oe = lambda w: seg_of[pos[id(w)]]["out_t"] + (w["e"] - seg_of[pos[id(w)]]["in"])
         seg_end = run[-1]["out_t"] + run[-1]["frames"] / FPS
         sg = run[0]
-        chunks = chunk(ws, lo, hi)
+        chunks = chunk(ws, lo, hi, st.get("max_chars"))
         if st["mechanism"] == "keyword":
             for ci, c in enumerate(chunks):
                 labels = [_label(w, st["case"]) for w in c]
