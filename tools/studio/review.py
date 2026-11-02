@@ -42,6 +42,8 @@ def run(job: Path, log=print) -> dict:
         add("length fits the format", not s.get("length_warning"), s.get("length_warning") or f"{info['dur']:.0f} s is inside the {s['format']} band")
     m = voice.measure(final, plat["lufs"], plat["tp"])
     add("loudness on target", abs(m["i"] - plat["lufs"]) <= 1.0 and m["tp"] <= plat["tp"] + 0.3, f"{m['i']:.1f} LUFS, {m['tp']:.1f} dBTP (target {plat['lufs']} / {plat['tp']})")
+    ok, det = sync_check(final, an, segs)
+    add("sound in sync with the picture", ok, det)
     # face vs the caption block actually used
     pl = s.get("placement") or {}
     if an and an.get("track") and s.get("camera") == "tracked":
@@ -111,6 +113,8 @@ def run_long(job: Path, j: dict, log=print) -> dict:
     add("length fits the format", not s.get("length_warning"), s.get("length_warning") or f"{info['dur']:.0f} s")
     m = voice.measure(final, plat["lufs"], plat["tp"])
     add("loudness on target", abs(m["i"] - plat["lufs"]) <= 1.0 and m["tp"] <= plat["tp"] + 0.3, f"{m['i']:.1f} LUFS, {m['tp']:.1f} dBTP")
+    ok, det = sync_check(final, an, segs)
+    add("sound in sync with the picture", ok, det)
     add("chapters written by a person", not s.get("auto_chapter_titles"), "chapters.txt has placeholder titles: write real ones and re-run" if s.get("auto_chapter_titles") else (f"{len(s['chapters'])} chapters" if s["chapters"] else "no chapters (fine under 4 min)"))
     add("every quote found in the speech", not s.get("missing_quotes"), f"not found: {s.get('missing_quotes')}" if s.get("missing_quotes") else "all matched")
     txt = (job / "captions.srt").read_text() if (job / "captions.srt").exists() else ""
@@ -131,3 +135,33 @@ def run_long(job: Path, j: dict, log=print) -> dict:
     for c in checks:
         log(f"{'PASS' if c['ok'] else 'FIX '}  {c['check']}: {c['detail']}")
     return report
+
+def sync_check(final, an, segs, sr: int = 8000) -> tuple[bool, str]:
+    """Picture and sound together: each piece's audio in the final is cross-correlated against the source at the same
+    place. A stale or shifted voice track shows as a lag far from the rest, or as no match at all."""
+    import subprocess
+    if not an:
+        return True, "no analysis to check against"
+    src, start = an["video"], an.get("start", 0.0)
+
+    def pcm(f, ss, d):
+        b = subprocess.run(["ffmpeg", "-v", "error", "-ss", f"{ss:.3f}", "-t", f"{d:.3f}", "-i", str(f), "-vn", "-ac", "1", "-ar", str(sr),
+                            "-f", "s16le", "-"], capture_output=True).stdout
+        return np.frombuffer(b, np.int16).astype(np.float32)
+    rows = []
+    for sg in segs:
+        if sg["frames"] / FPS < 1.0:
+            continue
+        a, b = pcm(final, sg["out_t"] + 0.25, 0.6), pcm(src, start + sg["in"] + 0.10, 0.9)
+        if len(a) < 100 or len(b) < len(a) or a.std() < 1e-3:
+            continue
+        a, b = (a - a.mean()) / (a.std() + 1e-6), (b - b.mean()) / (b.std() + 1e-6)
+        c = np.correlate(b, a, mode="valid") / len(a)
+        i = int(np.argmax(c))
+        rows.append((sg["out_t"], (i / sr - 0.15) * 1000, float(c[i])))
+    if not rows:
+        return True, "no piece long enough to check"
+    med = float(np.median([r[1] for r in rows]))
+    bad = [r for r in rows if abs(r[1] - med) > 40 or r[2] < 0.2]
+    detail = f"{len(rows)} pieces, offset {med:.0f} ms" + (f"; out of step or not matching at {[round(r[0], 1) for r in bad]} s" if bad else ", none drifting")
+    return len(bad) <= max(0, len(rows) // 20), detail
