@@ -15,7 +15,9 @@ PY="$HOME/.closer-studio/venv/bin/python"; [ -x "$PY" ] || PY="$HOME/.closer-stu
 ls "$KIT/inbox" "$KIT/output"
 ```
 
-## 1. Find the hook in the footage
+## 1. Research, then find the hook in the footage
+
+Before writing, open `docs/ROLODEX.md`. When the owner's Sandcastles collections are reachable, pull three to five proven videos in the target format and note how their visual, on-screen text and spoken hooks line up; copy the structure, never the words. Kallaway's Short-Form Hooks Workshop is the reference for hook components and alignment once the owner adds its notes.
 
 ```bash
 "$PY" "$KIT/tools/closer.py" analyze "$KIT/inbox/<file>" --out "$KIT/output/<job>"

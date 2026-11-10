@@ -47,6 +47,7 @@ ffmpeg, Python and Node; the installer is new and untested on Windows, so tell u
 | `tools/studio/placement.py`, `hands.py` | where graphics go (face, hands, captions, what is already on screen, per format) and 21-point hand tracking for labels |
 | `tools/studio/finish.py` | the colourist's pass, measured per video: sky and highlight roll-off, a tracked face light, grain and vignette |
 | `docs/EDITOR_RULEBOOK.md`, `docs/AUDIO_SPEC.md` | the rules behind the edit and the mix, each with its number and source |
+| `docs/ROLODEX.md` | the editor's references and tools: hooks research, texture, sound, footage, generation, and how to get access |
 | `tools/studio/` | the engine: formats, transcription and moments, face tracking and virtual camera, the cut, captions, cards, voice, grade, render, long-form, cover, review |
 | `skills/strategy/format-brain` | the marketer's brain: from the goal to the format, the brief and the command |
 | `skills/video/` | editor-brain, sound-director, placement, filming-playbook, compare-cuts, reel-editor, longform-editor, funnel-vsl, vsl-builder, show-rate-videos, skool-content, hooks-titles-covers, auto-reframe, caption-styles, platform-formatter, edit-grammar, cold-review, vsl-producer, video-use |
