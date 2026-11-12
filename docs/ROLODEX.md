@@ -11,6 +11,12 @@ is linked, never copied into this public kit.
 | Kallaway, Short Form Academy: Short-Form Hooks Workshop (luma.com/sfa-hooks) | A 90-minute recorded workshop: why hooks drive most of a video's result, the four components of a hook and how to align them, a 10-minute hook-writing system, and a method for finding and validating winning hooks before filming | Every hook, cover and first line (`skills/video/hooks-titles-covers`) | Recording sold on the event page ($127 after the live date). Only the outline is known here: once the owner buys it, put the notes in the private repo and the editor turns them into rules |
 | Sandcastles.ai collections (index: "Top Short-Form Video Collections (105 Collections)", a Kallaway PDF on Google Drive) | 105 collections of top short-form videos in four groups: visual hooks, signature series (recurring segments), editing styles (for example vlog hybrid) and formats (for example breakdown). Each video comes with its transcript, idea breakdown, format, hook analysis, story structure and visual layout | Research before cutting: pull three to five proven examples in the target format and copy their structure, never their words | Needs a Sandcastles account (Starter tier). The collection pages ask for a sign-in, so the editor can read them only through the owner's logged-in browser (Remote Control) or exports he sends |
 
+## Pages and funnels
+
+| Name | What it is | When the editor uses it | Access |
+|---|---|---|---|
+| Acquisition.com Scaling Workshop page (www.acquisition.com/workshop-4b) | The house standard VSL page: qualifier callout, outcome headline, muted-autoplay VSL, symptoms, a numbered mechanism, a named objection, founder letter, real scarcity, 50 reviews, FAQ, booking embedded on the page (iClosed) for a fit call | Every VSL page and landing page; the measured blueprint is `docs/blueprints/VSL_PAGE.md` | Public page |
+
 ## Look: motion design and texture
 
 | Name | What it is | When the editor uses it | Access |

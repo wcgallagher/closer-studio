@@ -39,6 +39,8 @@ Proof that goes in: the person's own takes, the site's own lines, `testimonial_c
 
 ## 3. Page variants
 
+The house standard for the page around the VSL is `docs/blueprints/VSL_PAGE.md` (owner's call, 2026-11-12): its section order, design tokens, copy pattern and funnel map (the page sells a call on the same page, the call sells the offer). Build every VSL page from it unless the owner says otherwise; the variants below decide which cut plays.
+
 - Opt-in thank-you page: the warm cut when the opt-in came through your training, otherwise the cold cut; the button sits under the player. Wistia's hosted-video data puts the play rate on thank-you pages at 10%, so the headline and the text offer carry the promise for everyone who never presses play.
 - Quiz result page or website page: the cold cut for direct traffic. The headline matches the ad's first line and the first spoken line. SMA's one ask: open the account and register for the Wednesday training.
 - Application page: the book-a-call cut, one open-text qualifying question under the player, the 5 to 8 question application, then the confirmation page from `skills/video/show-rate-videos/SKILL.md`.
