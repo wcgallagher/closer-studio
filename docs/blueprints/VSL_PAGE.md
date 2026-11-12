@@ -5,8 +5,9 @@ built like this"). Reference build: Acquisition.com's Scaling Workshop page, www
 2026-11-12 from the live page, its stylesheets and the browser's computed styles. Every value below was measured, not
 eyeballed. Copy their structure and system, never their words, photos or reviews.
 
-Not captured: the VSL video's own script and beats (a Vidalytics player; it was not downloaded or transcribed). To add
-it, the owner sends a screen recording or the file, and the beats go in section 6 below.
+The VSL video itself (section 6) was pulled from the page's own player stream on 2026-11-12, transcribed with the
+kit's faster-whisper (small.en), and its cuts measured with ffmpeg scene detection. The full transcript is kept in the
+owner's private repo for internal reference only.
 
 ## 1. Where the funnel leads
 
@@ -110,6 +111,46 @@ Components:
 - The VSL inside the page follows `skills/video/vsl-builder` and `docs/EDITOR_RULEBOOK.md`; this blueprint decides the
   page around it.
 
-## 6. The VSL video's beats
+## 6. The VSL video: script beats and edit
 
-Not captured yet (see the top of this file).
+Measured: 7:21 long, 2,075 words, 282 words a minute (314 in the opening questions, 262-297 elsewhere), 156 shots,
+median shot 2.4 s, about 21 cuts a minute (28 in the first minute, 7 in the last 21 seconds).
+
+Beats (times from the video):
+
+| Time | Beat | What happens |
+|---|---|---|
+| 0:00-0:26 | Hook: "Let me ask you a question." | Five symptom questions in the viewer's own words (vacation spent on the laptop, delegating feels risky, the team asks you everything, revenue if you got sick, guilt at work and at home) |
+| 0:26-0:37 | Name the enemy | Gives the problem a name ("key man risk"), defines it in one line, and stacks three costs (can't scale, can't sell, feel trapped) |
+| 0:37-0:51 | Authority plus reframe | "After hosting over a thousand businesses..."; the reframe: you don't own a business, you own a high-paying job |
+| 0:51-1:23 | Stakes | When it bites (growth, a new product line, a sale); "This is something that I went through" |
+| 1:23-1:33 | Analogy | The bridge: if you are the bridge, everyone falls in when you leave |
+| 1:33-2:23 | Origin story as proof | He was the key man when selling his company; fixed it in two years to one meeting a week; sold for $46.2M; portfolio now $250M a year; same systems across industries, "probably a business like yours" |
+| 2:23-2:35 | Fit | The four ways anything is sold, and they have worked with every one |
+| 2:35-3:16 | Mechanism, numbered | The problem lives in four areas (marketing, sales, product, operations), each with an on-screen chapter number |
+| 3:16-3:47 | Twist | The better you get, the worse it is for the business; the more places one person sits, the less sellable it is |
+| 3:47-4:23 | Promise | It can be removed with a repeatable system; everyone asks "how do I stop being the bottleneck?"; there is a system for each of the four |
+| 4:23-5:18 | Offer | What the workshop is, what it is not (no conference, no hype, capped room), and the deliverable (a 3 to 5 step plan with owners and timelines) |
+| 5:18-5:48 | Future pace | "Imagine this": the business runs on systems, you step away and revenue flows; a business that works for you, not because of you |
+| 5:48-6:15 | Cost of waiting | "You're building a very comfortable prison"; permission to say no; who comes (owners turning jobs into assets) |
+| 6:15-6:37 | Urgency and the step | No perfect time, problems compound; book a call, reserve a seat before picking a date, fit checked both ways |
+| 6:37-7:12 | Objections | A doctor analogy for waiting; the busy-season objection answered (fix it busy, breeze when it's quiet) |
+| 7:12-7:21 | Close | "Book a call with my team, we'll see if it's a fit. And if it is, can't wait to meet you." |
+
+The order: symptoms, named enemy, authority, stakes, analogy, origin proof, numbered mechanism, twist, promise, offer,
+future pace, cost of waiting, the step, objections, close. The offer arrives at 4:23 (60% in), after the problem is
+fully owned; the ask is a fit call, never a purchase.
+
+Edit and look:
+- One founder seated at a desk on a dark set (vertical light bars, the logo mark on the wall), two camera angles plus
+  punch-ins, cut every 2-3 s.
+- Captions on every line: small white text in a rounded purple box, lower third, centered, 3 to 6 words.
+- Graphics are front-loaded: nearly all of them sit in the first 3:15 (animated keyword cards on navy, a hand-drawn
+  whiteboard sketch for the named problem, B-roll with big gold numbers for proof, 3D words for the reframe, a simple
+  animated diagram for the analogy, a white list card for industries, numbered chapter tags with progress dots for the
+  four areas). From 4:00 to the end it is the founder on camera with captions only.
+- The player autoplays muted with a click-to-unmute overlay, so the captions carry the first seconds.
+
+How the house uses it: keep the beat order and the timing shape (offer near 60%, graphics in the first half, the
+founder alone for the close), the 2-3 s cut rhythm, and captions on every line. Scripts are ours; every claim still
+needs its source in the project's audit file.
